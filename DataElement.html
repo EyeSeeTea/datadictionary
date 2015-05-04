@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+ <head>
+	<title>Data Element</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
+
+	<script src="js/jquery-1.9.1.min.js"></script>
+	<script src="js/jquery.dateFormat-1.0.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="css/demo.css">
+
+	<script>
+
+
+		// TODO:
+		//		- Format Table (title/name in different color/font)
+		//		- Attributes in different background.
+		//		- 
+		//		- 
+
+
+		//var _today = new Date();
+		var _queryURL_DataElementsByID = "../../api/dataElements/";
+		var _queryURL_DataElementsBySearch = _queryURL_DataElementsByID + "search/";
+
+		var _queryURL_Attributes = "../../api/attributes.json?viewClass=Detailed&paging=false&filter=dataElementAttribute:eq:true";
+
+
+		var _attributeTypes = new Array();
+
+
+		// ======================================================
+		// Document Ready Run
+
+		$( document ).ready(function() {
+
+			// Set date picker
+			//$( ".datepicker" ).datepicker( { dateFormat: "yy/mm/dd" } );
+			//$( "#salesDate" ).val( $.format.date( _today, "yyyy/MM/dd" ) );
+
+
+
+			// Org Unit Name Set
+			var code = getParameterByName( "code" );
+			var uid = getParameterByName( "id" );
+
+			//$( '#elementTable' ).append( getRowFormated( 'KH - DHA-PIP for Adolescents',  ) );
+
+			if ( uid.length > 0 )
+			{
+				var urlRequest = _queryURL_DataElementsByID + uid + ".json";
+
+				loadData( urlRequest, 'ID', uid );
+
+			}
+			else if ( code.length > 0 )
+			{
+				var urlRequest = _queryURL_DataElementsBySearch + code + ".json";
+
+				loadData( urlRequest, 'code', code );
+
+			}
+			else
+			{
+				$( '#msgText' ).append( "Please use either 'ID' or 'code' in url to pass in element selection.<br> Example - --/apps/ObjectViewer/DataElement.html?code=dd124" );
+			}
+
+
+		});	
+
+
+		function loadData( urlRequest, type, id )
+		{
+
+			RESTUtil.requestGetData( urlRequest
+			, function( data )
+			{
+				populateTable( data );
+			}
+			, function( msg ) 
+			{
+				$( '#msgText' ).append( 'Could not find Data Element with ' + type + ' ' + id );
+			});
+
+		}
+
+
+		function loadAttributData( execFunc )
+		{
+			RESTUtil.requestGetData( _queryURL_Attributes
+			, function( data )
+			{
+				execFunc( data.attributes );
+			}
+			, function( msg ) 
+			{
+				console.log( 'Attributes Get error' );
+			});
+		}
+	
+		function populateTable( jsonData )
+		{
+			var table = $( '#elementTable' );
+			
+			table.append( getRowFormated( "UID", formatJsonData( jsonData.id ) ) );
+			table.append( getRowFormated( "Code", formatJsonData( jsonData.code ) ) );
+			table.append( getRowFormated( "Name", formatJsonData( jsonData.name ) ) );
+			table.append( getRowFormated( "Short name", formatJsonData( jsonData.shortName ) ) );
+			table.append( getRowFormated( "Description", formatJsonData( jsonData.description ), "height: 70px; vertical-align:top;" ) );
+			table.append( getRowFormated( "Value Type", formatValueType( formatJsonData( jsonData.type ) ) ) );
+			table.append( getRowFormated( "Store Zero Data Value", formatBooleanVal( formatJsonData( jsonData.zeroIsSignificant ) ) ) );
+			table.append( getRowFormated( "Aggregation operator", formatJsonData( jsonData.aggregationOperator ) ) );
+			table.append( getRowFormated( "Disaggregation (Cat Combos)", jsonData.categoryCombo.name ) );
+			// empty is not selected
+			//table.append( getRowFormated( "Option set", getObjectName( jsonData.optionSet ) ) );
+			
+			loadAttributData( function( attributeList )
+			{
+				if ( attributeList !== undefined )
+				{
+					$.each( attributeList, function( i, item ) {
+									
+						//if ( item.dataElementAttribute !== undefined && item.dataElementAttribute )
+						table.append( getRowFormated( item.name, getAttributeValue( item.id, jsonData.attributeValues ), "background-color: #eee;" ) );
+
+					});
+				}
+				
+			});
+
+			//table.append( getRowFormated( "Attributes", formatAttributes( jsonData.attributes ) ) );
+			table.append( getRowFormated( "Data Element Groups", formatGroups( jsonData.dataElementGroups ) ) );
+
+			table.append( getRowFormated( "Last Updated On", $.format.date( new Date( jsonData.lastUpdated ), "yyyy-MM-dd hh:mm a" )  ) );
+
+			var dateNow = new Date( "2014-05-21T01:50:39.385+0000" );
+
+			//$( '#msgInfo' ).text( getFormattedDate2( dateNow ) );
+			$( '#msgInfo' ).text( $.format.date( dateNow, "yyyy-MM-dd " ) );
+		}
+
+
+		function getObjectName( valueObj )
+		{
+			var returnVal = "";
+
+			if ( valueObj !== undefined && valueObj != null && valueObj != "null" && valueObj.name !== undefined )
+			{
+				returnVal = valueObj.name;
+			}
+
+			return returnVal;
+		}
+
+		function formatValueType( value )
+		{
+			if ( value == "string" ) value = "Text";
+			else if ( value == "int" ) value = "Number";
+			else if ( value == "trueOnly" ) value = "Yes Only";
+			else if ( value == "bool" ) value = "Yes/No";
+			else if ( value == "date" ) value = "Date";
+			else if ( value == "username" ) value = "User Name";
+	
+			return value;
+		}
+
+		function formatBooleanVal( value )
+		{
+			var returnVal = "";
+
+			if ( value ) 
+			{
+				returnVal = "Yes";
+			}
+			else 
+			{
+				returnVal = "No";
+			}
+
+
+			return returnVal;
+		}
+
+		function formatAggregation( valueObj )
+		{
+			var returnVal = "";
+
+			if ( valueObj === undefined )
+			{
+				returnVal = "not selected";
+			}
+			else
+			{
+				returnVal = "selected"; //: " + JSON.stringify( valueObj );
+			}
+
+			return returnVal;
+		}
+
+		function formatAnchor( url )
+		{
+			var returnVal = "";
+
+			if ( url.length > 0 )
+			{
+				returnVal = "<a href='" + url + "' target='_blank'>" + url + "</a>";
+			}
+
+			return returnVal;
+		}
+
+		function getAttributeValue( attributeId, attributes )
+		{
+			var returnVal = "";
+
+			if ( attributes !== undefined )
+			{
+				$.each( attributes, function( i, item ) {
+
+					if ( item.attribute.id == attributeId )
+					{
+						returnVal = item.value;
+					}
+				});
+			}
+
+			return returnVal;
+		}
+
+
+		function formatAttributes( jsonData )
+		{
+			var returnVal = "";
+
+			if ( jsonData !== undefined )
+			{
+				$.each( jsonData, function( i, item ) {
+
+					returnVal += item.attribute.name + ": " + item.value + "<br>";
+				});
+			}
+
+			return returnVal;
+		}
+
+		function formatGroups( jsonData )
+		{
+			var returnVal = "";
+
+			if ( jsonData !== undefined )
+			{
+				$.each( jsonData, function( i, item ) {
+
+					returnVal += item.name + "<br>";
+				});
+			}
+
+			return returnVal;
+		}
+
+		function formatJsonData( data )
+		{
+			if ( data !== undefined )
+			{
+				return data;
+			}
+			else
+			{
+				return "";
+			}
+		}
+
+		// ======================================================
+		// Functions	
+
+		function getRowFormated( title, content, style )
+		{
+			if ( style === undefined )
+			{
+				style = '';
+			}
+
+			if ( content === undefined )
+			{
+				content = '';
+			}
+
+			return '<tr style="' + style + '">' + 
+					'<td class="title" width="140px">' + title + '</td>' +
+					'<td class="content">' + content + '</td>' +
+				'</tr>';
+		}
+	
+
+		function getParameterByName( name ) {
+			name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+			var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+				results = regex.exec(location.search);
+			return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+		}
+
+
+		// Static Functions
+		function RESTUtil() {}
+
+		RESTUtil.requestGetData = function( url, successFunc, failFunc ) 
+		{
+			return $.ajax({
+				type: "GET",
+				dataType: "json",
+				url: url,
+				async: true,
+				success: successFunc,
+				error: failFunc
+			});
+		}
+
+
+	</script>
+ 
+ </head>
+
+ <body>
+  
+    <table>
+		<tr>
+			<td>
+				<img src="img/psi.png" alt="PSI Logo" /> 
+			</td>
+			<td>
+				<h1>Data Element Detail</h1>
+			</td>
+		</tr>
+   </table>
+
+	<div style="width:98%;">
+	<div class="section">
+		<table id="elementTable" class="listTable display" border="1" width="98%">
+		</table>
+	</div>
+	</div>
+	<br>
+
+	<div id="msgText" style="font-size:small;"></div>
+
+ </body>
+</html>
