@@ -187,7 +187,7 @@
 
 		// TODO:
 
-		var _queryURL_getOrgUnit = "../../api/organisationUnits";
+		var _queryURL_getOrgUnit = "../../dhis/api/organisationUnits";
 
 		var _dataManager;
 		var _catComboData = {};
@@ -213,13 +213,13 @@
 		{
 			var me = this;
 
-			me.queryURL_DataElementGet = "../../api/dataElements/";
-			me.queryURL_IndicatorGet = "../../api/indicators/";
-			me.queryURL_DataElementListGet = "../../api/dataElements.json?paging=false";
-			me.queryURL_DataSetListGet = "../../api/dataSets.json?paging=false";
-			me.queryURL_DataSetDetailGet = "../../api/dataSets/";
+			me.queryURL_DataElementGet = "../../dhis/api/dataElements/";
+			me.queryURL_IndicatorGet = "../../dhis/api/indicators/";
+			me.queryURL_DataElementListGet = "../../dhis/api/dataElements.json?paging=false";
+			me.queryURL_DataSetListGet = "../../dhis/api/dataSets.json?paging=false";
+			me.queryURL_DataSetDetailGet = "../../dhis/api/dataSets/";
 
-			me.queryURL_getCountries = "../../api/organisationUnits.json?level=3";
+			me.queryURL_getCountries = "../../dhis/api/organisationUnits.json?level=3";
 
 			me.dataElementPopup = new DataElementPopup();
 			me.indicatorPopup = new IndicatorPopup();
@@ -307,7 +307,7 @@
 					queryStr = me.queryURL_DataSetDetailGet + dataSetId + '.json';
 				}
 
-				//me.queryURL_DataSetDetailGet = "../../api/dataSets/";
+				//me.queryURL_DataSetDetailGet = "../../dhis/api/dataSets/";
 
 				RESTUtil.getAsynchData( queryStr
 					, function( data )
@@ -1488,7 +1488,7 @@
 				{	
 					if ( item_deg != "" )
 					{
-						RESTUtil.getAsynchData( '../../api/dataElementGroups/' + item_deg + '.json?fields=id,name,dataElementGroupSet[id,name,dataDimension]'
+						RESTUtil.getAsynchData( '../../dhis/api/dataElementGroups/' + item_deg + '.json?fields=id,name,dataElementGroupSet[id,name,dataDimension]'
 						, function( json_dataDetail )
 						{
 							if ( json_dataDetail.dataElementGroupSet !== undefined && json_dataDetail.dataElementGroupSet.dataDimension )
@@ -1544,7 +1544,7 @@
 					me.setCatComboData( catid, _catComboData );
 
 
-					RESTUtil.getAsynchData( '../../api/categoryCombos/' + catid + '.json?fields=id,name,categories[id,name,categoryOptions[id,name]]' //,categoryOptionCombos[id,name]'
+					RESTUtil.getAsynchData( '../../dhis/api/categoryCombos/' + catid + '.json?fields=id,name,categories[id,name,categoryOptions[id,name]]' //,categoryOptionCombos[id,name]'
 					, function( json_dataDetail )
 					{
 						//catComboData = { id: catid, name: json_dataDetail.name, catOptionCombos: json_dataDetail.categoryOptionCombos };
@@ -1604,7 +1604,7 @@
 					// Set it as not 'undefined' since the request is made once (below)
 					catComboData[ catid ] = {};
 
-					RESTUtil.getAsynchData( '../../api/categoryCombos/' + catid + '.json?fields=id,name,categoryOptionCombos[id,name]'
+					RESTUtil.getAsynchData( '../../dhis/api/categoryCombos/' + catid + '.json?fields=id,name,categoryOptionCombos[id,name]'
 					, function( json_dataDetail )
 					{
 						catComboData[ catid ] = { id: catid, name: json_dataDetail.name, categoryOptionCombos: json_dataDetail.categoryOptionCombos };
@@ -1621,7 +1621,7 @@
 				var loadingTag = divDimension.find( '.loading_COGS' );
 
 				// Get cateogry option group set with '[COGS]'
-				RESTUtil.getAsynchData( '../../api/categoryOptionGroups.json?paging=false&fields=id,name,categoryOptions[id,name],categoryOptionGroupSet[id,name,dataDimension]'
+				RESTUtil.getAsynchData( '../../dhis/api/categoryOptionGroups.json?paging=false&fields=id,name,categoryOptions[id,name],categoryOptionGroupSet[id,name,dataDimension]'
 				, function( json_dataDetail )
 				{
 					if ( json_dataDetail.categoryOptionGroups !== undefined )
@@ -1856,14 +1856,14 @@
 					me.infoList_ProgramTableTag.find( 'tr.data' ).remove();
 
 
-					var requestUrl_OrgUnits = '../../api/organisationUnits/' + me.countryListTag.val() + '.json?includeDescendants=true&fields=id';
+					var requestUrl_OrgUnits = '../../dhis/api/organisationUnits/' + me.countryListTag.val() + '.json?includeDescendants=true&fields=id';
 
 
 
 					RESTUtil.getAsynchData( requestUrl_OrgUnits
 					, function( countryOrgUnitList )
 					{
-						var requestUrl_dataSetLists = '../../api/dataSets.json?paging=no&fields=id,name';
+						var requestUrl_dataSetLists = '../../dhis/api/dataSets.json?paging=no&fields=id,name';
 
 
 						// For preventing the ahead finish..
@@ -1880,7 +1880,7 @@
 							// for each dataset
 							$.each( json_dsList_Sorted, function( i_ds, item_ds )
 							{
-								var requestUrl_dataSetDetail = '../../api/dataSets/' + item_ds.id + '.json?fields=id,name,,description,dataElements[id],organisationUnits[id]';
+								var requestUrl_dataSetDetail = '../../dhis/api/dataSets/' + item_ds.id + '.json?fields=id,name,,description,dataElements[id],organisationUnits[id]';
 
 								RESTUtil.getAsynchData( requestUrl_dataSetDetail
 								, function( json_dataSet )
@@ -1956,7 +1956,7 @@
 						console.log( 'getting programs...' );
 
 						// Retrieve Program List
-						var requestUrl_programList = '../../api/programs.json?paging=no&fields=id,name,type,description,organisationUnits[id],programStages[programStageDataElements]';
+						var requestUrl_programList = '../../dhis/api/programs.json?paging=no&fields=id,name,type,description,organisationUnits[id],programStages[programStageDataElements]';
 
 
 						RESTUtil.getAsynchData( requestUrl_programList
@@ -2123,7 +2123,7 @@
 					urlName = "indicatorGroups";
 				}
 
-				RESTUtil.getAsynchData( '../../api/' + urlName + '.json?paging=false&fields=id,name'
+				RESTUtil.getAsynchData( '../../dhis/api/' + urlName + '.json?paging=false&fields=id,name'
 				, function( json_Data )
 				{
 					var json_DataList = ( groupType == "IND" ) ? json_Data.indicatorGroups : json_Data.dataElementGroups;
@@ -2264,7 +2264,7 @@
 
 			me.getDataList_byGroup = function( groupType, groupId, loadingTagName, runFunc )
 			{
-				RESTUtil.getAsynchData( '../../api/' + me.getGroupTypeData( groupType, "queryUrl" ) + '/' + groupId + '.json'
+				RESTUtil.getAsynchData( '../../dhis/api/' + me.getGroupTypeData( groupType, "queryUrl" ) + '/' + groupId + '.json'
 					, function( data )
 					{
 						runFunc( me.getGroupTypeData( groupType, "data", data ) );
@@ -2416,8 +2416,8 @@
 		{
 			var me = this;
 
-			me.queryURL_DataElements = "../../api/dataElements";
-			me.queryURL_Attributes = "../../api/attributes.json?paging=false&filter=dataElementAttribute:eq:true&fields=id,name";
+			me.queryURL_DataElements = "../../dhis/api/dataElements";
+			me.queryURL_Attributes = "../../dhis/api/attributes.json?paging=false&filter=dataElementAttribute:eq:true&fields=id,name";
 
 			me.dialogFormTag = $( "#dataElementPopupForm" );
 			me.tableTag = $( '#dataElementDetailTable' );
@@ -2698,7 +2698,7 @@
 		{
 			var me = this;
 
-			me.queryURL_Indicators = "../../api/indicators";
+			me.queryURL_Indicators = "../../dhis/api/indicators";
 
 			me.dialogFormTag = $( "#indicatorPopupForm" );
 			me.tableTag = $( '#indicatorDetailTable' );
