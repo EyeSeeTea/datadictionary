@@ -1,4 +1,5 @@
 var apiPath = "../../dhis/api/";
+//var apiPath = "http://james.psi-mis.org/api/"
 
 
 var _queryURL_getOrgUnit = apiPath + "organisationUnits";
@@ -83,8 +84,14 @@ function DataManager() {
 	me.countryListTag = $('#countryList');
 	me.retrieveData_CountryTag = $('#retrieveData_Country');
 
+	me.infoList_SummaryTableTag = $('#infoList_Summary');
 	me.infoList_DataSetTableTag = $('#infoList_DataSet');
-	me.infoList_ProgramTableTag = $('#infoList_Program');
+	me.infoList_EventTableTag = $('#infoList_Event');
+	me.infoList_TrackerTableTag = $('#infoList_Tracker');
+	me.infoList_OrgUnitGroupTableTag = $('#infoList_OrgUnitGroup');
+	me.infoList_UserTableTag = $('#infoList_User');
+	
+//	me.infoList_ProgramTableTag = $('#infoList_Program');
 
 	me.countDownTag = $('#defaultCountdown');
 
@@ -1286,7 +1293,7 @@ function DataManager() {
 							if (item_deg != "") {
 								RESTUtil
 										.getAsynchData(
-												'../../dhis/api/dataElementGroups/'
+												apiPath + 'dataElementGroups/'
 														+ item_deg
 														+ '.json?fields=id,name,dataElementGroupSet[id,name,dataDimension]',
 												function(json_dataDetail) {
@@ -1344,7 +1351,7 @@ function DataManager() {
 
 			RESTUtil
 					.getAsynchData(
-							'../../dhis/api/categoryCombos/'
+							apiPath + 'categoryCombos/'
 									+ catid
 									+ '.json?fields=id,name,categories[id,name,categoryOptions[id,name]]' // ,categoryOptionCombos[id,name]'
 							, function(json_dataDetail) {
@@ -1412,7 +1419,7 @@ function DataManager() {
 
 			RESTUtil
 					.getAsynchData(
-							'../../dhis/api/categoryCombos/'
+							apiPath + 'categoryCombos/'
 									+ catid
 									+ '.json?fields=id,name,categoryOptionCombos[id,name]',
 							function(json_dataDetail) {
@@ -1435,7 +1442,7 @@ function DataManager() {
 		// Get cateogry option group set with '[COGS]'
 		RESTUtil
 				.getAsynchData(
-						'../../dhis/api/categoryOptionGroups.json?paging=false&fields=id,name,categoryOptions[id,name],categoryOptionGroupSet[id,name,dataDimension]',
+						apiPath + 'categoryOptionGroups.json?paging=false&fields=id,name,categoryOptions[id,name],categoryOptionGroupSet[id,name,dataDimension]',
 						function(json_dataDetail) {
 							if (json_dataDetail.categoryOptionGroups !== undefined) {
 								$
@@ -1663,137 +1670,129 @@ function DataManager() {
 						format : 'MS'
 					});
 
-					var dataSetsInfo = {}; // id as property, value as []
-
+					//Clear tables 
+					//me.infoList_SummaryTableTag.find('tr.data').remove();
 					me.infoList_DataSetTableTag.find('tr.data').remove();
-					me.infoList_ProgramTableTag.find('tr.data').remove();
+					me.infoList_EventTableTag.find('tr.data').remove();
+					me.infoList_TrackerTableTag.find('tr.data').remove();
+					me.infoList_OrgUnitGroupTableTag.find('tr.data').remove();
+					me.infoList_UserTableTag.find('tr.data').remove();
+					
+					//Summary Variables
+					me.summary = {numberOfDatasets: 0, numberOfEvents: 0, numberOfTrackers: 0, orgUnitGroups: new Array(), users: 0};
 
-					var requestUrl_OrgUnits = '../../dhis/api/organisationUnits/'
-							+ me.countryListTag.val()
-							+ '.json?includeDescendants=true&fields=id';
+					var requestUrl_OrgUnits = apiPath + 'organisationUnits/' + me.countryListTag.val() + '.json?includeDescendants=true&fields=id,organisationUnitGroups[id],users[id,name]';
 
-					RESTUtil
-							.getAsynchData(
+					RESTUtil.getAsynchData(
 									requestUrl_OrgUnits,
 									function(countryOrgUnitList) {
-										var requestUrl_dataSetLists = '../../dhis/api/dataSets.json?paging=no&fields=id,name';
+										var requestUrl_dataSetLists = apiPath + 'dataSets.json?paging=no&fields=id,name';
 
 										// For preventing the ahead finish..
-										QuickLoading
-												.dialogShowAdd(loadingTagName);
-										requestCount++;
+										QuickLoading.dialogShowAdd(loadingTagName);
+//										requestCount++;
 
 										// alert( 'get all dataset ids.' );
-										RESTUtil
-												.getAsynchData(
-														requestUrl_dataSetLists,
-														function(json_dsList) {
-															var json_dsList_Sorted = Util
-																	.sortByKey(
-																			json_dsList.dataSets,
-																			"name");
+										RESTUtil.getAsynchData(requestUrl_dataSetLists,	
+												function(json_dsList) {
+													var json_dsList_Sorted = Util.sortByKey(json_dsList.dataSets,"name");
+													// for each dataset
+													$.each(json_dsList_Sorted,
+															function(i_ds,item_ds) {
+																var requestUrl_dataSetDetail = apiPath + 'dataSets/'
+																		+ item_ds.id
+																		+ '.json?fields=id,name,,description,dataSetType,dataElements[id],organisationUnits[id,level]';
 
-															// for each dataset
-															$
-																	.each(
-																			json_dsList_Sorted,
-																			function(
-																					i_ds,
-																					item_ds) {
-																				var requestUrl_dataSetDetail = '../../dhis/api/dataSets/'
-																						+ item_ds.id
-																						+ '.json?fields=id,name,,description,dataElements[id],organisationUnits[id]';
+																RESTUtil.getAsynchData(requestUrl_dataSetDetail,
+																		function(json_dataSet) {
+																				// requestCount++;
 
-																				RESTUtil
-																						.getAsynchData(
-																								requestUrl_dataSetDetail,
-																								function(
-																										json_dataSet) {
-																									// requestCount++;
+																				var foundCount = 0;
+																				var foundOrgUnits = {};
+																				
 
-																									var foundCount = 0;
+																				$.each(json_dataSet.organisationUnits,
+																						function(i_dsOU, item_dsOU) {
+																					
+																							var found = false;
 
-																									$
-																											.each(
-																													json_dataSet.organisationUnits,
-																													function(
-																															i_dsOU,
-																															item_dsOU) {
-																														var found = false;
+																							$.each(countryOrgUnitList.organisationUnits,
+																									function(i_countryOU, item_countryOU) {
+																								
+																										if (item_countryOU.id == item_dsOU.id) {
+																											
+																											//Update org unit by level for this dataset
+																											if (item_dsOU.level in foundOrgUnits){
+																												foundOrgUnits[item_dsOU.level] = foundOrgUnits[item_dsOU.level] + 1;
+																											}
+																											else{
+																												foundOrgUnits[item_dsOU.level] = 1;
+																											}
+																											
+																											found = true;
+																											return false;
+																										}
+																									});
 
-																														$
-																																.each(
-																																		countryOrgUnitList.organisationUnits,
-																																		function(
-																																				i_countryOU,
-																																				item_countryOU) {
-																																			if (item_countryOU.id == item_dsOU.id) {
-																																				found = true;
-																																				return false;
-																																			}
-																																		});
+																							if (found) {
+																								foundCount++;
+																								// return
+																								// false;
+																							}
+																						});
 
-																														if (found) {
-																															foundCount++;
-																															// return
-																															// false;
-																														}
-																													});
+																						if (foundCount > 0) {
+																							me.summary.numberOfDatasets++;
+																							
+																							var organizationUnitByLevel = "";
+																							for (var level in foundOrgUnits){
+																								organizationUnitByLevel += "L" + level + ": " + foundOrgUnits[level] + "</br>";
+																							}
+																							
+																							var isCustomDataset = (json_dataSet.dataSetType == 'custom')?'Y':'N';
+																							
+																							var contentText = '<tr class="data">'
+																									+ '<td><a href="" class="dataSetLink" dsid="'
+																									+ json_dataSet.id
+																									+ '">'
+																									+ '<b>' + json_dataSet.name + '</b></br>'
+																									+ Util.getNotEmpty(json_dataSet.description)
+																									+ '</a></td>'
+																									+ '<td class="tdCenter">'
+//																									+ foundCount
+																									+ organizationUnitByLevel
+																									+ '</td>'
+																									+ '<td class="tdCenter">'
+																									+ json_dataSet.dataElements.length
+																									+ '</td>'
+																									+ '<td class="tdCenter">'
+																									+ isCustomDataset
+																									+ '</td>'
+																									+ '<td class="tdCenter notReady">'
+																									+ 'not implemented yet'
+																									+ '</td>'
+																									+ '</tr>';
 
-																									if (foundCount > 0) {
-																										var contentText = '<tr class="data">'
-																												+ '<td><a href="" class="dataSetLink" dsid="'
-																												+ json_dataSet.id
-																												+ '">'
-																												+ json_dataSet.name
-																												+ '</a></td>'
-																												+ '<td>'
-																												+ Util
-																														.getNotEmpty(json_dataSet.description)
-																												+ '</td>'
-																												+ '<td class="tdCenter">'
-																												+ foundCount
-																												+ '</td>'
-																												+ '<td class="tdCenter">'
-																												+ json_dataSet.dataElements.length
-																												+ '</td>'
-																												+ '<td class="tdCenter notReady">'
-																												+ 'not implemented yet'
-																												+ '</td>'
-																												+ '<td class="tdCenter notReady">'
-																												+ 'not implemented yet'
-																												+ '</td>'
-																												+ '</tr>';
+																							me.infoList_DataSetTableTag
+																									.append(contentText);
 
-																										me.infoList_DataSetTableTag
-																												.append(contentText);
+																							// Add event to this row.
+																							me.SetDataSetLinkAction(me.infoList_DataSetTableTag);
 
-																										// Add
-																										// event
-																										// to
-																										// this
-																										// row.
-																										me
-																												.SetDataSetLinkAction(me.infoList_DataSetTableTag);
+																						}
 
-																									}
-
-																								},
-																								function() {
-																								},
-																								function() {
-																									requestCount++;
-																									QuickLoading
-																											.dialogShowAdd(loadingTagName);
-																								},
-																								function() {
-																									QuickLoading
-																											.dialogShowRemove(loadingTagName);
-																									requestCount--;
-																									me
-																											.checkRequestCount(requestCount);
-
-																								});
+																					},
+																					function() {
+																					},
+																					function() {
+																						requestCount++;
+																						QuickLoading.dialogShowAdd(loadingTagName);
+																					},
+																					function() {
+																						QuickLoading.dialogShowRemove(loadingTagName);
+																						requestCount--;
+																						me.checkRequestCount(requestCount);
+																					});
 
 																			});
 
@@ -1801,105 +1800,185 @@ function DataManager() {
 														function() {
 														},
 														function() {
-															QuickLoading
-																	.dialogShowAdd(loadingTagName);
+															QuickLoading.dialogShowAdd(loadingTagName);
 														},
 														function() {
-															QuickLoading
-																	.dialogShowRemove(loadingTagName);
+															QuickLoading.dialogShowRemove(loadingTagName);
 														});
+										
 
-										console.log('getting programs...');
+										// Requesting Org Unit Groups and USER
+										$.each(countryOrgUnitList.organisationUnits,
+												function(i_countryOU, item_countryOU) {
+											
+											$.each(item_countryOU.users,
+													function(i_countryOUG,item_countryUsers) {
+												
+												me.summary.users++;
+												
+												var contentText = '<tr class="data">'
+													+ '<td>'
+													+ item_countryUsers.name
+													+ '</td>'
+													+ '</tr>';
+
+												me.infoList_UserTableTag.append(contentText);
+											});
+											
+											$.each(item_countryOU.organisationUnitGroups,
+													function(i_countryOUG,item_countryOUG) {
+											
+												if(me.summary.orgUnitGroups.indexOf(item_countryOUG.id) == -1){
+													//Update organization unit groups summary
+													me.summary.orgUnitGroups.push(item_countryOUG.id);
+													
+												
+													var requestUrl_orgUnitGroupsLists = apiPath + 'organisationUnitGroups/' + item_countryOUG.id + '.json?fields=id,name,lastUpdated,organisationUnitGroupSet[id],organisationUnits';
+													RESTUtil.getAsynchData(requestUrl_orgUnitGroupsLists,	
+														function(json_ougList) {
+															var belongsToGroupSet = (json_ougList.organisationUnitGroupSet.id == undefined)?'N':'Y';
+														
+															var lastUpdatedDate = new Date(json_ougList.lastUpdated);
+															var lastUpdatedDateFormatted = $.format.date(lastUpdatedDate, "dd-MM-yyyy" );
+
+															var contentText = '<tr class="data">'
+																	+ '<td>'
+																	+ '<b>' + json_ougList.name + '</b></br>'
+																	+ Util.getNotEmpty(json_ougList.description)
+																	+ '</a></td>'
+																	+ '<td class="tdCenter">'
+																	+ json_ougList.organisationUnits.length
+																	+ '</td>'
+																	+ '<td class="tdCenter">'
+																	+ belongsToGroupSet
+																	+ '</td>'
+																	+ '<td class="tdCenter">'
+																	+ lastUpdatedDateFormatted
+																	+ '</td>'
+																	+ '</tr>';
+				
+															me.infoList_OrgUnitGroupTableTag.append(contentText);
+														},
+														function() {
+														},
+														function() {
+															requestCount++;
+															QuickLoading.dialogShowAdd(loadingTagName);
+														},
+														function() {
+															QuickLoading.dialogShowRemove(loadingTagName);
+															requestCount--;
+															me.checkRequestCount(requestCount);
+														});
+												}	
+											});
+										});
+										
+
+										console.log('Getting programs...');
 
 										// Retrieve Program List
-										var requestUrl_programList = '../../dhis/api/programs.json?paging=no&fields=id,name,type,description,organisationUnits[id],programStages[programStageDataElements]';
+										var requestUrl_programList = apiPath + 'programs.json?paging=no&fields=id,name,type,description,organisationUnits[id,level],programStages[dataEntryType,programStageDataElements]';
 
-										RESTUtil
-												.getAsynchData(
+										RESTUtil.getAsynchData(
 														requestUrl_programList,
 														function(programList) {
 															// requestCount++;
 
-															// console.log(
-															// 'Found ouList: '
-															// + JSON.stringify(
-															// programList ) );
+															$.each(programList.programs,
+																	function(
+																			i_program,
+																			item_program) {
+																		var found = 0;
+																		var foundOrgUnits = {};
 
-															$
-																	.each(
-																			programList.programs,
-																			function(
-																					i_program,
-																					item_program) {
-																				var found = 0;
-
-																				$
-																						.each(
-																								item_program.organisationUnits,
-																								function(
-																										i_programOU,
-																										item_programOU) {
-																									$
-																											.each(
-																													countryOrgUnitList.organisationUnits,
-																													function(
-																															i_countryOU,
-																															item_countryOU) {
-																														if (item_countryOU.id == item_programOU.id) {
-																															found++;
-																														}
-																													});
-
+																		$.each(item_program.organisationUnits,
+																				function(
+																						i_programOU,
+																						item_programOU) {
+																					$.each(countryOrgUnitList.organisationUnits,
+																								function(i_countryOU,
+																										item_countryOU) {
+																									if (item_countryOU.id == item_programOU.id) {
+																										found++;
+																										
+																										//Update org unit by level for this dataset
+																										if (item_programOU.level in foundOrgUnits){
+																											foundOrgUnits[item_programOU.level] = foundOrgUnits[item_programOU.level] + 1;
+																										}
+																										else{
+																											foundOrgUnits[item_programOU.level] = 1;
+																										}
+																									}
 																								});
+																				});
 
-																				if (found > 0) {
-																					var program_type = "";
-																					var deCount = 0;
+																		if (found > 0) {
+//																			var program_type = "";
+																			var deCount = 0;
 
-																					if (item_program.type == 3) {
-																						program_type = "Event (SEwoR)";
-																					} else if (item_program.type == 1) {
-																						program_type = "Tracker (MEwR)";
-																					}
+																			var organizationUnitByLevel = "";
+																			for (var level in foundOrgUnits){
+																				organizationUnitByLevel += "L" + level + ": " + foundOrgUnits[level] + "</br>";
+																			}
 
-																					$
-																							.each(
-																									item_program.programStages,
-																									function(
-																											i_ps,
-																											item_ps) {
-																										deCount += item_ps.programStageDataElements.length;
-																									});
+																			$.each(item_program.programStages,
+																							function(
+																									i_ps,
+																									item_ps) {
+																								deCount += item_ps.programStageDataElements.length;
+																							});
 
-																					var contentText = '<tr class="data">'
-																							+ '<td>'
-																							+ item_program.name
-																							+ '</td>'
-																							+ '<td>'
-																							+ program_type
-																							+ '</td>'
-																							+ '<td>'
-																							+ Util
-																									.getNotEmpty(item_program.description)
-																							+ '</td>'
-																							+ '<td class="tdCenter">'
-																							+ found
-																							+ '</td>'
-																							+ '<td class="tdCenter">'
-																							+ deCount
-																							+ '</td>' // item_program.dataElements.length
-																							+ '<td class="tdCenter notReady">'
-																							+ 'not implemented yet'
-																							+ '</td>'
-																							+ '<td class="tdCenter notReady">'
-																							+ 'not implemented yet'
-																							+ '</td>'
-																							+ '</tr>';
+																			if (item_program.type == 3) {
+																				var isCustomEvent = (item_program.programStages[0].dataSetType == 'custom')?'Y':'N';
+																				
+																				var contentText = '<tr class="data">'
+																					+ '<td>'
+																					+ '<b>' + item_program.name + '</b></br>'
+																					+ Util.getNotEmpty(item_program.description)
+																					+ '</td>'
+																					+ '<td class="tdCenter">'
+																					+ organizationUnitByLevel
+																					+ '</td>'
+																					+ '<td class="tdCenter">'
+																					+ deCount
+																					+ '</td>' // item_program.dataElements.length
+																					+ '<td class="tdCenter">'
+																					+ isCustomEvent
+																					+ '</td>'
+																					+ '<td class="tdCenter notReady">'
+																					+ 'not implemented yet'
+																					+ '</td>'
+																					+ '</tr>';
+																				
+																				me.infoList_EventTableTag.append(contentText);
+																				me.summary.numberOfEvents++;
+																			} else if (item_program.type == 1) {
+																				var contentText = '<tr class="data">'
+																					+ '<td>'
+																					+ '<b>' + item_program.name + '</b></br>'
+																					+ Util.getNotEmpty(item_program.description)
+																					+ '</td>'
+																					+ '<td class="tdCenter">'
+																					+ organizationUnitByLevel
+																					+ '</td>'
+																					+ '<td class="tdCenter">'
+																					+ deCount
+																					+ '</td>' // item_program.dataElements.length
+																					+ '<td class="tdCenter">'
+																					+ 'not implemented yet'
+																					+ '</td>'
+																					+ '<td class="tdCenter notReady">'
+																					+ 'not implemented yet'
+																					+ '</td>'
+																					+ '</tr>';
+																				
+																				me.infoList_TrackerTableTag.append(contentText);
+																				me.summary.numberOfTrackers++;
+																			}
 
-																					me.infoList_ProgramTableTag
-																							.append(contentText);
-																				}
-																			});
+																		}
+																	});
 
 														},
 														function() {
@@ -1907,23 +1986,19 @@ function DataManager() {
 														},
 														function() {
 															requestCount++;
-															QuickLoading
-																	.dialogShowAdd(loadingTagName);
+															QuickLoading.dialogShowAdd(loadingTagName);
 														},
 														function() {
-															QuickLoading
-																	.dialogShowRemove(loadingTagName);
+															QuickLoading.dialogShowRemove(loadingTagName);
 															requestCount--;
-															me
-																	.checkRequestCount(requestCount);
+															me.checkRequestCount(requestCount);
 
 														});
 
 										// Remove one for middle stopping case.
-										QuickLoading
-												.dialogShowRemove(loadingTagName);
-										requestCount--;
-										me.checkRequestCount(requestCount);
+										QuickLoading.dialogShowRemove(loadingTagName);
+//										requestCount--;
+//										me.checkRequestCount(requestCount);
 
 									},
 									function() {
@@ -1931,23 +2006,29 @@ function DataManager() {
 									},
 									function() {
 										requestCount++;
-										QuickLoading
-												.dialogShowAdd(loadingTagName);
+										QuickLoading.dialogShowAdd(loadingTagName);
 									},
 									function() {
-										QuickLoading
-												.dialogShowRemove(loadingTagName);
+										QuickLoading.dialogShowRemove(loadingTagName);
 										requestCount--;
 										me.checkRequestCount(requestCount);
 									});
 
 					// me.checkRequestCount( requestCount );
+					
+					
 
 				});
 	}
 
 	me.checkRequestCount = function(requestCount) {
 		if (requestCount == 0) {
+			me.infoList_SummaryTableTag.find("#dataSets_InfoList_Summary").text(me.summary.numberOfDatasets);
+			me.infoList_SummaryTableTag.find("#trackers_InfoList_Summary").text(me.summary.numberOfTrackers);
+			me.infoList_SummaryTableTag.find("#events_InfoList_Summary").text(me.summary.numberOfEvents);
+			me.infoList_SummaryTableTag.find("#orgUnitGroups_InfoList_Summary").text(me.summary.orgUnitGroups.length);
+			me.infoList_SummaryTableTag.find("#users_InfoList_Summary").text(me.summary.users);
+			
 			me.countDownTag.countdown('pause');
 			$('#defaultCountdownSpan').text('Time it Took: ');
 		}
@@ -1998,7 +2079,7 @@ function DataManager() {
 
 		RESTUtil
 				.getAsynchData(
-						'../../dhis/api/' + urlName
+						apiPath + urlName
 								+ '.json?paging=false&fields=id,name',
 						function(json_Data) {
 							var json_DataList = (groupType == "IND") ? json_Data.indicatorGroups
@@ -2118,7 +2199,7 @@ function DataManager() {
 
 	me.getDataList_byGroup = function(groupType, groupId, loadingTagName,
 			runFunc) {
-		RESTUtil.getAsynchData('../../dhis/api/'
+		RESTUtil.getAsynchData(apiPath
 				+ me.getGroupTypeData(groupType, "queryUrl") + '/' + groupId
 				+ '.json', function(data) {
 			runFunc(me.getGroupTypeData(groupType, "data", data));
