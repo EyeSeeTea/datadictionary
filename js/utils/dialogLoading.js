@@ -87,7 +87,7 @@ DialogLoading.close = function( option )
 
 // Sample loading message format
 //<div id='orgUnitLoading' style='display:none'>
-//	<img src='img/ui-anim_basic.gif'/> retrieving..
+//	<img src='images/ui-anim_basic.gif'/> retrieving..
 //</div>
 
 var _quickLoadingCountObj = {};
