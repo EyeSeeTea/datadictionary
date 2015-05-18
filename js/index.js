@@ -1947,7 +1947,7 @@ function DataManager() {
 																					+ isCustomEvent
 																					+ '</td>'
 																					+ '<td class="tdCenter notReady">'
-																					+ 'not implemented yet'
+																					+ 'not currently possible'
 																					+ '</td>'
 																					+ '</tr>';
 																				
@@ -1969,7 +1969,7 @@ function DataManager() {
 																					+ 'not implemented yet'
 																					+ '</td>'
 																					+ '<td class="tdCenter notReady">'
-																					+ 'not implemented yet'
+																					+ 'not currently possible'
 																					+ '</td>'
 																					+ '</tr>';
 																				
