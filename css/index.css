@@ -122,6 +122,26 @@ img {
 div.content {
 	font-size: 14px;
 }
+.content .subContent{
+	margin-top: 20px;
+}
+.tabFilters{
+	border-spacing: 0px;
+}
+
+.tabFilters tr{
+	width: 100%;
+	white-space: nowrap;
+}
+
+.tabFilters td:first-child {
+	padding-left: 0px;	
+}
+.tabFilters td:last-child {
+    width: 100%;
+    text-align: right;
+    font-size: 12px;
+}
 
 div.limitedView {
 	cursor: pointer;
