@@ -45,6 +45,13 @@ function DataManager() {
 	me.tbDataElementListTag = $('#tbDataElementList');
 	me.dataElementListDivTag = $('#dataElementList');
 
+	//Mode
+	me.orgUnitTabMode = $('#orgUnitTabMode')
+	
+	//Settings
+	me.settingDialogFormTag = $( '#settingDialogForm' );
+	me.settingPopupFormOpenTag = $( '#settingPopupFormOpen' );
+	
 	// 
 	me.dataListDEDiv_byGroupTag = $('#dataListDE_byGroup');
 	me.tbDataListDE_byGroupTag = $('#tbDataListDE_byGroup');
@@ -101,6 +108,15 @@ function DataManager() {
 
 	// --------------------------------------
 	// Methods
+	
+	me.setupTopSection = function()
+	{
+		me.settingPopupFormOpenTag.click( function()
+		{
+			me.settingDataPopupForm.openForm();
+		});
+
+	}
 
 	// ---------------------------------------
 	// -- Get/Retrieve Methods
@@ -1619,445 +1635,6 @@ function DataManager() {
 	// -- Setup Methods
 	// ---------------------------------------
 
-	// ---------------------------------------
-	// -- 'Search by Country' related
-
-	me.populateCountryList = function(listTag, loadingTagName, afterFunc) {
-		listTag.empty();
-
-		RESTUtil.getAsynchData(me.queryURL_getCountries, function(json_Data) {
-			var json_DataOrdered = Util.sortByKey(json_Data.organisationUnits,
-					"name");
-
-			Util.populateSelect(listTag, "Country", json_DataOrdered);
-
-			afterFunc();
-		}, function() {
-			alert('Failed to load country list.');
-		}, function() {
-			QuickLoading.dialogShowAdd(loadingTagName);
-		}, function() {
-			QuickLoading.dialogShowRemove(loadingTagName);
-		});
-
-	}
-
-	me.setup_SearchByCountry = function(afterFunc) {
-
-		// Populate Country List
-		me.populateCountryList(me.countryListTag, 'countriesLoading',
-						afterFunc);
-
-		// Set up the events
-		me.countryListTag.change(function() {
-			($(this).val() != "") ? Util.disableTag(me.retrieveData_CountryTag,
-					false) : Util.disableTag(me.retrieveData_CountryTag, true);
-		});
-
-		me.retrieveData_CountryTag
-				.click(function() {
-					var requestCount = 0;
-
-					var loadingTagName = 'dataLoading';
-
-					// Reset the timer
-					me.countDownTag.countdown('destroy');
-					$('#defaultCountdownSpan').text('Time Elapsed: ');
-
-					me.countDownTag.countdown({
-						since : 0,
-						compact : true,
-						format : 'MS'
-					});
-
-					//Clear tables 
-					//me.infoList_SummaryTableTag.find('tr.data').remove();
-					me.infoList_DataSetTableTag.find('tr.data').remove();
-					me.infoList_EventTableTag.find('tr.data').remove();
-					me.infoList_TrackerTableTag.find('tr.data').remove();
-					me.infoList_OrgUnitGroupTableTag.find('tr.data').remove();
-					me.infoList_UserTableTag.find('tr.data').remove();
-					
-					//Summary Variables
-					me.summary = {numberOfDatasets: 0, numberOfEvents: 0, numberOfTrackers: 0, orgUnitGroups: new Array(), users: 0};
-
-					var requestUrl_OrgUnits = apiPath + 'organisationUnits/' + me.countryListTag.val() + '.json?includeDescendants=true&fields=id,organisationUnitGroups[id],users[id,name]';
-
-					RESTUtil.getAsynchData(
-									requestUrl_OrgUnits,
-									function(countryOrgUnitList) {
-										var requestUrl_dataSetLists = apiPath + 'dataSets.json?paging=no&fields=id,name';
-
-										// For preventing the ahead finish..
-										QuickLoading.dialogShowAdd(loadingTagName);
-//										requestCount++;
-
-										// alert( 'get all dataset ids.' );
-										RESTUtil.getAsynchData(requestUrl_dataSetLists,	
-												function(json_dsList) {
-													var json_dsList_Sorted = Util.sortByKey(json_dsList.dataSets,"name");
-													// for each dataset
-													$.each(json_dsList_Sorted,
-															function(i_ds,item_ds) {
-																var requestUrl_dataSetDetail = apiPath + 'dataSets/'
-																		+ item_ds.id
-																		+ '.json?fields=id,name,,description,dataSetType,dataElements[id],organisationUnits[id,level]';
-
-																RESTUtil.getAsynchData(requestUrl_dataSetDetail,
-																		function(json_dataSet) {
-																				// requestCount++;
-
-																				var foundCount = 0;
-																				var foundOrgUnits = {};
-																				
-
-																				$.each(json_dataSet.organisationUnits,
-																						function(i_dsOU, item_dsOU) {
-																					
-																							var found = false;
-
-																							$.each(countryOrgUnitList.organisationUnits,
-																									function(i_countryOU, item_countryOU) {
-																								
-																										if (item_countryOU.id == item_dsOU.id) {
-																											
-																											//Update org unit by level for this dataset
-																											if (item_dsOU.level in foundOrgUnits){
-																												foundOrgUnits[item_dsOU.level] = foundOrgUnits[item_dsOU.level] + 1;
-																											}
-																											else{
-																												foundOrgUnits[item_dsOU.level] = 1;
-																											}
-																											
-																											found = true;
-																											return false;
-																										}
-																									});
-
-																							if (found) {
-																								foundCount++;
-																								// return
-																								// false;
-																							}
-																						});
-
-																						if (foundCount > 0) {
-																							me.summary.numberOfDatasets++;
-																							
-																							var organizationUnitByLevel = "";
-																							for (var level in foundOrgUnits){
-																								organizationUnitByLevel += "L" + level + ": " + foundOrgUnits[level] + "</br>";
-																							}
-																							
-																							var isCustomDataset = (json_dataSet.dataSetType == 'custom')?'Y':'N';
-																							
-																							var contentText = '<tr class="data">'
-																									+ '<td><a href="" class="dataSetLink" dsid="'
-																									+ json_dataSet.id
-																									+ '">'
-																									+ '<b>' + json_dataSet.name + '</b></br>'
-																									+ Util.getNotEmpty(json_dataSet.description)
-																									+ '</a></td>'
-																									+ '<td class="tdCenter">'
-//																									+ foundCount
-																									+ organizationUnitByLevel
-																									+ '</td>'
-																									+ '<td class="tdCenter">'
-																									+ json_dataSet.dataElements.length
-																									+ '</td>'
-																									+ '<td class="tdCenter">'
-																									+ isCustomDataset
-																									+ '</td>'
-																									+ '<td class="tdCenter notReady">'
-																									+ 'not implemented yet'
-																									+ '</td>'
-																									+ '</tr>';
-
-																							me.infoList_DataSetTableTag
-																									.append(contentText);
-
-																							// Add event to this row.
-																							me.SetDataSetLinkAction(me.infoList_DataSetTableTag);
-
-																						}
-
-																					},
-																					function() {
-																					},
-																					function() {
-																						requestCount++;
-																						QuickLoading.dialogShowAdd(loadingTagName);
-																					},
-																					function() {
-																						QuickLoading.dialogShowRemove(loadingTagName);
-																						requestCount--;
-																						me.checkRequestCount(requestCount);
-																					});
-
-																			});
-
-														},
-														function() {
-														},
-														function() {
-															QuickLoading.dialogShowAdd(loadingTagName);
-														},
-														function() {
-															QuickLoading.dialogShowRemove(loadingTagName);
-														});
-										
-
-										// Requesting Org Unit Groups and USER
-										$.each(countryOrgUnitList.organisationUnits,
-												function(i_countryOU, item_countryOU) {
-											
-											$.each(item_countryOU.users,
-													function(i_countryOUG,item_countryUsers) {
-												
-												me.summary.users++;
-												
-												var contentText = '<tr class="data">'
-													+ '<td>'
-													+ item_countryUsers.name
-													+ '</td>'
-													+ '</tr>';
-
-												me.infoList_UserTableTag.append(contentText);
-											});
-											
-											$.each(item_countryOU.organisationUnitGroups,
-													function(i_countryOUG,item_countryOUG) {
-											
-												if(me.summary.orgUnitGroups.indexOf(item_countryOUG.id) == -1){
-													//Update organization unit groups summary
-													me.summary.orgUnitGroups.push(item_countryOUG.id);
-													
-												
-													var requestUrl_orgUnitGroupsLists = apiPath + 'organisationUnitGroups/' + item_countryOUG.id + '.json?fields=id,name,lastUpdated,organisationUnitGroupSet[id],organisationUnits';
-													RESTUtil.getAsynchData(requestUrl_orgUnitGroupsLists,	
-														function(json_ougList) {
-															var belongsToGroupSet = (json_ougList.organisationUnitGroupSet.id == undefined)?'N':'Y';
-														
-															var lastUpdatedDate = new Date(json_ougList.lastUpdated);
-															var lastUpdatedDateFormatted = $.format.date(lastUpdatedDate, "dd-MM-yyyy" );
-
-															var contentText = '<tr class="data">'
-																	+ '<td>'
-																	+ '<b>' + json_ougList.name + '</b></br>'
-																	+ Util.getNotEmpty(json_ougList.description)
-																	+ '</a></td>'
-																	+ '<td class="tdCenter">'
-																	+ json_ougList.organisationUnits.length
-																	+ '</td>'
-																	+ '<td class="tdCenter">'
-																	+ belongsToGroupSet
-																	+ '</td>'
-																	+ '<td class="tdCenter">'
-																	+ lastUpdatedDateFormatted
-																	+ '</td>'
-																	+ '</tr>';
-				
-															me.infoList_OrgUnitGroupTableTag.append(contentText);
-														},
-														function() {
-														},
-														function() {
-															requestCount++;
-															QuickLoading.dialogShowAdd(loadingTagName);
-														},
-														function() {
-															QuickLoading.dialogShowRemove(loadingTagName);
-															requestCount--;
-															me.checkRequestCount(requestCount);
-														});
-												}	
-											});
-										});
-										
-
-										console.log('Getting programs...');
-
-										// Retrieve Program List
-										var requestUrl_programList = apiPath + 'programs.json?paging=no&fields=id,name,type,description,organisationUnits[id,level],programStages[dataEntryType,programStageDataElements]';
-
-										RESTUtil.getAsynchData(
-														requestUrl_programList,
-														function(programList) {
-															// requestCount++;
-
-															$.each(programList.programs,
-																	function(
-																			i_program,
-																			item_program) {
-																		var found = 0;
-																		var foundOrgUnits = {};
-
-																		$.each(item_program.organisationUnits,
-																				function(
-																						i_programOU,
-																						item_programOU) {
-																					$.each(countryOrgUnitList.organisationUnits,
-																								function(i_countryOU,
-																										item_countryOU) {
-																									if (item_countryOU.id == item_programOU.id) {
-																										found++;
-																										
-																										//Update org unit by level for this dataset
-																										if (item_programOU.level in foundOrgUnits){
-																											foundOrgUnits[item_programOU.level] = foundOrgUnits[item_programOU.level] + 1;
-																										}
-																										else{
-																											foundOrgUnits[item_programOU.level] = 1;
-																										}
-																									}
-																								});
-																				});
-
-																		if (found > 0) {
-//																			var program_type = "";
-																			var deCount = 0;
-
-																			var organizationUnitByLevel = "";
-																			for (var level in foundOrgUnits){
-																				organizationUnitByLevel += "L" + level + ": " + foundOrgUnits[level] + "</br>";
-																			}
-
-																			$.each(item_program.programStages,
-																							function(
-																									i_ps,
-																									item_ps) {
-																								deCount += item_ps.programStageDataElements.length;
-																							});
-
-																			if (item_program.type == 3) {
-																				var isCustomEvent = (item_program.programStages[0].dataSetType == 'custom')?'Y':'N';
-																				
-																				var contentText = '<tr class="data">'
-																					+ '<td>'
-																					+ '<b>' + item_program.name + '</b></br>'
-																					+ Util.getNotEmpty(item_program.description)
-																					+ '</td>'
-																					+ '<td class="tdCenter">'
-																					+ organizationUnitByLevel
-																					+ '</td>'
-																					+ '<td class="tdCenter">'
-																					+ deCount
-																					+ '</td>' // item_program.dataElements.length
-																					+ '<td class="tdCenter">'
-																					+ isCustomEvent
-																					+ '</td>'
-																					+ '<td class="tdCenter notReady">'
-																					+ 'not implemented yet'
-																					+ '</td>'
-																					+ '</tr>';
-																				
-																				me.infoList_EventTableTag.append(contentText);
-																				me.summary.numberOfEvents++;
-																			} else if (item_program.type == 1) {
-																				var contentText = '<tr class="data">'
-																					+ '<td>'
-																					+ '<b>' + item_program.name + '</b></br>'
-																					+ Util.getNotEmpty(item_program.description)
-																					+ '</td>'
-																					+ '<td class="tdCenter">'
-																					+ organizationUnitByLevel
-																					+ '</td>'
-																					+ '<td class="tdCenter">'
-																					+ deCount
-																					+ '</td>' // item_program.dataElements.length
-																					+ '<td class="tdCenter">'
-																					+ 'not implemented yet'
-																					+ '</td>'
-																					+ '<td class="tdCenter notReady">'
-																					+ 'not implemented yet'
-																					+ '</td>'
-																					+ '</tr>';
-																				
-																				me.infoList_TrackerTableTag.append(contentText);
-																				me.summary.numberOfTrackers++;
-																			}
-
-																		}
-																	});
-
-														},
-														function() {
-															alert('Failed to load program list.');
-														},
-														function() {
-															requestCount++;
-															QuickLoading.dialogShowAdd(loadingTagName);
-														},
-														function() {
-															QuickLoading.dialogShowRemove(loadingTagName);
-															requestCount--;
-															me.checkRequestCount(requestCount);
-
-														});
-
-										// Remove one for middle stopping case.
-										QuickLoading.dialogShowRemove(loadingTagName);
-//										requestCount--;
-//										me.checkRequestCount(requestCount);
-
-									},
-									function() {
-										alert('Failed to retrieve org units.');
-									},
-									function() {
-										requestCount++;
-										QuickLoading.dialogShowAdd(loadingTagName);
-									},
-									function() {
-										QuickLoading.dialogShowRemove(loadingTagName);
-										requestCount--;
-										me.checkRequestCount(requestCount);
-									});
-
-					// me.checkRequestCount( requestCount );
-					
-					
-
-				});
-	}
-
-	me.checkRequestCount = function(requestCount) {
-		if (requestCount == 0) {
-			me.infoList_SummaryTableTag.find("#dataSets_InfoList_Summary").text(me.summary.numberOfDatasets);
-			me.infoList_SummaryTableTag.find("#trackers_InfoList_Summary").text(me.summary.numberOfTrackers);
-			me.infoList_SummaryTableTag.find("#events_InfoList_Summary").text(me.summary.numberOfEvents);
-			me.infoList_SummaryTableTag.find("#orgUnitGroups_InfoList_Summary").text(me.summary.orgUnitGroups.length);
-			me.infoList_SummaryTableTag.find("#users_InfoList_Summary").text(me.summary.users);
-			
-			me.countDownTag.countdown('pause');
-			$('#defaultCountdownSpan').text('Time it Took: ');
-		}
-	}
-
-	me.SetDataSetLinkAction = function(tableTag) {
-		var trCurrent = tableTag.find('tr:last');
-
-		trCurrent.find('a.dataSetLink').click(function() {
-			var anchorClicked = $(this);
-
-			var dataSetId = anchorClicked.attr('dsid');
-
-			if (Util.trim(dataSetId) != "") {
-				me.selectDataSet(dataSetId);
-				me.getDataElementsBtnTag.click();
-
-				// Set the change tab to dataSet one (first one)
-				$("#tabs").tabs();
-				$("#tabs").tabs("option", "active", 0);
-			}
-
-			return false;
-		});
-
-	}
-
-	// -- 'Search by Country' related
-	// ---------------------------------------
 
 	// ---------------------------------------
 	// -- 'Search by Group' related
@@ -2284,7 +1861,7 @@ function DataManager() {
 	// -- Initial Run
 
 	me.initialRun = function() {
-
+		
 		// Parameter Get and Set Tab.
 		me.getParameters();
 		me.setTabByParameter();
@@ -2293,16 +1870,19 @@ function DataManager() {
 			if (me.paramTab == 'DataSet')
 				me.setParameterAction(me.paramTab);
 		});
-
-		me.setup_SearchByCountry(function() {
+		
+		setup_SearchByCountry(me, function() {
 			if (me.paramTab == 'Country')
-				me.setParameterAction(me.paramTab);
-		});
+			me.setParameterAction(me.paramTab);
+		})
 
-		me.setup_SearchByGroup($('#tabs-3'), function() {
+		me.setup_SearchByGroup($('#tabs-7'), function() {
 			if (me.paramTab == 'Group')
 				me.setParameterAction(me.paramTab);
 		});
+
+		me.setupTopSection();		
+		me.settingDataPopupForm = new SettingDataPopupForm();
 
 	}
 
@@ -2319,10 +1899,5 @@ function DataManager() {
 
 // -- Data Element Manager Class
 // -------------------------------------------
-
-
-
-// =========================================================
-// Static Classes
 
 

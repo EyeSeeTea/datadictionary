@@ -14,6 +14,25 @@ Util.populateSelect = function( selectObj, selectName, json_Data )
 	});
 }
 
+Util.populateSelectDefault = function( selectObj, selectNoneName, json_Data )
+{
+	selectObj.empty();
+
+	selectObj.append( '<option value="">' + selectNoneName + '</option>' );
+
+	if ( json_Data !== undefined )
+	{
+		$.each( json_Data, function( i, item ) 
+		{
+			var option = $( '<option></option>' );
+
+			option.attr( "value", item.id ).text( item.name );
+				
+			selectObj.append( option );
+		});
+	}
+}
+
 Util.selectValueIfExists = function( selectTag, value )
 {
 	selectTag.find( 'option' ).each( function()
