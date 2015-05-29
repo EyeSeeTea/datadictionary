@@ -12,7 +12,7 @@ var _catComboData = {};
 
 $(document).ready(function() {
 
-	$("#tabs").tabs();
+	$("#tabs").tabs({disabled: [3,4,5]});
 
 	_dataManager = new DataManager();
 
