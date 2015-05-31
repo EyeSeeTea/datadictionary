@@ -111,6 +111,16 @@ img {
 	font-family: LiberationSans, arial, sans-serif;
 }
 
+#headerTitle {
+	position: absolute;
+	margin-left: 43%;
+	top: 10px;
+	font-weight: bold;
+	color: #fff;
+	font-size: 18px;
+	font-family: "Helvetica Neue", HelveticaNeue, Verdana, Arial, Helvetica, sans-serif;
+}
+
 #headerRightSideControls {
 	height: 20px;
 	position: fixed;
