@@ -1720,8 +1720,13 @@ function DataManager() {
 		setup_SearchByCountry(me, function() {
 			if (me.paramTab == 'Country')
 			me.setParameterAction(me.paramTab);
-		})
+		});
 
+		setup_Analytics(me, function() {
+			if (me.paramTab == 'Analytics')
+			me.setParameterAction(me.paramTab);
+		});
+		
 		setup_SearchByGroup(me, "DE", $('#tabs-7'), function() {
 			if (me.paramTab == 'Group')
 				me.setParameterAction(me.paramTab);
