@@ -34,7 +34,7 @@
 	<script src="js/index.js"></script>
 	<script src="js/orgUnit.js"></script>
 	<script src="js/orgUnitGraph.js"></script>
-	<script src="js/dataElementGroup.js"></script>
+	<script src="js/dataElementIndicatorGroup.js"></script>
 	<script src="js/indexPopups.js"></script>
 	<script src="js/settingDataManager.js"></script>
  
@@ -325,45 +325,11 @@
 		<div id="tabs-7" style="display:none;">
 			<div class="content">
 				<table>
-					<tr>
-						<td style="font-weight:bold;">Group Type:
-							<select id='groupType'>
-								<option value=''>Select Group Type</option>
-								<option value='DE'>DataElement Group</option>
-								<option value='IND'>Indicator Group</option>
-							</select>
-						</td>
-						<td>
-							<div id='divGroupList' style='display:none'>
-								<select id="groupList"></select>
-							</div>
-						</td>
-						<td>
-							<div id='divGroupLoading' style='display:none'>
-								<img src='images/ui-anim_basic.gif'/> retrieving..
-							</div>
-						</td>
-						<td>
-							<div id='divRetrieveData_byGroup' style="display:none;">
-								<button type="button" id="retrieveData_byGroup">Retrieve</button>
-							</div>
-						</td>
-
+					<tr style="font-weight: bold">
+						<td>Data Element Groups: <select id="groupList"></select></td>
 					</tr>
-					
 				</table>
 
-
-				<div id="loadingMsgDiv_byGroup" style="display:none;">			
-					<br><br><br>
-					
-					<img src="images/ajax-loader-circle.gif">
-					
-					<br><br><br>
-						
-					<p>Please wait while the data is being loaded</p>
-					
-				</div>
 				<div id="dataListDE_byGroup" class="areaStyle" style="display:none;width:98%;margin-top:20px;">
 
 					<div class="section" style="padding: 10px 20px;" >
@@ -371,19 +337,27 @@
 						</table>
 					</div>
 				</div>
-				<div id="dataListIND_byGroup" class="areaStyle" style="display:none;width:98%;margin-top:20px;">
-					<div class="section" style="padding: 10px 20px;" >
-						<table id="tbDataListIND_byGroup" class="display listTable" cellspacing="0" width="100%">
-						</table>
-					</div>
-				</div>
-
 			</div>
 		</div>
 		<!-- End Dataelements Groups Tab -->
 
 		<!-- Indicator Tab -->
 		<div id="tabs-8" style="display:none;">
+			<div class="content">
+				<table>
+					<tr style="font-weight: bold">
+						<td>Indicator Groups: <select id="indicatorList"></select></td>
+					</tr>
+					
+				</table>
+				
+				<div id="dataListIND_byGroup" class="areaStyle" style="display:none;width:98%;margin-top:20px;">
+					<div class="section" style="padding: 10px 20px;" >
+						<table id="tbDataListIND_byGroup" class="display listTable" cellspacing="0" width="100%">
+						</table>
+					</div>
+				</div>
+			</div>	
 		</div>
 		<!-- End Indicator Tab -->		
 		

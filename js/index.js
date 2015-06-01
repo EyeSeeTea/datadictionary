@@ -60,12 +60,13 @@ function DataManager() {
 
 	// Group related tags
 	me.groupTypeTag = $('#groupType');
-	me.divGroupListTag = $('#divGroupList');
+	//me.divGroupListTag = $('#divGroupList');
 	me.divGroupLoadingTag = $('#divGroupLoading');
-	me.divRetrieveData_byGroupTag = $('#divRetrieveData_byGroup');
+//	me.divRetrieveData_byGroupTag = $('#divRetrieveData_byGroup');
 
 	me.groupListTag = $('#groupList');
-	me.retrieveData_byGroupTag = $('#retrieveData_byGroup');
+	me.indicatorListTag = $('#indicatorList');
+//	me.retrieveData_byGroupTag = $('#retrieveData_byGroup');
 
 	me.paramTab = '';
 	me.paramSearchValue = '';
@@ -1721,7 +1722,12 @@ function DataManager() {
 			me.setParameterAction(me.paramTab);
 		})
 
-		setup_SearchByGroup(me, $('#tabs-7'), function() {
+		setup_SearchByGroup(me, "DE", $('#tabs-7'), function() {
+			if (me.paramTab == 'Group')
+				me.setParameterAction(me.paramTab);
+		});
+		
+		setup_SearchByGroup(me, "IND", $('#tabs-8'), function() {
 			if (me.paramTab == 'Group')
 				me.setParameterAction(me.paramTab);
 		});
