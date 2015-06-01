@@ -3,7 +3,6 @@
 
 var orgUnitStructure = {};
 
-//me.populateCountryList = function(listTag, loadingTagName, afterFunc) {
 function populateCountryList(me, loadingTagName, afterFunc) {
 	var listTag = me.countryListTag;
 	listTag.empty();
@@ -25,7 +24,6 @@ function populateCountryList(me, loadingTagName, afterFunc) {
 
 }
 
-//me.setup_SearchByCountry = function(afterFunc) {
 function setup_SearchByCountry(me, afterFunc) {
 	
 	me.orgUnitTabMode.buttonset();
