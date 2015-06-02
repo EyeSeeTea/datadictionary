@@ -5,8 +5,6 @@ function setup_Analytics(me, afterFunc) {
 	
 	RESTUtil.getAsynchData(me.queryURL_analyticsSQLView, function(json_Data) {
 		$.each(json_Data.rows, function(i_dashboard, item_dashboard) {
-			console.log(item_dashboard);
-			
 			var requestUrl_analytics = me.queryURL_analytics
 			+ item_dashboard[1]
 			+ '.json?fields=itemCount,user[name],userGroupAccesses';

@@ -30,8 +30,6 @@ function DataManager() {
 	me.queryURL_DataSetListGet = apiPath + "dataSets.json?paging=false";
 	me.queryURL_DataSetDetailGet = apiPath + "dataSets/";
 
-	me.queryURL_getCountries = apiPath + "organisationUnits.json?level=3";
-	
 	me.queryURL_analyticsSQLView = apiPath + "sqlViews/a4pPlKYd2ya/data";
 	me.queryURL_analytics = apiPath + "dashboards/";
 
@@ -1720,15 +1718,12 @@ function DataManager() {
 				me.setParameterAction(me.paramTab);
 		});
 		
-		setup_SearchByCountry(me, function() {
-			if (me.paramTab == 'Country')
-			me.setParameterAction(me.paramTab);
-		});
-
-		setup_Analytics(me, function() {
-			if (me.paramTab == 'Analytics')
-			me.setParameterAction(me.paramTab);
-		});
+		setup_SearchByCountry(me);
+		
+//		setup_Analytics(me, function() {
+//			if (me.paramTab == 'Analytics')
+//			me.setParameterAction(me.paramTab);
+//		});
 		
 		setup_SearchByGroup(me, "DE", $('#tabs-7'), function() {
 			if (me.paramTab == 'Group')
@@ -1741,7 +1736,7 @@ function DataManager() {
 		});
 
 		me.setupTopSection();		
-		me.settingDataPopupForm = new SettingDataPopupForm();
+		me.settingDataPopupForm = new SettingDataPopupForm(me);
 
 	}
 

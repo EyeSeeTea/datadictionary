@@ -48,7 +48,7 @@
 	<span id="headerText" onclick="window.location.href='../../dhis-web-dashboard-integration/index.action'" style="cursor:pointer" title="View home page">PSI MIS</span>
 	<span id="headerTitle">Data Dictionary</span>
 	<div id="headerRightSideControls">		
-			<button id="settingPopupFormOpen">Setting</button>
+			<button id="settingPopupFormOpen">Settings</button>
 			| 
 			<a href="https://docs.google.com/document/d/1kas42KhcTIIL0cE9_PVwcEJw97wunVaAafwKuM0JaBc" target="_blank" style="color: White;">v 1.22</a>
 			| <button type="button" id="closeButton" onclick="window.location.href='../../dhis-web-dashboard-integration/index.action'"><span nameId='closeButton'>Close</span></button>
@@ -64,7 +64,7 @@
 		<table>
 			<tr id="orgUnitRow">
 				<td>
-					<span style="color:#555555;"><b>Country Level</b></span>
+					<span style="color:#555555;"><b>Organization Unit Level: </b></span>
 				</td>
 				<td>
 					<select id="orgUnitList"></select>
@@ -101,7 +101,7 @@
 				<table class="tabFilters">
 					<tr>
 						<td style="font-weight:bold;">
-							Countries: <select id="countryList"></select>
+							<span id="orgUnitLabel"></span>: <select id="countryList"></select> <img style="max-width: 16px;cursor: pointer; cursor: hand;" title="Click on Settings to change the organization unit level" src="images/help.png"/>
 						</td>
 						<td>
 							<div id='countriesLoading' style='display:none'>
@@ -122,7 +122,7 @@
 						</td>
 						<td>
 							<div id="orgUnitTabMode">
-								<input type="radio" id="tableMode" name="radio" value="tableContent"><label for="tableMode">Table Mode</label>
+								<input type="radio" id="tableMode" name="radio" value="tableContent" checked><label for="tableMode">Table Mode</label>
 								<input type="radio" id="graphMode" name="radio" value="graphContent"><label for="graphMode">Graph Mode</label>
 							</div>	
 						</td>	
@@ -131,7 +131,7 @@
 
 				<div class="tableContent subContent">
 					
-					<div style="font-weight:bold;">Sumary</div>
+					<div style="font-weight:bold;">Summary</div>
 					<table id="infoList_Summary" class="listTable">
 						<tr class="header">
 							<th width="150px">Name</th>

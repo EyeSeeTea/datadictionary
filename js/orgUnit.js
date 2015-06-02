@@ -7,11 +7,13 @@ function populateCountryList(me, loadingTagName, afterFunc) {
 	var listTag = me.countryListTag;
 	listTag.empty();
 
-	RESTUtil.getAsynchData(me.queryURL_getCountries, function(json_Data) {
+	var queryURL_getCountries = apiPath + "organisationUnits.json?level=" + me.orgUnitList.val();
+	
+	RESTUtil.getAsynchData(queryURL_getCountries, function(json_Data) {
 		var json_DataOrdered = Util.sortByKey(json_Data.organisationUnits,
 				"name");
 
-		Util.populateSelect(listTag, "Country", json_DataOrdered);
+		Util.populateSelect(listTag, me.orgUnitList.find("option:selected").text(), json_DataOrdered);
 
 		afterFunc();
 	}, function() {
@@ -24,7 +26,7 @@ function populateCountryList(me, loadingTagName, afterFunc) {
 
 }
 
-function setup_SearchByCountry(me, afterFunc) {
+function setup_SearchByCountry(me) {
 	
 	me.orgUnitTabMode.buttonset();
 	
@@ -46,17 +48,13 @@ function setup_SearchByCountry(me, afterFunc) {
 	me.infoList_OrgUnitGroup_DataTable = $("#infoList_OrgUnitGroup").DataTable({"aLengthMenu" : [ [ -1, 25, 50, 100 ], [ "All", 25, 50, 100 ] ]});
 	me.infoList_User_DataTable = $("#infoList_User").DataTable({"aLengthMenu" : [ [ -1, 25, 50, 100 ], [ "All", 25, 50, 100 ] ]});
 
-	// Populate Country List
-	populateCountryList(me, 'countriesLoading', afterFunc);
-
 	// Set up the events
 	me.countryListTag.change(function() {
 		($(this).val() != "") ? Util.disableTag(me.retrieveData_CountryTag,
 				false) : Util.disableTag(me.retrieveData_CountryTag, true);
 	});
 
-	me.retrieveData_CountryTag
-			.click(function() {
+	me.retrieveData_CountryTag.click(function() {
 				var requestCount = 0;
 
 				var loadingTagName = 'dataLoading';

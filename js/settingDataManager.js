@@ -7,26 +7,28 @@ var _sectionName_General = "General";
 // Class - SettingPopupForm
 //		- Used for popup Setting Form
 
-function SettingDataPopupForm(settingDialogDiv)
+function SettingDataPopupForm(me)
 {
-	var me = this;
+//	var that = this;
 
-	me.width = 700;
-	me.height = 200;
-
-
-	me.orgUnitList = $( '#orgUnitList' );
-	me.orgUnitRow = $( '#orgUnitRow' );
+	var width = 700;
+	var height = 200;
+	
+	var orgUnitLabel = $('#orgUnitLabel');
+	
+	me.orgUnitList = $('#orgUnitList');
+	
+	var orgUnitRow = $('#orgUnitRow');
 	
 	//Not being used at the moment
 	//me.dataLoadingTemplateMain = '<div class="dataLoading main" style="display:none;"><img src="img/ui-anim_basic.gif"/></div>';
 	
 
-	me.dialogFormTag = $( '#settingDialogForm' );
+	var dialogFormTag = $( '#settingDialogForm' );
 	
 
 
-	me.retrieveAndSetValueSelection = function( type, value, selectTag, loadingTag)
+	function retrieveAndSetValueSelection(type, value, selectTag, loadingTag)
 	{
 
 		if ( value === undefined ) value = "";
@@ -51,7 +53,12 @@ function SettingDataPopupForm(settingDialogDiv)
 
 				Util.populateSelectDefault( selectTag, 'Not Selected', orgUnitLvlNew );
 
+				selectTag.change(function(){refreshUI()});
+
 				selectTag.val( value );
+				
+				refreshUI();
+				
 			}
 		}
 		, function() {}
@@ -63,16 +70,25 @@ function SettingDataPopupForm(settingDialogDiv)
 	}
 
 
+	function refreshUI(){
+		orgUnitLabel.text(me.orgUnitList.find("option:selected").text());
+		
+		// Populate Country List
+		populateCountryList(me, 'countriesLoading', function() {
+			if (me.paramTab == 'Country')
+				me.setParameterAction(me.paramTab);
+			});
+	}
 
 
-	me.retrieveAndPopulate = function( returnFunc )
+	function retrieveAndPopulate( returnFunc )
 	{
-		me.retrieveAndSetValueSelection("", "", me.orgUnitList, me.orgUnitRow.find('div.dataLoading'));
+		retrieveAndSetValueSelection("", 3, me.orgUnitList, orgUnitRow.find('div.dataLoading'));
 		
 		if ( returnFunc !== undefined ) returnFunc();
 	}
 
-	me.resetDisplay = function()
+	function resetDisplay()
 	{
 		
 	}
@@ -81,14 +97,14 @@ function SettingDataPopupForm(settingDialogDiv)
 	// -----------------------------------------
 
 
-	me.FormPopupSetup = function()
+	function FormPopupSetup()
 	{
 		// -- Set up the form -------------------
-		me.dialogFormTag.dialog( {
+		dialogFormTag.dialog( {
 		autoOpen: false
 		// ,dialogClass: "noTitleStuff"
-		,width: me.width
-		,height: me.height				  
+		,width: width
+		,height: height				  
 		,modal: true
 		,title: "Settings"
 		,close: function( event, ui ) 
@@ -108,34 +124,30 @@ function SettingDataPopupForm(settingDialogDiv)
 	}
 
 
-	me.openForm = function( status )
+	this.openForm = function (status)
 	{
-		me.dialogFormTag.show();
+		dialogFormTag.show();
+		
+		dialogFormTag.dialog( "open" );
 
-		me.resetDisplay();
-
-
-		// Retrieve and Populate Data to HTML
-		me.retrieveAndPopulate( function()
-		{
-			me.dialogFormTag.dialog( "open" );
-
-			me.orgUnitList.focus();
-		});
+		orgUnitList.focus();
 	}
 
 
 	// Initial Setup Call
-	me.initialSetup = function()
+	function initialSetup()
 	{				
 		// Initially block the div.
 		//me.formBlock( true );
 
 
-		me.FormPopupSetup();
+		FormPopupSetup();
 
 
-		me.resetDisplay();
+		resetDisplay();
+		
+		// Retrieve and Populate Data to HTML
+		retrieveAndPopulate();
 
 		// advanced Setup allow
 //		me.setUp_SettingDataEdit();
@@ -150,6 +162,6 @@ function SettingDataPopupForm(settingDialogDiv)
 	// Run methods
 
 	// Initial Run Call
-	me.initialSetup();
+	initialSetup();
 
 }
