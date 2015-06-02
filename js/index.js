@@ -31,6 +31,9 @@ function DataManager() {
 	me.queryURL_DataSetDetailGet = apiPath + "dataSets/";
 
 	me.queryURL_getCountries = apiPath + "organisationUnits.json?level=3";
+	
+	me.queryURL_analyticsSQLView = apiPath + "sqlViews/a4pPlKYd2ya/data";
+	me.queryURL_analytics = apiPath + "dashboards/";
 
 	me.dataElementPopup = new DataElementPopup();
 	me.indicatorPopup = new IndicatorPopup();
