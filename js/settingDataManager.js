@@ -20,6 +20,8 @@ function SettingDataPopupForm(me)
 	
 	var orgUnitRow = $('#orgUnitRow');
 	
+	var sqlViewSettings = $('#sqlViewSettings');
+	
 	//Not being used at the moment
 	//me.dataLoadingTemplateMain = '<div class="dataLoading main" style="display:none;"><img src="img/ui-anim_basic.gif"/></div>';
 	
@@ -54,10 +56,22 @@ function SettingDataPopupForm(me)
 				Util.populateSelectDefault( selectTag, 'Not Selected', orgUnitLvlNew );
 
 				selectTag.change(function(){refreshUI()});
-
 				selectTag.val( value );
-				
 				refreshUI();
+				
+				var sqlViewSettingsHasChanged;
+				sqlViewSettings.keyup(function () { 
+					sqlViewSettingsHasChanged = true; });
+				sqlViewSettings.blur(function(){
+					if (typeof me.infoList_DataSet_Analytics != "undefined" && sqlViewSettingsHasChanged){
+						me.infoList_DataSet_Analytics.clear().draw();
+						setup_Analytics(me, function() {
+							if (me.paramTab == 'Analytics')
+								me.setParameterAction(me.paramTab);
+						});
+					}
+					
+				});
 				
 			}
 		}

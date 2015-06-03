@@ -30,8 +30,9 @@ function DataManager() {
 	me.queryURL_DataSetListGet = apiPath + "dataSets.json?paging=false";
 	me.queryURL_DataSetDetailGet = apiPath + "dataSets/";
 
-	me.queryURL_analyticsSQLView = apiPath + "sqlViews/a4pPlKYd2ya/data";
+	me.queryURL_analyticsSQLView = apiPath + "sqlViews/";
 	me.queryURL_analytics = apiPath + "dashboards/";
+	me.queryURL_analytics_userGroups = apiPath + "userGroups/";
 
 	me.dataElementPopup = new DataElementPopup();
 	me.indicatorPopup = new IndicatorPopup();
@@ -48,6 +49,9 @@ function DataManager() {
 
 	//Mode
 	me.orgUnitTabMode = $('#orgUnitTabMode')
+	
+	//Graph settings
+	me.orgUnitGraphSelector = $('#graphSelector');
 	
 	//Settings
 	me.settingDialogFormTag = $( '#settingDialogForm' );
@@ -1720,10 +1724,16 @@ function DataManager() {
 		
 		setup_SearchByCountry(me);
 		
-//		setup_Analytics(me, function() {
-//			if (me.paramTab == 'Analytics')
-//			me.setParameterAction(me.paramTab);
-//		});
+		$('a[href="#tabs-3"]').click(function(){
+			if (!$('#infoList_Analytics').is(":visible")){
+				$('#infoList_Analytics').show();
+				
+				setup_Analytics(me, function() {
+					if (me.paramTab == 'Analytics')
+						me.setParameterAction(me.paramTab);
+				});	
+			}
+		});
 		
 		setup_SearchByGroup(me, "DE", $('#tabs-7'), function() {
 			if (me.paramTab == 'Group')

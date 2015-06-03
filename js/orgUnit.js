@@ -42,6 +42,11 @@ function setup_SearchByCountry(me) {
 		}
 	});
 	
+	me.orgUnitGraphSelector.click(function(e){
+		maxNumber = orgUnitStructure[$(this).val()];
+		update();
+	});
+	
 	me.infoList_DataSet_DataTable = $("#infoList_DataSet").DataTable({"aLengthMenu" : [ [ -1, 25, 50, 100 ], [ "All", 25, 50, 100 ] ]});
 	me.infoList_Event_DataTable = $("#infoList_Event").DataTable({"aLengthMenu" : [ [ -1, 25, 50, 100 ], [ "All", 25, 50, 100 ] ]});
 	me.infoList_Tracker_DataTable = $("#infoList_Tracker").DataTable({"aLengthMenu" : [ [ -1, 25, 50, 100 ], [ "All", 25, 50, 100 ] ]});
@@ -81,7 +86,8 @@ function setup_SearchByCountry(me) {
 
 				var requestUrl_OrgUnits = apiPath + 'organisationUnits/' + me.countryListTag.val() + '.json?includeDescendants=true&fields=id,organisationUnitGroups[id],users[id,name]';
 
-				orgUnitStructure = {"id": "root", "name":me.countryListTag.find(":selected").text(), "childNodes" : []};
+				orgUnitStructure = {"id": "root", "name":me.countryListTag.find(":selected").text(), "_children" : [], "type" : "Organization Unit"};
+				orgUnitDataElements = [];
 				
 				RESTUtil.getAsynchData(
 								requestUrl_OrgUnits,
@@ -101,7 +107,7 @@ function setup_SearchByCountry(me) {
 														function(i_ds,item_ds) {
 															var requestUrl_dataSetDetail = apiPath + 'dataSets/'
 																	+ item_ds.id
-																	+ '.json?fields=id,name,description,dataSetType,dataElements[id,name],organisationUnits[id,level]';
+																	+ '.json?fields=id,shortName,name,description,dataSetType,dataElements[id,name],organisationUnits[id,level]';
 
 															RESTUtil.getAsynchData(requestUrl_dataSetDetail,
 																	function(json_dataSet) {
@@ -142,63 +148,95 @@ function setup_SearchByCountry(me) {
 																					});
 
 																					if (foundCount > 0) {
+																						
+																						//----------------------------
+																						// Preparing data for graph mode
+																						
 																						//FIXME: We can use a js lib (underscore) to deal with this in a better way
 																						var dataElementsIds = [];
 																						$.each(json_dataSet.dataElements, function(i_dataElement, item_dataElement) {
 																							dataElementsIds.push(item_dataElement.id);
+																							if (orgUnitDataElements.indexOf(item_dataElement.id) == -1){
+																								orgUnitDataElements.push(item_dataElement.id);
+																							}
+																							
 																						});
 																						
 																						//Getting data values
 																						var datasetsAnalyticsUrl = apiPath + 'analytics.json?dimension=dx:' + dataElementsIds.join(";") + '&filter=ou:' + me.countryListTag.val() + '&filter=pe:LAST_12_MONTHS&aggregationType=COUNT&displayProperty=SHORTNAME';
 																						var datasetDataValues = 0;
 																						RESTUtil.getAsynchData(datasetsAnalyticsUrl, function(datasetsAnalyticsList) {
-																								$.each(datasetsAnalyticsList.rows, function(i_row, item_row) {
-																									datasetDataValues += parseInt(item_row[1]);
-																									me.summary.dataValues += parseInt(item_row[1]);
-																								});
+																							$.each(datasetsAnalyticsList.rows, function(i_row, item_row) {
+																								var currentDataElementDataValues = parseInt(item_row[1]);
+																								
+																								//FIXME: We need to check why it is not a number
+																								if (!isNaN(currentDataElementDataValues)){
+																									$.each(json_dataSet.dataElements, function(i_de, item_de) {
+																										if (item_de.id == item_row[0]){
+																											item_de["numberDataValues"] = currentDataElementDataValues;
+																										}
+																									});
+																								
+																								
+																									datasetDataValues += currentDataElementDataValues
+																									me.summary.dataValues += currentDataElementDataValues;
+																								}
+																							});
+																							orgUnitStructure._children.push({"id": json_dataSet.id, "shortName":json_dataSet.shortName, "name":json_dataSet.name, "_children":json_dataSet.dataElements, "type": "Dataset", "numberDataElements": json_dataSet.dataElements.length, "numberDataValues":datasetDataValues});
 																						});
 																						
-																						orgUnitStructure.childNodes.push({"id": json_dataSet.id, "name":json_dataSet.name, "childNodes":json_dataSet.dataElements, "type": "dataset", "numberDataValues":datasetDataValues});
+																						// Preparing data for graph mode
+																						//----------------------------
 
 																						//Getting Completed information
-																						var currentDatasetTime = 0;
-																						var currentDatasetPercentage = 0;
+																						var currentDatasetTime = -1;
+																						var currentDatasetPercentage = -1;
+																						var tooltip = "";
 																						var completedAnalyticsUrl = apiPath + 'analytics.json?dimension=dx:' + json_dataSet.id + '&filter=ou:' + me.countryListTag.val() + '&dimension=pe:LAST_12_MONTHS&displayProperty=SHORTNAME';
 																						RESTUtil.getAsynchData(completedAnalyticsUrl, function(completedAnalyticsList) {
-																							console.log(completedAnalyticsList);
 																							$.each(completedAnalyticsList.rows, function(i_row, item_row) {
+																								tooltip += item_row[1].substring(4,6) + "-" + item_row[1].substring(0,4) + " => " + item_row[2] + "%\n";
 																								if (item_row[1] > currentDatasetTime){
 																									currentDatasetTime = item_row[1];
 																									currentDatasetPercentage = item_row[2];
 																								}
 																							});
+																							
+																						},
+																						function() {
+																						},
+																						function() {
+																						},
+																						function() {
+																							me.summary.numberOfDatasets++;
+																							
+																							var organizationUnitByLevel = "";
+																							for (var level in foundOrgUnits){
+																								organizationUnitByLevel += "L" + level + ": " + foundOrgUnits[level] + "</br>";
+																							}
+																							
+																							var isCustomDataset = (json_dataSet.dataSetType == 'custom')?'Y':'N';
+																							
+																							var datasetCompleted = "No information during the last 12 months";
+																							if (currentDatasetPercentage != -1 && currentDatasetTime != -1){
+																								var currentDatasetTimeDateFormatted = currentDatasetTime.substring(4,6) + "-" + currentDatasetTime.substring(0,4);
+																								datasetCompleted = currentDatasetTimeDateFormatted + " => " + currentDatasetPercentage + "%";
+																							}
+																							
+																							me.infoList_DataSet_DataTable.row.add([
+																							  '<a href="" class="dataSetLink" dsid="'+ json_dataSet.id + '">' + '<b>' + json_dataSet.name + '</b></br>' + Util.getNotEmpty(json_dataSet.description) + '</a>',
+																							  organizationUnitByLevel,
+																							  json_dataSet.dataElements.length,
+																							  isCustomDataset,
+																							  '<span title="' + tooltip + '">' + datasetCompleted + "</span>"
+																							]).draw();
+
+																							// Add event to this row.
+																							setDataSetLinkAction(me);
 																						});
 																						
 																						
-																						me.summary.numberOfDatasets++;
 																						
-																						var organizationUnitByLevel = "";
-																						for (var level in foundOrgUnits){
-																							organizationUnitByLevel += "L" + level + ": " + foundOrgUnits[level] + "</br>";
-																						}
-																						
-																						var isCustomDataset = (json_dataSet.dataSetType == 'custom')?'Y':'N';
-																						
-																						var datasetCompleted = "No information during the last 12 months";
-																						if (currentDatasetPercentage == '0' && currentDatasetTime == '0'){
-																							datasetCompleted = currentDatasetTime + " => " + currentDatasetPercentage + "%";
-																						}
-																						
-																						me.infoList_DataSet_DataTable.row.add([
-																						  '<a href="" class="dataSetLink" dsid="'+ json_dataSet.id + '">' + '<b>' + json_dataSet.name + '</b></br>' + Util.getNotEmpty(json_dataSet.description) + '</a>',
-																						  organizationUnitByLevel,
-																						  json_dataSet.dataElements.length,
-																						  isCustomDataset,
-																						  datasetCompleted
-																						]).draw();
-
-																						// Add event to this row.
-																						setDataSetLinkAction(me);
 
 																					}
 
@@ -320,6 +358,7 @@ function setup_SearchByCountry(me) {
 																			});
 
 																	if (found > 0) {
+																		
 //																			var program_type = "";
 																		var deCount = 0;
 
@@ -412,9 +451,16 @@ function checkRequestCount(me, requestCount) {
 		me.countDownTag.countdown('pause');
 		$('#defaultCountdownSpan').text('Time it Took: ');
 		
+		// Add values to root node
 		orgUnitStructure["numberDataValues"] = me.summary.dataValues;
+		orgUnitStructure["numberDataElements"] = orgUnitDataElements.length;
+		
+		console.log("orgUnitStructure");
 		console.log(orgUnitStructure);
+		
+		// Init graph
 		initGraph(orgUnitStructure);
+		$("#graphSettings").show();
 	}
 }
 
