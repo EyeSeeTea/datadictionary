@@ -1,4 +1,5 @@
 function getLabel(d) {
+//	console.log(d);
 	if (d.shortName){
 		return d.shortName;
 	}else if (d.name){
@@ -26,41 +27,73 @@ function getLabel(d) {
 //	return children;
 //}
 
-function getChildren(node){
-	var children = null;
-	if (node._children != undefined){
-		children = node._children;
+//function getChildren(node){
+//	var children = null;
+//	if (node._children != undefined){
+//		children = node._children;
+//	}
+//	else{
+//		children=getFiles(node.childNodes);
+//		if (children == null){
+//			node.isAFinalNode = true;
+//			showTip(node);
+//		}
+//	}
+//	return children;
+//}
+
+//Calculate tree dimensions
+function calculateTreeDimensions(numberOfNodes){
+	var realHeight = numberOfNodes * 20;
+	if (realHeight > originalHeight){
+		height = realHeight - margin.top - margin.bottom;
 	}
 	else{
-		children=getFiles(node.childNodes);
-		if (children == null){
-			node.isAFinalNode = true;
-			showTip(node);
-		}
+		height = originalHeight - margin.top - margin.bottom;
 	}
-	return children;
+	tree.size([height, width]);
+	$("svg").attr("height",height + margin.top + margin.bottom)
 }
 
 //Toggle children on click.
 function collapsibleTreeClick(d) {
   if (!d3.event.defaultPrevented) {
-    if (d.isAFinalNode == undefined || d.isAFinalNode == false){
 	  if (d.children) {
 	    d._children = d.children;
 	    d.children = null;
-      } else {
-	    //d.children = getChildren(d);
-    	if (d.childNodes == null){
-  			node.isAFinalNode = true;
-  			showTip(d);
-  		}
-    	else{
-	    	d.children = d.childNodes;
-		    d._children = null;
-    	}
+	    
+	  //Recalculate tree height and shift labels to the right
+	   if (typeof d.parent != 'undefined'){
+		   calculateTreeDimensions(d.parent.children.length);
+		   
+		   for (var i in d.parent.children){
+	    		d.parent.children[i]["moveLabelToLeft"] = false;
+		    }
+		    d.parent["hideLabel"] = false;
+	    }
+      } else if (d._children != null){
+    	d.children = d._children;
+	    d._children = null;
+	    
+	    //Recalculate tree height
+	    if (typeof d.parent == 'undefined' || d.children.length > d.parent.children.length){
+	    	calculateTreeDimensions(d.children.length);
+	    }
+	    
+	    //Collapse the other nodes and shift labels to the left
+	    if (typeof d.parent != 'undefined'){
+
+	    	for (var i in d.parent.children){
+		    	if (d.parent.children[i].id != d.id && d.parent.children[i].children != null){
+		    		d.parent.children[i]._children = d.parent.children[i].children;
+		    		d.parent.children[i].children = null;
+		    	}
+		    	d.parent.children[i]["moveLabelToLeft"] = true;
+		    }
+		    d.parent["hideLabel"] = true;
+	    }
 	  }
 	  update();
-	}
   }
 }
 
@@ -74,6 +107,9 @@ function getTipContent(d) {
 	var content = "";
 	if (d.numberDataValues != undefined){
 		content += "<p>Number of DataValues: <span style='color:red'>" + d.numberDataValues + "</span></p>";
+	}
+	if (d.numberDataElements != undefined){
+		content += "<p>Number of DataElements: <span style='color:red'>" + d.numberDataElements + "</span></p>";
 	}
 	if (d.description != undefined){
 		content += "<p>Description: <span style='color:red'>" + d.description + "</span></p>";
@@ -99,21 +135,25 @@ function calculateTextPosition(d){
 }
 
 function calculateRadius(d) {
-	//return Math.sqrt(d.numberDataValues) / 20 || 4.5;
-	return Math.sqrt(d.numberDataValues) / 2 || 0;
+
+	return (d[$('#graphSelector').val()] / maxNumber) * 50|| 0;
+//	return Math.sqrt(d.numberDataValues) / 2 || 0;
 }
 
 //Color leaf nodes orange, and packages white or blue.
 function color(d) {
-	var color;
-	if (d.isAFinalNode){
-		color = "#fd8d3c";
+	var nodeColor;
+	
+	if (d.type == "Dataset"){
+		nodeColor = "#f45e00";
 	}
-	else if ((d._children != undefined && d._children != null) || (d._children === undefined && d.children === undefined)){
-		color = "#3182bd";
+	else if (d.type == "Organization Unit"){
+		nodeColor = "#bfbfbf";
 	}
-	else if (d.children != undefined && d.children != null){
-		color = "#c6dbef";
+	else{
+		//It is a data element
+		nodeColor = color(d.parent);
 	}
-	return color;
+
+	return nodeColor;
 }

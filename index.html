@@ -34,6 +34,8 @@
 	<script src="js/index.js"></script>
 	<script src="js/orgUnit.js"></script>
 	<script src="js/orgUnitGraph.js"></script>
+	<script src="js/dataElementIndicatorGroup.js"></script>
+	<script src="js/analytics.js"></script>
 	<script src="js/indexPopups.js"></script>
 	<script src="js/settingDataManager.js"></script>
  
@@ -44,8 +46,9 @@
  <div id="header">
 	<img id="headerBanner" src="images/logo_banner.png" onclick="window.location.href='../../dhis-web-dashboard-integration/index.action'" style="cursor:pointer" title="View home page">
 	<span id="headerText" onclick="window.location.href='../../dhis-web-dashboard-integration/index.action'" style="cursor:pointer" title="View home page">PSI MIS</span>
+	<span id="headerTitle">Data Dictionary</span>
 	<div id="headerRightSideControls">		
-			<button id="settingPopupFormOpen">Setting</button>
+			<button id="settingPopupFormOpen">Settings</button>
 			| 
 			<a href="https://docs.google.com/document/d/1kas42KhcTIIL0cE9_PVwcEJw97wunVaAafwKuM0JaBc" target="_blank" style="color: White;">v 1.22</a>
 			| <button type="button" id="closeButton" onclick="window.location.href='../../dhis-web-dashboard-integration/index.action'"><span nameId='closeButton'>Close</span></button>
@@ -61,10 +64,21 @@
 		<table>
 			<tr id="orgUnitRow">
 				<td>
-					<span style="color:#555555;"><b>Country Level</b></span>
+					<span style="color:#555555;"><b>Organization Unit Level: </b></span>
 				</td>
 				<td>
 					<select id="orgUnitList"></select>
+				</td>
+				<td>
+					<div class='dataLoading' style='display:none;'><img src='images/ui-anim_basic.gif'/></div>
+				</td>	
+			</tr>
+			<tr id="sqlViewIdRow">
+				<td>
+					<span style="color:#555555;"><b>SQL View Id: </b></span>
+				</td>
+				<td>
+					<input id="sqlViewSettings" type="text" value="a4pPlKYd2ya"/> <img style="max-width: 16px;cursor: pointer; cursor: hand;" title="This SQL View is used to generate the analytics" src="images/help.png"/>
 				</td>
 				<td>
 					<div class='dataLoading' style='display:none;'><img src='images/ui-anim_basic.gif'/></div>
@@ -76,37 +90,18 @@
 </div>
 <!-- End Setting Dialog -->
 
-<div style="display: block;margin-top: 40px;">
-
-  <!-- Data Dictionary Header -->
-  <table width="100%">
-	<tr>
-		<td>
-			<table>
-			<tr>
-				<td>
-					<img src="images/psi.png" alt="PSI Logo" /> 
-				</td>
-				<td>
-					<h1>Data Dictionary</h1>
-				</td>
-			</tr>
-			</table>
-		</td>
-	</tr>
-  </table>
-  <!-- End Data Dictionary Header -->
+<div style="display: block;margin-top: 60px;">
 
 	<div id="tabs" style="margin:3px 7px;">
 		<ul>
-		<li><a href="#tabs-1" style="font-size:14px;">View By Org Unit</a></li>
-		<li><a href="#tabs-2" style="font-size:14px;">View By DataSets & Programs</a></li>
+		<li><a href="#tabs-1" style="font-size:14px;">Org Unit</a></li>
+		<li><a href="#tabs-2" style="font-size:14px;">DataSets & Programs</a></li>
 		<li><a href="#tabs-3" style="font-size:14px;">Analytics</a></li>
-		<li><a href="#tabs-4" style="font-size:14px;">View By Users</a></li>
-		<li><a href="#tabs-5" style="font-size:14px;">View By Org Groups</a></li>
-		<li><a href="#tabs-6" style="font-size:14px;">Database progress</a></li>
+		<li><a href="#tabs-4" style="font-size:14px;">Users</a></li>
+		<li><a href="#tabs-5" style="font-size:14px;">Org Groups</a></li>
+		<li><a href="#tabs-6" style="font-size:14px;">DB progress</a></li>
 		<li><a href="#tabs-7" style="font-size:14px;">Data Element Groups</a></li>
-		<li><a href="#tabs-8" style="font-size:14px;">Indicators Groups</a></li>
+		<li><a href="#tabs-8" style="font-size:14px;">Indicator Groups</a></li>
 		</ul>
 
 		<!-- Country Tab -->
@@ -117,7 +112,7 @@
 				<table class="tabFilters">
 					<tr>
 						<td style="font-weight:bold;">
-							Countries: <select id="countryList"></select>
+							<span id="orgUnitLabel"></span>: <select id="countryList"></select> <img style="max-width: 16px;cursor: pointer; cursor: hand;" title="Click on Settings to change the organization unit level" src="images/help.png"/>
 						</td>
 						<td>
 							<div id='countriesLoading' style='display:none'>
@@ -138,7 +133,7 @@
 						</td>
 						<td>
 							<div id="orgUnitTabMode">
-								<input type="radio" id="tableMode" name="radio" value="tableContent"><label for="tableMode">Table Mode</label>
+								<input type="radio" id="tableMode" name="radio" value="tableContent" checked><label for="tableMode">Table Mode</label>
 								<input type="radio" id="graphMode" name="radio" value="graphContent"><label for="graphMode">Graph Mode</label>
 							</div>	
 						</td>	
@@ -147,11 +142,21 @@
 
 				<div class="tableContent subContent">
 					
-					<div style="font-weight:bold;">Sumary</div>
+					<div style="font-weight:bold;">Summary</div>
 					<table id="infoList_Summary" class="listTable">
 						<tr class="header">
 							<th width="150px">Name</th>
-							<th width="150px"># of</th>
+							<th width="150px"># of<span style="float: right"><img style="max-width: 16px;cursor: pointer; cursor: hand;" title="DataSets: Number of data sets activated on the org units.
+
+Events: Number of single event without registration programs activated on the org. units.
+
+Tracker: Number of single/multiple events with registration programs activated on the org. units.
+
+Org. Unit Groups: Number of organisation unit groups used on at least one org. unit.
+
+Users: Number of users having access to at least one org. unit.
+
+Data Values: Indicates the total number of data values from all data sets, events, and tracker activated on the org. units." src="images/help.png"/></span></th>
 						</tr>
 						<tr class="data">
 							<td>Data Sets</td>
@@ -188,7 +193,7 @@
 								<th width="70px"># assigned OU</th>
 								<th width="70px"># of Data Elements</th>
 								<th width="70px">Custom Form</th>
-								<th width="100px">Completed</th>
+								<th width="100px">Completed <img style="max-width: 16px;cursor: pointer; cursor: hand;" title="Information for the last 12 month. Hover over the value to see statistics per month." src="images/help.png"/></th>
 							</tr>
 						</thead>
 						<tbody>
@@ -260,6 +265,13 @@
 					</table>
 				</div>
 				<div class="graphContent subContent" style="display:none;">
+					<div id="graphSettings" style="position: absolute;top:120px;border: 1px solid;padding:10px;display:none;">
+						<span>Radium depens on:</span><br />
+						<select id="graphSelector">
+						  <option value="numberDataValues">Data Values</option>
+						  <option value="numberDataElements">Data Elements</option>
+						</select>
+					</div>
 				
 				</div>		
 			</div>
@@ -320,6 +332,23 @@
 
 		<!-- Analytics Tab -->
 		<div id="tabs-3" style="display:none;">
+			<div class="content">
+				<table id="infoList_Analytics" class="listTable" style="display:none;">
+					<thead>
+						<tr class="header">
+							<th>Dashboard name</th>
+							<th># items</th>
+							<th>Creation / Last Update Date</th>
+							<th>Owner</th>
+							<th>Groups</th>
+						</tr>
+					</thead>
+					<tbody>
+						
+					</tbody>
+				</table>
+				
+			</div>	
 		</div>
 		<!-- End Analytics Tab -->
 
@@ -342,45 +371,11 @@
 		<div id="tabs-7" style="display:none;">
 			<div class="content">
 				<table>
-					<tr>
-						<td style="font-weight:bold;">Group Type:
-							<select id='groupType'>
-								<option value=''>Select Group Type</option>
-								<option value='DE'>DataElement Group</option>
-								<option value='IND'>Indicator Group</option>
-							</select>
-						</td>
-						<td>
-							<div id='divGroupList' style='display:none'>
-								<select id="groupList"></select>
-							</div>
-						</td>
-						<td>
-							<div id='divGroupLoading' style='display:none'>
-								<img src='images/ui-anim_basic.gif'/> retrieving..
-							</div>
-						</td>
-						<td>
-							<div id='divRetrieveData_byGroup' style="display:none;">
-								<button type="button" id="retrieveData_byGroup">Retrieve</button>
-							</div>
-						</td>
-
+					<tr style="font-weight: bold">
+						<td>Data Element Groups: <select id="groupList"></select></td>
 					</tr>
-					
 				</table>
 
-
-				<div id="loadingMsgDiv_byGroup" style="display:none;">			
-					<br><br><br>
-					
-					<img src="images/ajax-loader-circle.gif">
-					
-					<br><br><br>
-						
-					<p>Please wait while the data is being loaded</p>
-					
-				</div>
 				<div id="dataListDE_byGroup" class="areaStyle" style="display:none;width:98%;margin-top:20px;">
 
 					<div class="section" style="padding: 10px 20px;" >
@@ -388,21 +383,29 @@
 						</table>
 					</div>
 				</div>
+			</div>
+		</div>
+		<!-- End Dataelements Groups Tab -->
+
+		<!-- Indicator Tab -->
+		<div id="tabs-8" style="display:none;">
+			<div class="content">
+				<table>
+					<tr style="font-weight: bold">
+						<td>Indicator Groups: <select id="indicatorList"></select></td>
+					</tr>
+					
+				</table>
+				
 				<div id="dataListIND_byGroup" class="areaStyle" style="display:none;width:98%;margin-top:20px;">
 					<div class="section" style="padding: 10px 20px;" >
 						<table id="tbDataListIND_byGroup" class="display listTable" cellspacing="0" width="100%">
 						</table>
 					</div>
 				</div>
-
-			</div>
+			</div>	
 		</div>
-		<!-- End Dataelements Groups Tab -->
-
-		<!-- Indicators Tab -->
-		<div id="tabs-8" style="display:none;">
-		</div>
-		<!-- End Indicators Tab -->		
+		<!-- End Indicator Tab -->		
 		
 	</div>
 

@@ -1,8 +1,15 @@
+
 $(function(){
-var margin = {top: 20, right: 120, bottom: 20, left: 120},
-width = 860 - margin.right - margin.left,
-height = 650 - margin.top - margin.bottom,
-root,
+margin = {top: 20, right: 120, bottom: 20, left: 140};
+originalWidth = 850;
+originalHeight = 850;
+width = originalWidth - margin.right - margin.left;
+height = originalHeight - margin.top - margin.bottom;
+
+maxNumberDataValues = 0
+maxNumberDataElements = 0;
+
+var root,
 duration = 750,
 i = 0;
 
@@ -11,19 +18,23 @@ tip = d3.tip()
 .offset([-10, 0])
 .html(getTipContent);
 
-var tree = d3.layout.tree().size([height, width]);
+tree = d3.layout.tree().size([height, width]);
 
 var diagonal = d3.svg.diagonal().projection(function(d) { return [d.y, d.x]; });	
 
 var svg = d3.select(".graphContent").append("svg")
-.attr("width", width + margin.right + margin.left)
+//.attr("width", width + margin.right + margin.left)
+.attr("width", '100%')
 .attr("height", height + margin.top + margin.bottom)
+//.attr("height", '100%')
 .append("g")
 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 svg.call(tip);
 
 initGraph = function (json){
+	maxNumber = json.numberDataValues;
+	
 	root = json;
 	root.x0 = height /2;
 	root.y0 = 0;
@@ -55,13 +66,15 @@ update = function (){
 
   nodeEnter.append("circle")
   	  .attr("class", "node")
+  	  .attr("stroke", color)
       .attr("r", calculateRadius);
 
   nodeEnter.append("text")
-      .attr("x", function(d) { return d.children || d._children ? (-1 * calculateTextPosition(d)) : calculateTextPosition(d); })
+//      .attr("x", function(d) { return d.children || d._children ? (-1 * calculateTextPosition(d)) : calculateTextPosition(d); })
+  	  .attr("x", function(d) {return d.children || d.moveLabelToLeft ? (-1 * calculateTextPosition(d)) : calculateTextPosition(d); })
       .attr("y", "9")
       .attr("dy", ".35em")
-      .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+      .attr("text-anchor", function(d) {return d.children || d.moveLabelToLeft ? "end" : "start"; })
       .text(getLabel)
       .style("fill-opacity", 1e-6);
 
@@ -72,12 +85,13 @@ update = function (){
 
   nodeUpdate.select("circle")
       .attr("r", calculateRadius)
+      .attr("stroke", color)
       .style("fill", color);
 
   nodeUpdate.select("text")
-      .style("fill-opacity", 1)
-      .attr("x", function(d) { return d.children || d._children ? (-1 * calculateTextPosition(d)) : calculateTextPosition(d); })
-      .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+      .style("fill-opacity", function(d){ return d.hideLabel && d.children ? 1e-6 : 1;})
+      .attr("x", function(d) { return d.children || d.moveLabelToLeft ? (-1 * calculateTextPosition(d)) : calculateTextPosition(d); })
+      .attr("text-anchor", function(d) { return d.children || d.moveLabelToLeft ? "end" : "start"; })
       .style("fill", color);
 
   // Transition exiting nodes to the parent's new position.

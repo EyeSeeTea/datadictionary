@@ -12,7 +12,7 @@ var _catComboData = {};
 
 $(document).ready(function() {
 
-	$("#tabs").tabs();
+	$("#tabs").tabs({disabled: [3,4,5]});
 
 	_dataManager = new DataManager();
 
@@ -30,7 +30,9 @@ function DataManager() {
 	me.queryURL_DataSetListGet = apiPath + "dataSets.json?paging=false";
 	me.queryURL_DataSetDetailGet = apiPath + "dataSets/";
 
-	me.queryURL_getCountries = apiPath + "organisationUnits.json?level=3";
+	me.queryURL_analyticsSQLView = apiPath + "sqlViews/";
+	me.queryURL_analytics = apiPath + "dashboards/";
+	me.queryURL_analytics_userGroups = apiPath + "userGroups/";
 
 	me.dataElementPopup = new DataElementPopup();
 	me.indicatorPopup = new IndicatorPopup();
@@ -48,6 +50,9 @@ function DataManager() {
 	//Mode
 	me.orgUnitTabMode = $('#orgUnitTabMode')
 	
+	//Graph settings
+	me.orgUnitGraphSelector = $('#graphSelector');
+	
 	//Settings
 	me.settingDialogFormTag = $( '#settingDialogForm' );
 	me.settingPopupFormOpenTag = $( '#settingPopupFormOpen' );
@@ -60,12 +65,13 @@ function DataManager() {
 
 	// Group related tags
 	me.groupTypeTag = $('#groupType');
-	me.divGroupListTag = $('#divGroupList');
+	//me.divGroupListTag = $('#divGroupList');
 	me.divGroupLoadingTag = $('#divGroupLoading');
-	me.divRetrieveData_byGroupTag = $('#divRetrieveData_byGroup');
+//	me.divRetrieveData_byGroupTag = $('#divRetrieveData_byGroup');
 
 	me.groupListTag = $('#groupList');
-	me.retrieveData_byGroupTag = $('#retrieveData_byGroup');
+	me.indicatorListTag = $('#indicatorList');
+//	me.retrieveData_byGroupTag = $('#retrieveData_byGroup');
 
 	me.paramTab = '';
 	me.paramSearchValue = '';
@@ -1593,7 +1599,7 @@ function DataManager() {
 							return iStart + " to " + iEnd;
 						},
 						"tableTools" : {
-							"sSwfPath" : "js/query/swf/copy_csv_xls_pdf.swf",
+							"sSwfPath" : "js/jquery/swf/copy_csv_xls_pdf.swf",
 							"aButtons" : [ "copy", "csv", {
 								"sExtends" : "xls",
 								"sButtonText" : "Excel",
@@ -1636,162 +1642,7 @@ function DataManager() {
 	// ---------------------------------------
 
 
-	// ---------------------------------------
-	// -- 'Search by Group' related
-
-	// 'dataElement Groups' list
-	me.populateGroupList = function(groupType, listTag, loadingTag, execFunc) {
-		listTag.empty();
-
-		var groupTypeName = "";
-		var urlName = "";
-
-		if (groupType == "DE") {
-			groupTypeName = "DataElement";
-			urlName = "dataElementGroups";
-		} else if (groupType == "IND") {
-			groupTypeName = "Indicator";
-			urlName = "indicatorGroups";
-		}
-
-		RESTUtil
-				.getAsynchData(
-						apiPath + urlName
-								+ '.json?paging=false&fields=id,name',
-						function(json_Data) {
-							var json_DataList = (groupType == "IND") ? json_Data.indicatorGroups
-									: json_Data.dataElementGroups;
-
-							var json_DataOrdered = Util.sortByKey(
-									json_DataList, "name");
-
-							Util.populateSelect(listTag, groupTypeName
-									+ " Group", json_DataOrdered);
-
-							execFunc();
-						}, function() {
-							alert('Failed to load ' + groupTypeName
-									+ ' group list.');
-						}, function() {
-							loadingTag.show();
-						}, function() {
-							loadingTag.hide();
-						});
-
-	}
-
-	me.setup_SearchByGroup = function(tabTag, afterFunc) {
-		var speed = 400;
-
-		me.groupTypeTag.change(function() {
-			var selectTag = $(this);
-
-			// Hide everything and clean the data
-			me.divGroupListTag.hide(speed);
-			me.divGroupLoadingTag.hide(speed);
-			me.divRetrieveData_byGroupTag.hide(speed);
-			me.groupListTag.empty();
-
-			if (selectTag.val() != "") {
-				me.populateGroupList(selectTag.val(), me.groupListTag,
-						me.divGroupLoadingTag, function() {
-							me.divGroupListTag.show(speed);
-
-							// If parameter value was set, call this once
-							if (me.setGroupParameterSelection) {
-								me.setGroupParameterSelection = false;
-
-								// select the groupListTag
-								me.groupListTag.val(me.paramSearchValue);
-
-								if (me.groupListTag.val() != '') {
-									me.groupListTag.change();
-
-									me.retrieveData_byGroupTag.click();
-								}
-							}
-
-						});
-			}
-		});
-
-		me.groupListTag.change(function() {
-			var selectTag = $(this);
-
-			if (selectTag.val() == "") {
-				me.divRetrieveData_byGroupTag.hide(speed);
-			} else {
-				me.divRetrieveData_byGroupTag.show(speed);
-			}
-		});
-
-		me.retrieveData_byGroupTag.click(function() {
-			var groupType = me.groupTypeTag.val();
-
-			me.dataListDEDiv_byGroupTag.hide();
-			me.dataListINDDiv_byGroupTag.hide();
-
-			me.getDataList_byGroup(groupType, me.groupListTag.val(),
-					'loadingMsgDiv_byGroup', function(json_dataList) {
-						if (groupType == "DE") {
-							me.retrieveAndPopulateData(groupType,
-									json_dataList, 'loadingMsgDiv_byGroup',
-									me.tbDataListDE_byGroupTag,
-									me.dataListDEDiv_byGroupTag);
-						} else if (groupType == "IND") {
-							me.retrieveAndPopulateData(groupType,
-									json_dataList, 'loadingMsgDiv_byGroup',
-									me.tbDataListIND_byGroupTag,
-									me.dataListINDDiv_byGroupTag);
-						}
-
-					});
-		});
-
-		afterFunc();
-
-	}
-
-	me.getGroupTypeData = function(typeId, dataType, data) {
-		if (typeId == "DE") {
-			if (dataType == "queryUrl") {
-				return "dataElementGroups"
-			} else if (dataType == "data") {
-				return data.dataElements;
-			} else if (dataType == "name") {
-				return "dataElement";
-			}
-
-		} else if (typeId == "IND") {
-			if (dataType == "queryUrl") {
-				return "indicatorGroups"
-			} else if (dataType == "data") {
-				return data.indicators;
-			} else if (dataType == "name") {
-				return "indicator";
-			}
-
-		}
-	}
-
-	me.getDataList_byGroup = function(groupType, groupId, loadingTagName,
-			runFunc) {
-		RESTUtil.getAsynchData(apiPath
-				+ me.getGroupTypeData(groupType, "queryUrl") + '/' + groupId
-				+ '.json', function(data) {
-			runFunc(me.getGroupTypeData(groupType, "data", data));
-		}, function() {
-			alert('Failed to retrieve '
-					+ me.getGroupTypeData(groupType, "name") + ' list.');
-		}, function() {
-			QuickLoading.dialogShowAdd(loadingTagName);
-		}, function() {
-			QuickLoading.dialogShowRemove(loadingTagName);
-		});
-	}
-
-	// -- 'Search by Group' related
-	// ---------------------------------------
+	
 
 	me.getParameters = function() {
 		// Get parameters and set as class variable to access later
@@ -1871,18 +1722,31 @@ function DataManager() {
 				me.setParameterAction(me.paramTab);
 		});
 		
-		setup_SearchByCountry(me, function() {
-			if (me.paramTab == 'Country')
-			me.setParameterAction(me.paramTab);
-		})
-
-		me.setup_SearchByGroup($('#tabs-7'), function() {
+		setup_SearchByCountry(me);
+		
+		$('a[href="#tabs-3"]').click(function(){
+			if (!$('#infoList_Analytics').is(":visible")){
+				$('#infoList_Analytics').show();
+				
+				setup_Analytics(me, function() {
+					if (me.paramTab == 'Analytics')
+						me.setParameterAction(me.paramTab);
+				});	
+			}
+		});
+		
+		setup_SearchByGroup(me, "DE", $('#tabs-7'), function() {
+			if (me.paramTab == 'Group')
+				me.setParameterAction(me.paramTab);
+		});
+		
+		setup_SearchByGroup(me, "IND", $('#tabs-8'), function() {
 			if (me.paramTab == 'Group')
 				me.setParameterAction(me.paramTab);
 		});
 
 		me.setupTopSection();		
-		me.settingDataPopupForm = new SettingDataPopupForm();
+		me.settingDataPopupForm = new SettingDataPopupForm(me);
 
 	}
 
