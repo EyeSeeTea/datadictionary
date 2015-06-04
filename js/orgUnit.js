@@ -26,7 +26,7 @@ function populateCountryList(me, loadingTagName, afterFunc) {
 
 }
 
-function setup_SearchByCountry(me) {
+function setup_SearchByOrgUnit(me) {
 	
 	me.orgUnitTabMode.buttonset();
 	

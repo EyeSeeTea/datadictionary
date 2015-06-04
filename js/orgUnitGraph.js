@@ -1,4 +1,3 @@
-
 $(function(){
 margin = {top: 20, right: 120, bottom: 20, left: 140};
 originalWidth = 850;
@@ -14,21 +13,19 @@ duration = 750,
 i = 0;
 
 tip = d3.tip()
-.attr('class', 'd3-tip')
-.offset([-10, 0])
-.html(getTipContent);
+		.attr('class', 'd3-tip')
+		.offset([-10, 0])
+		.html(getTipContent);
 
 tree = d3.layout.tree().size([height, width]);
 
 var diagonal = d3.svg.diagonal().projection(function(d) { return [d.y, d.x]; });	
 
 var svg = d3.select(".graphContent").append("svg")
-//.attr("width", width + margin.right + margin.left)
-.attr("width", '100%')
-.attr("height", height + margin.top + margin.bottom)
-//.attr("height", '100%')
-.append("g")
-.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+				.attr("width", '100%')
+				.attr("height", height + margin.top + margin.bottom)
+				.append("g")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 svg.call(tip);
 
@@ -92,6 +89,7 @@ update = function (){
       .style("fill-opacity", function(d){ return d.hideLabel && d.children ? 1e-6 : 1;})
       .attr("x", function(d) { return d.children || d.moveLabelToLeft ? (-1 * calculateTextPosition(d)) : calculateTextPosition(d); })
       .attr("text-anchor", function(d) { return d.children || d.moveLabelToLeft ? "end" : "start"; })
+      .text(getLabel)
       .style("fill", color);
 
   // Transition exiting nodes to the parent's new position.
