@@ -1,5 +1,5 @@
 function getLabel(d) {
-//	console.log(d);
+	console.log(d);
 	if (d.shortName){
 		return d.shortName;
 	}else if (d.name){
@@ -105,6 +105,7 @@ function showTip(d){
 
 function getTipContent(d) {
 	var content = "";
+	content += "<p><b>" + getLabel(d) + "</b></p>";
 	if (d.numberDataValues != undefined){
 		content += "<p>Number of DataValues: <span style='color:red'>" + d.numberDataValues + "</span></p>";
 	}

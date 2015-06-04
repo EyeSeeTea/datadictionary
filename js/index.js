@@ -1,6 +1,4 @@
 var apiPath = "../../dhis/api/";
-//var apiPath = "http://james.psi-mis.org/api/"
-
 
 var _queryURL_getOrgUnit = apiPath + "organisationUnits";
 
@@ -65,13 +63,10 @@ function DataManager() {
 
 	// Group related tags
 	me.groupTypeTag = $('#groupType');
-	//me.divGroupListTag = $('#divGroupList');
 	me.divGroupLoadingTag = $('#divGroupLoading');
-//	me.divRetrieveData_byGroupTag = $('#divRetrieveData_byGroup');
 
 	me.groupListTag = $('#groupList');
 	me.indicatorListTag = $('#indicatorList');
-//	me.retrieveData_byGroupTag = $('#retrieveData_byGroup');
 
 	me.paramTab = '';
 	me.paramSearchValue = '';
@@ -104,8 +99,6 @@ function DataManager() {
 	me.infoList_OrgUnitGroupTableTag = $('#infoList_OrgUnitGroup');
 	me.infoList_UserTableTag = $('#infoList_User');
 	
-//	me.infoList_ProgramTableTag = $('#infoList_Program');
-
 	me.countDownTag = $('#defaultCountdown');
 
 	me.loadingCount = 0;
@@ -1717,15 +1710,19 @@ function DataManager() {
 		me.getParameters();
 		me.setTabByParameter();
 
+		// Organization Unit TAb 
+		setup_SearchByOrgUnit(me);
+
+		// Dataset & Programs Tab
 		me.setup_SearchByDataSet(function() {
 			if (me.paramTab == 'DataSet')
 				me.setParameterAction(me.paramTab);
 		});
 		
-		setup_SearchByCountry(me);
-		
+		// Analytics Tab (as it is quite demanding in terms of js processing it is loaded on tab click)
 		$('a[href="#tabs-3"]').click(function(){
 			if (!$('#infoList_Analytics').is(":visible")){
+				
 				$('#infoList_Analytics').show();
 				
 				setup_Analytics(me, function() {
@@ -1735,11 +1732,13 @@ function DataManager() {
 			}
 		});
 		
+		// Data Elements Groups Tab
 		setup_SearchByGroup(me, "DE", $('#tabs-7'), function() {
 			if (me.paramTab == 'Group')
 				me.setParameterAction(me.paramTab);
 		});
 		
+		// Indicator Groups Tab
 		setup_SearchByGroup(me, "IND", $('#tabs-8'), function() {
 			if (me.paramTab == 'Group')
 				me.setParameterAction(me.paramTab);
