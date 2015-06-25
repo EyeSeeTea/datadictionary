@@ -1,5 +1,5 @@
-//var apiPath = "../../dhis/api/";
-var apiPath = "../../api/";
+var apiPath = "../../dhis/api/";
+//var apiPath = "../../api/";
 var dhisPath = "../../dhis/";
 
 var _queryURL_getOrgUnit = apiPath + "organisationUnits";

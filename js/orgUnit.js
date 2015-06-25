@@ -43,7 +43,8 @@ function setup_SearchByOrgUnit(me) {
 	});
 	
 	me.orgUnitGraphSelector.click(function(e){
-		maxNumber = orgUnitStructure[$(this).val()];
+//		maxNumber = orgUnitStructure[$(this).val()];
+		calculateMaxNumber(orgUnitStructure, $(this).val())
 		update();
 	});
 	
@@ -452,7 +453,7 @@ function setup_SearchByOrgUnit(me) {
 																							me.summary.numberOfEvents++;
 																							me.summary.eventInstances += totalInstances;
 																							
-																							orgUnitStructure._children.push({"id": item_program.id, "name":item_program.name, "type": "Event", "numberEventInstances":totalInstances});
+																							orgUnitStructure._children.push({"id": item_program.id, "name":item_program.name, "type": "Event", "numberEventInstances":totalInstances, "numberDataElements":deCount});
 																						} else if (item_program.type == 1) {
 																						
 																							me.infoList_Tracker_DataTable.row.add([
@@ -468,7 +469,7 @@ function setup_SearchByOrgUnit(me) {
 																							me.summary.numberOfTrackers++;
 																							me.summary.trackerInstances += totalInstances;
 																							
-																							orgUnitStructure._children.push({"id": item_program.id, "name":item_program.name, "type": "Tracker", "numberTrackerInstances":totalInstances});
+																							orgUnitStructure._children.push({"id": item_program.id, "name":item_program.name, "type": "Tracker", "numberTrackerInstances":totalInstances, "numberDataElements":deCount});
 																						}
 																						
 																						checkRequestCount(me, requestCount);

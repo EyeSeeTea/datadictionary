@@ -109,7 +109,12 @@ function calculateTextPosition(d){
 
 function calculateRadius(d) {
 	if ($('#graphSelector').val() in d){
-		return (d[$('#graphSelector').val()] / maxNumber) * 50|| 0;
+//		if (d.type == "Organization Unit" && $('#graphSelector').val() == 'numberDataValues'){
+//			return ((d[$('#graphSelector').val()] + d["numberTrackerInstances"] + d["numberEventInstances"])/ maxNumber) * 50|| 0;
+//		}
+//		else{
+			return (d[$('#graphSelector').val()] / maxNumber) * 50|| 0;
+//		}
 	}
 	else if ("numberTrackerInstances" in d){
 		return (d["numberTrackerInstances"] / maxNumber) * 50|| 0;
@@ -119,6 +124,23 @@ function calculateRadius(d) {
 	}
 	
 //	return Math.sqrt(d.numberDataValues) / 2 || 0;
+}
+
+function calculateMaxNumber(tree, selectedRadius){
+	if (typeof selectedRadius == 'undefined' || selectedRadius == 'numberDataValues'){
+		if (tree.numberTrackerInstances > tree.numberEventInstances && tree.numberTrackerInstances > tree.numberDataValues){
+			maxNumber = tree.numberTrackerInstances;	
+		}
+		else if (tree.numberEventInstances > tree.numberDataValues){
+			maxNumber = tree.numberEventInstances;
+		}
+		else{
+			maxNumber = tree.numberDataValues
+		}
+	}
+	else{
+		maxNumber = tree.numberDataElements
+	}
 }
 
 //Color leaf nodes orange, and packages white or blue.
