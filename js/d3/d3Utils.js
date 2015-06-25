@@ -1,5 +1,4 @@
 function getLabel(d) {
-	console.log(d);
 	if (d.shortName){
 		return d.shortName;
 	}else if (d.name){
@@ -8,39 +7,6 @@ function getLabel(d) {
 		return d.id;
 	}
 }
-
-//function getFiles(childrenPointers){
-//	var children =  [];
-//	if (childrenPointers){
-//		for (var i=0; i < childrenPointers.length; i++) {
-//			$.ajax({
-//			  url: path + childrenPointers[i].id + ".json",
-//			  async: false,
-//			  dataType: 'json',
-//			  success: function (response) {
-//			  	children.push(response);
-//			  }
-//			});
-//		};
-//	}
-//	if (children.length == 0) children = null;
-//	return children;
-//}
-
-//function getChildren(node){
-//	var children = null;
-//	if (node._children != undefined){
-//		children = node._children;
-//	}
-//	else{
-//		children=getFiles(node.childNodes);
-//		if (children == null){
-//			node.isAFinalNode = true;
-//			showTip(node);
-//		}
-//	}
-//	return children;
-//}
 
 //Calculate tree dimensions
 function calculateTreeDimensions(numberOfNodes){
@@ -109,6 +75,12 @@ function getTipContent(d) {
 	if (d.numberDataValues != undefined){
 		content += "<p>Number of DataValues: <span style='color:red'>" + d.numberDataValues + "</span></p>";
 	}
+	if (d.numberTrackerInstances != undefined){
+		content += "<p>Number of Tracker Instances: <span style='color:red'>" + d.numberTrackerInstances + "</span></p>";
+	}
+	if (d.numberEventInstances != undefined){
+		content += "<p>Number of Event Instances: <span style='color:red'>" + d.numberEventInstances + "</span></p>";
+	}
 	if (d.numberDataElements != undefined){
 		content += "<p>Number of DataElements: <span style='color:red'>" + d.numberDataElements + "</span></p>";
 	}
@@ -136,8 +108,16 @@ function calculateTextPosition(d){
 }
 
 function calculateRadius(d) {
-
-	return (d[$('#graphSelector').val()] / maxNumber) * 50|| 0;
+	if ($('#graphSelector').val() in d){
+		return (d[$('#graphSelector').val()] / maxNumber) * 50|| 0;
+	}
+	else if ("numberTrackerInstances" in d){
+		return (d["numberTrackerInstances"] / maxNumber) * 50|| 0;
+	}
+	else{
+		return (d["numberEventInstances"] / maxNumber) * 50|| 0;
+	}
+	
 //	return Math.sqrt(d.numberDataValues) / 2 || 0;
 }
 
@@ -150,6 +130,12 @@ function color(d) {
 	}
 	else if (d.type == "Organization Unit"){
 		nodeColor = "#bfbfbf";
+	}
+	else if (d.type == "Event"){
+		nodeColor = "#467e4a";
+	}
+	else if (d.type == "Tracker"){
+		nodeColor = "#53a93f";
 	}
 	else{
 		//It is a data element
