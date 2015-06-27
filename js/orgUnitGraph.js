@@ -30,7 +30,7 @@ var svg = d3.select(".graphContent").append("svg")
 svg.call(tip);
 
 initGraph = function (json){
-	maxNumber = json.numberDataValues;
+	calculateMaxNumber(json);
 	
 	root = json;
 	root.x0 = height /2;

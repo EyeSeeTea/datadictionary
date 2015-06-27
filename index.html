@@ -75,10 +75,10 @@
 			</tr>
 			<tr id="sqlViewIdRow">
 				<td>
-					<span style="color:#555555;"><b>SQL View Id: </b></span>
+					<span style="color:#555555;"><b>Dashboard SQL View Id: </b></span>
 				</td>
 				<td>
-					<input id="sqlViewSettings" type="text" value="a4pPlKYd2ya"/> <img style="max-width: 16px;cursor: pointer; cursor: hand;" title="This SQL View is used to generate the analytics" src="images/help.png"/>
+					<input id="sqlViewSettings" type="text" value="a4pPlKYd2ya"/> <img style="max-width: 16px;cursor: pointer; cursor: hand;" title="This Dashboard SQL View is used to generate the analytics tab" src="images/help.png"/>
 				</td>
 				<td>
 					<div class='dataLoading' style='display:none;'><img src='images/ui-anim_basic.gif'/></div>
@@ -140,13 +140,13 @@
 					</tr>
 				</table>
 
-				<div class="tableContent subContent">
+				<div class="tableContent subContent" style="display:none;">
 					
 					<div style="font-weight:bold;">Summary</div>
 					<table id="infoList_Summary" class="listTable">
 						<tr class="header">
 							<th width="150px">Name</th>
-							<th width="150px"># of<span style="float: right"><img style="max-width: 16px;cursor: pointer; cursor: hand;" title="DataSets: Number of data sets activated on the org units.
+							<th width="150px"># of<span style="float: right"><img style="max-width: 16px;cursor: pointer; cursor: hand;" title="DataSets: Number of data sets activated on the org units. Data values indicates the total number of data values from all data sets, events, and tracker activated on the org. units.
 
 Events: Number of single event without registration programs activated on the org. units.
 
@@ -154,20 +154,18 @@ Tracker: Number of single/multiple events with registration programs activated o
 
 Org. Unit Groups: Number of organisation unit groups used on at least one org. unit.
 
-Users: Number of users having access to at least one org. unit.
-
-Data Values: Indicates the total number of data values from all data sets, events, and tracker activated on the org. units." src="images/help.png"/></span></th>
+Users: Number of users having access to at least one org. unit." src="images/help.png"/></span></th>
 						</tr>
 						<tr class="data">
-							<td>Data Sets</td>
+							<td>Data Sets (Data Values)</td>
 							<td id="dataSets_InfoList_Summary"></td>
 						</tr>
 						<tr class="data">
-							<td>Events</td>
+							<td>Events (Instances)</td>
 							<td id="events_InfoList_Summary"></td>
 						</tr>
 						<tr class="data">
-							<td>Tracker</td>
+							<td>Tracker (Instances)</td>
 							<td id="trackers_InfoList_Summary"></td>
 						</tr>
 						<tr class="data">
@@ -177,10 +175,6 @@ Data Values: Indicates the total number of data values from all data sets, event
 						<tr class="data">
 							<td>Users</td>
 							<td id="users_InfoList_Summary"></td>
-						</tr>
-						<tr class="data">
-							<td>Data Values</td>
-							<td id="dataValues_InfoList_Summary"></td>
 						</tr>
 					</table>
 	
@@ -209,6 +203,7 @@ Data Values: Indicates the total number of data values from all data sets, event
 								<th width="150px">Name & Description</th>
 								<th width="70px"># assigned OU</th>
 								<th width="70px"># of Data Elements</th>
+								<th width="70px"># of Instances</th>
 								<th width="70px">Custom Form</th>
 								<th width="100px">Completed</th>
 							</tr>
@@ -226,6 +221,7 @@ Data Values: Indicates the total number of data values from all data sets, event
 								<th width="150px">Name & Description</th>
 								<th width="70px"># assigned OU</th>
 								<th width="70px"># of Data Elements</th>
+								<th width="70px"># of Instances</th>
 								<th width="70px">Custom Form</th>
 								<th width="100px">Completed</th>
 							</tr>
@@ -266,7 +262,7 @@ Data Values: Indicates the total number of data values from all data sets, event
 				</div>
 				<div class="graphContent subContent" style="display:none;">
 					<div id="graphSettings" style="position: absolute;top:120px;border: 1px solid;padding:10px;display:none;">
-						<span>Radium depens on:</span><br />
+						<span>Radius depens on:</span><br />
 						<select id="graphSelector">
 						  <option value="numberDataValues">Data Values</option>
 						  <option value="numberDataElements">Data Elements</option>

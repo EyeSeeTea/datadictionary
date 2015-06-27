@@ -43,24 +43,30 @@ function setup_SearchByOrgUnit(me) {
 	});
 	
 	me.orgUnitGraphSelector.click(function(e){
-		maxNumber = orgUnitStructure[$(this).val()];
+//		maxNumber = orgUnitStructure[$(this).val()];
+		calculateMaxNumber(orgUnitStructure, $(this).val())
 		update();
 	});
 	
-	me.infoList_DataSet_DataTable = $("#infoList_DataSet").DataTable({"aLengthMenu" : [ [ -1, 25, 50, 100 ], [ "All", 25, 50, 100 ] ]});
-	me.infoList_Event_DataTable = $("#infoList_Event").DataTable({"aLengthMenu" : [ [ -1, 25, 50, 100 ], [ "All", 25, 50, 100 ] ]});
-	me.infoList_Tracker_DataTable = $("#infoList_Tracker").DataTable({"aLengthMenu" : [ [ -1, 25, 50, 100 ], [ "All", 25, 50, 100 ] ]});
-	me.infoList_OrgUnitGroup_DataTable = $("#infoList_OrgUnitGroup").DataTable({"aLengthMenu" : [ [ -1, 25, 50, 100 ], [ "All", 25, 50, 100 ] ]});
-	me.infoList_User_DataTable = $("#infoList_User").DataTable({"aLengthMenu" : [ [ -1, 25, 50, 100 ], [ "All", 25, 50, 100 ] ]});
+	me.infoList_DataSet_DataTable = $("#infoList_DataSet").DataTable({"aLengthMenu" : [ [ -1, 25, 50, 100 ], [ "All", 25, 50, 100 ] ], "pageLength": 50});
+	me.infoList_Event_DataTable = $("#infoList_Event").DataTable({"aLengthMenu" : [ [ -1, 25, 50, 100 ], [ "All", 25, 50, 100 ] ], "pageLength": 50});
+	me.infoList_Tracker_DataTable = $("#infoList_Tracker").DataTable({"aLengthMenu" : [ [ -1, 25, 50, 100 ], [ "All", 25, 50, 100 ] ], "pageLength": 50});
+	me.infoList_OrgUnitGroup_DataTable = $("#infoList_OrgUnitGroup").DataTable({"aLengthMenu" : [ [ -1, 25, 50, 100 ], [ "All", 25, 50, 100 ] ], "pageLength": 50});
+	me.infoList_User_DataTable = $("#infoList_User").DataTable({"aLengthMenu" : [ [ -1, 25, 50, 100 ], [ "All", 25, 50, 100 ] ], "pageLength": 50});
 
 	// Set up the events
 	me.countryListTag.change(function() {
+		$(".subContent").hide(); 
+		
 		($(this).val() != "") ? Util.disableTag(me.retrieveData_CountryTag,
 				false) : Util.disableTag(me.retrieveData_CountryTag, true);
 	});
 
 	me.retrieveData_CountryTag.click(function() {
+				$("#tableMode").click();
+		
 				var requestCount = 0;
+				var requestCountProgram = 0;
 
 				var loadingTagName = 'dataLoading';
 
@@ -82,12 +88,14 @@ function setup_SearchByOrgUnit(me) {
 				me.infoList_User_DataTable.clear().draw()
 				
 				//Summary Variables
-				me.summary = {numberOfDatasets: 0, numberOfEvents: 0, numberOfTrackers: 0, orgUnitGroups: new Array(), users: 0, dataValues: 0};
+				me.summary = {numberOfDatasets: 0, numberOfEvents: 0, numberOfTrackers: 0, orgUnitGroups: new Array(), users: 0, dataValues: 0, eventInstances: 0, trackerInstances: 0};
 
 				var requestUrl_OrgUnits = apiPath + 'organisationUnits/' + me.countryListTag.val() + '.json?includeDescendants=true&fields=id,organisationUnitGroups[id],users[id,name]';
 
 				orgUnitStructure = {"id": "root", "name":me.countryListTag.find(":selected").text(), "_children" : [], "type" : "Organization Unit"};
 				orgUnitDataElements = [];
+				usersUniqueList = [];
+				dataElementsUniqueList = [];
 				
 				RESTUtil.getAsynchData(
 								requestUrl_OrgUnits,
@@ -153,6 +161,7 @@ function setup_SearchByOrgUnit(me) {
 																						// Preparing data for graph mode
 																						
 																						//FIXME: We can use a js lib (underscore) to deal with this in a better way
+																						// Transform data element ids in a array of ids
 																						var dataElementsIds = [];
 																						$.each(json_dataSet.dataElements, function(i_dataElement, item_dataElement) {
 																							dataElementsIds.push(item_dataElement.id);
@@ -173,13 +182,28 @@ function setup_SearchByOrgUnit(me) {
 																								if (!isNaN(currentDataElementDataValues)){
 																									$.each(json_dataSet.dataElements, function(i_de, item_de) {
 																										if (item_de.id == item_row[0]){
+																											// Add number of data values to data element
 																											item_de["numberDataValues"] = currentDataElementDataValues;
+																											
+																											// Getting category elements
+																											item_de["_children"]=[];
+																											var categoryElementsUrl = apiPath + 'analytics.json?dimension=co&dimension=dx:' + item_row[0] + '&filter=ou:' + me.countryListTag.val() + '&filter=pe:LAST_12_MONTHS&aggregationType=COUNT&displayProperty=SHORTNAME';
+																											RESTUtil.getAsynchData(categoryElementsUrl, function(categoryElementsList) {
+																												$.each(categoryElementsList.rows, function(i_ce, item_ce) {
+																													item_de["_children"].push({"id": item_ce[0], "shortName":categoryElementsList.metaData.names[item_ce[0]], "numberDataValues":item_ce[2]});
+																												});
+																											});
 																										}
 																									});
 																								
-																								
+																									// Add data values for this data element
 																									datasetDataValues += currentDataElementDataValues
-																									me.summary.dataValues += currentDataElementDataValues;
+
+																									//Just add to the organisation unit the unique data values
+																									if (dataElementsUniqueList.indexOf(item_row[0]) == -1){
+																										dataElementsUniqueList.push(item_row[0]);
+																										me.summary.dataValues += currentDataElementDataValues;
+																									}
 																								}
 																							});
 																							orgUnitStructure._children.push({"id": json_dataSet.id, "shortName":json_dataSet.shortName, "name":json_dataSet.name, "_children":json_dataSet.dataElements, "type": "Dataset", "numberDataElements": json_dataSet.dataElements.length, "numberDataValues":datasetDataValues});
@@ -191,11 +215,13 @@ function setup_SearchByOrgUnit(me) {
 																						//Getting Completed information
 																						var currentDatasetTime = -1;
 																						var currentDatasetPercentage = -1;
-																						var tooltip = "";
+																						//var tooltip = "";
+																						var tooltip = {};
 																						var completedAnalyticsUrl = apiPath + 'analytics.json?dimension=dx:' + json_dataSet.id + '&filter=ou:' + me.countryListTag.val() + '&dimension=pe:LAST_12_MONTHS&displayProperty=SHORTNAME';
 																						RESTUtil.getAsynchData(completedAnalyticsUrl, function(completedAnalyticsList) {
 																							$.each(completedAnalyticsList.rows, function(i_row, item_row) {
-																								tooltip += item_row[1].substring(4,6) + "-" + item_row[1].substring(0,4) + " => " + item_row[2] + "%\n";
+																								//tooltip += item_row[1].substring(4,6) + "-" + item_row[1].substring(0,4) + " => " + item_row[2] + "%\n";
+																								tooltip[item_row[1]] = item_row[2];
 																								if (item_row[1] > currentDatasetTime){
 																									currentDatasetTime = item_row[1];
 																									currentDatasetPercentage = item_row[2];
@@ -223,12 +249,20 @@ function setup_SearchByOrgUnit(me) {
 																								datasetCompleted = currentDatasetTimeDateFormatted + " => " + currentDatasetPercentage + "%";
 																							}
 																							
+																							//Formatted tooltip
+																							var tooltipKeys = Object.keys(tooltip);
+																							tooltipKeys.sort();
+																							var formattedTooltip = "";
+																							jQuery.each(tooltipKeys, function(i, key){
+																								formattedTooltip += key.substring(4,6) + "-" + key.substring(0,4) + " => " + tooltip[key] + "%\n";
+																						    });
+																							
 																							me.infoList_DataSet_DataTable.row.add([
 																							  '<a href="" class="dataSetLink" dsid="'+ json_dataSet.id + '">' + '<b>' + json_dataSet.name + '</b></br>' + Util.getNotEmpty(json_dataSet.description) + '</a>',
 																							  organizationUnitByLevel,
 																							  json_dataSet.dataElements.length,
 																							  isCustomDataset,
-																							  '<span title="' + tooltip + '">' + datasetCompleted + "</span>"
+																							  '<span title="' + formattedTooltip + '">' + datasetCompleted + "</span>"
 																							]).draw();
 
 																							// Add event to this row.
@@ -270,15 +304,17 @@ function setup_SearchByOrgUnit(me) {
 									$.each(countryOrgUnitList.organisationUnits,
 											function(i_countryOU, item_countryOU) {
 										
+										//Create user table
 										$.each(item_countryOU.users,
 												function(i_countryOUG,item_countryUsers) {
-											
-											me.summary.users++;
-											
-											me.infoList_User_DataTable.row.add([item_countryUsers.name]).draw();
-											
+											//Check if name has not been added yet
+											if (usersUniqueList.indexOf(item_countryUsers.name) == -1){
+												me.infoList_User_DataTable.row.add([item_countryUsers.name]).draw();
+												usersUniqueList.push(item_countryUsers.name);
+											}
 										});
-										
+
+										//Create OUG table
 										$.each(item_countryOU.organisationUnitGroups,
 												function(i_countryOUG,item_countryOUG) {
 										
@@ -322,17 +358,13 @@ function setup_SearchByOrgUnit(me) {
 									console.log('Getting programs...');
 
 									// Retrieve Program List
-									var requestUrl_programList = apiPath + 'programs.json?paging=no&fields=id,name,type,description,organisationUnits[id,level],programStages[dataEntryType,programStageDataElements]';
+									var requestUrl_programList = apiPath + 'programs.json?paging=no&fields=id,name,type,description,organisationUnits[id,level],programStages[id,dataEntryType,programStageDataElements]';
 
-									RESTUtil.getAsynchData(
-													requestUrl_programList,
-													function(programList) {
+									RESTUtil.getAsynchData(requestUrl_programList, function(programList) {
 														// requestCount++;
 
 														$.each(programList.programs,
-																function(
-																		i_program,
-																		item_program) {
+																function(i_program, item_program) {
 																	var found = 0;
 																	var foundOrgUnits = {};
 
@@ -359,7 +391,7 @@ function setup_SearchByOrgUnit(me) {
 
 																	if (found > 0) {
 																		
-//																			var program_type = "";
+//																		var program_type = "";
 																		var deCount = 0;
 
 																		var organizationUnitByLevel = "";
@@ -367,37 +399,84 @@ function setup_SearchByOrgUnit(me) {
 																			organizationUnitByLevel += "L" + level + ": " + foundOrgUnits[level] + "</br>";
 																		}
 
-																		$.each(item_program.programStages,
-																						function(
-																								i_ps,
-																								item_ps) {
-																							deCount += item_ps.programStageDataElements.length;
-																						});
-
-																		if (item_program.type == 3) {
-																			var isCustomEvent = (item_program.programStages[0].dataSetType == 'custom')?'Y':'N';
+//																		var tooltip = {};
+																		var totalInstances = 0;
+																		console.log("stages");
+																		console.log(item_program.programStages);
+																		$.each(item_program.programStages, function(i_ps,item_ps) {
 																			
-																			me.infoList_Event_DataTable.row.add([
-																													  '<b>' + item_program.name + '</b></br>' + Util.getNotEmpty(item_program.description),
-																													  organizationUnitByLevel,
-																													  deCount,
-																													  isCustomEvent,
-																													  'not currently possible'
-																													]).draw();
-																			
-																			me.summary.numberOfEvents++;
-																		} else if (item_program.type == 1) {
-																		
-																			me.infoList_Tracker_DataTable.row.add([
-																													  '<b>' + item_program.name + '</b></br>' + Util.getNotEmpty(item_program.description),
-																													  organizationUnitByLevel,
-																													  deCount,
-																													  'not implemented yet',
-																													  'not currently possible'
-																													]).draw();
-																			
-																			me.summary.numberOfTrackers++;
-																		}
+																				//Count number of data elements
+																				deCount += item_ps.programStageDataElements.length;
+																				
+																				//Count number of instance
+																				var programInstancesURL = apiPath + 'analytics/events/aggregate/' + item_program.id +'.json?stage=' + item_ps.id + '&dimension=pe:LAST_12_MONTHS&filter=ou:' +  me.countryListTag.val() + '&outputType=EVENT&displayProperty=SHORTNAME';
+																				RESTUtil.getAsynchData(programInstancesURL, function(programInstanceList) {
+																					console.log(programInstanceList);
+																					$.each(programInstanceList.rows, function(i_pi, item_pi) {
+//																						tooltip[item_pi[0]] = item_pi[1];
+																						totalInstances += parseInt(item_pi[1]);
+																					});
+																				},
+																				function() {
+																					alert('Failed to retrieve program stages.');
+																				},
+																				function() {
+																					requestCount++;
+																				},
+																				function() {
+																					requestCount--;
+																					
+																					//if (requestCountProgram == 0) {
+																						//Formatted tooltip
+//																						var tooltipKeys = Object.keys(tooltip);
+//																						tooltipKeys.sort();
+//																						var formattedTooltip = "";
+//																						var totalInstances = 0;
+//																						jQuery.each(tooltipKeys, function(i, key){
+//																							formattedTooltip += key.substring(4,6) + "-" + key.substring(0,4) + " => " + tooltip[key] + "%\n";
+//																							totalInstances += tooltip[key];
+//																					    });
+																					
+																						if (item_program.type == 3) {
+																							var isCustomEvent = (item_program.programStages[0].dataSetType == 'custom')?'Y':'N';
+																							
+																							me.infoList_Event_DataTable.row.add([
+																																	  '<b>' + item_program.name + '</b></br>' + Util.getNotEmpty(item_program.description),
+																																	  organizationUnitByLevel,
+																																	  deCount,
+																																	  //'<span title="' + formattedTooltip + '">' + totalInstances + "</span>",
+																																	  totalInstances,
+																																	  isCustomEvent,
+																																	  'not currently possible'
+																																	]).draw();
+																							
+																							me.summary.numberOfEvents++;
+																							me.summary.eventInstances += totalInstances;
+																							
+																							orgUnitStructure._children.push({"id": item_program.id, "name":item_program.name, "type": "Event", "numberEventInstances":totalInstances, "numberDataElements":deCount});
+																						} else if (item_program.type == 1) {
+																						
+																							me.infoList_Tracker_DataTable.row.add([
+																																	  '<b>' + item_program.name + '</b></br>' + Util.getNotEmpty(item_program.description),
+																																	  organizationUnitByLevel,
+																																	  deCount,
+																																	  //'<span title="' + formattedTooltip + '">' + totalInstances + "</span>",
+																																	  totalInstances,
+																																	  'not implemented yet',
+																																	  'not currently possible'
+																																	]).draw();
+																							
+																							me.summary.numberOfTrackers++;
+																							me.summary.trackerInstances += totalInstances;
+																							
+																							orgUnitStructure._children.push({"id": item_program.id, "name":item_program.name, "type": "Tracker", "numberTrackerInstances":totalInstances, "numberDataElements":deCount});
+																						}
+																						
+																						checkRequestCount(me, requestCount);
+																					//}
+																					//checkRequestCountProgram(me, requestCountProgram, totalInstances, deCount, organizationUnitByLevel, item_program);
+																				});	
+																		});
 
 																	}
 																});
@@ -439,14 +518,58 @@ function setup_SearchByOrgUnit(me) {
 			});
 }
 
+
+function checkRequestCountProgram(me, requestCountProgram, totalInstances, deCount, organizationUnitByLevel, item_program){
+	if (requestCountProgram == 0) {
+		//Formatted tooltip
+//		var tooltipKeys = Object.keys(tooltip);
+//		tooltipKeys.sort();
+//		var formattedTooltip = "";
+//		var totalInstances = 0;
+//		jQuery.each(tooltipKeys, function(i, key){
+//			formattedTooltip += key.substring(4,6) + "-" + key.substring(0,4) + " => " + tooltip[key] + "%\n";
+//			totalInstances += tooltip[key];
+//	    });
+	
+		if (item_program.type == 3) {
+			var isCustomEvent = (item_program.programStages[0].dataSetType == 'custom')?'Y':'N';
+			
+			me.infoList_Event_DataTable.row.add([
+													  '<b>' + item_program.name + '</b></br>' + Util.getNotEmpty(item_program.description),
+													  organizationUnitByLevel,
+													  deCount,
+													  //'<span title="' + formattedTooltip + '">' + totalInstances + "</span>",
+													  totalInstances,
+													  isCustomEvent,
+													  'not currently possible'
+													]).draw();
+			
+			me.summary.numberOfEvents++;
+		} else if (item_program.type == 1) {
+		
+			me.infoList_Tracker_DataTable.row.add([
+													  '<b>' + item_program.name + '</b></br>' + Util.getNotEmpty(item_program.description),
+													  organizationUnitByLevel,
+													  deCount,
+													  //'<span title="' + formattedTooltip + '">' + totalInstances + "</span>",
+													  totalInstances,
+													  'not implemented yet',
+													  'not currently possible'
+													]).draw();
+			
+			me.summary.numberOfTrackers++;
+		}
+	}
+}
+
+
 function checkRequestCount(me, requestCount) {
 	if (requestCount == 0) {
-		me.infoList_SummaryTableTag.find("#dataSets_InfoList_Summary").text(me.summary.numberOfDatasets);
-		me.infoList_SummaryTableTag.find("#trackers_InfoList_Summary").text(me.summary.numberOfTrackers);
-		me.infoList_SummaryTableTag.find("#events_InfoList_Summary").text(me.summary.numberOfEvents);
+		me.infoList_SummaryTableTag.find("#dataSets_InfoList_Summary").text(me.summary.numberOfDatasets + " (" + me.summary.dataValues + ")");
+		me.infoList_SummaryTableTag.find("#trackers_InfoList_Summary").text(me.summary.numberOfTrackers + " (" + me.summary.trackerInstances + ")");
+		me.infoList_SummaryTableTag.find("#events_InfoList_Summary").text(me.summary.numberOfEvents + " (" + me.summary.eventInstances + ")");
 		me.infoList_SummaryTableTag.find("#orgUnitGroups_InfoList_Summary").text(me.summary.orgUnitGroups.length);
-		me.infoList_SummaryTableTag.find("#users_InfoList_Summary").text(me.summary.users);
-		me.infoList_SummaryTableTag.find("#dataValues_InfoList_Summary").text(me.summary.dataValues);
+		me.infoList_SummaryTableTag.find("#users_InfoList_Summary").text(usersUniqueList.length);
 		
 		me.countDownTag.countdown('pause');
 		$('#defaultCountdownSpan').text('Time it Took: ');
@@ -454,6 +577,8 @@ function checkRequestCount(me, requestCount) {
 		// Add values to root node
 		orgUnitStructure["numberDataValues"] = me.summary.dataValues;
 		orgUnitStructure["numberDataElements"] = orgUnitDataElements.length;
+		orgUnitStructure["numberTrackerInstances"] = me.summary.trackerInstances;
+		orgUnitStructure["numberEventInstances"] = me.summary.eventInstances;
 		
 		console.log("orgUnitStructure");
 		console.log(orgUnitStructure);

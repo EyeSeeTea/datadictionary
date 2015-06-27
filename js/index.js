@@ -1,4 +1,6 @@
 var apiPath = "../../dhis/api/";
+//var apiPath = "../../api/";
+var dhisPath = "../../dhis/";
 
 var _queryURL_getOrgUnit = apiPath + "organisationUnits";
 
@@ -30,7 +32,9 @@ function DataManager() {
 
 	me.queryURL_analyticsSQLView = apiPath + "sqlViews/";
 	me.queryURL_analytics = apiPath + "dashboards/";
+	me.queryURL_analytics_ownDashboard = apiPath + "dashboards.json";
 	me.queryURL_analytics_userGroups = apiPath + "userGroups/";
+	me.queryURL_me = apiPath + "me.json";
 
 	me.dataElementPopup = new DataElementPopup();
 	me.indicatorPopup = new IndicatorPopup();
