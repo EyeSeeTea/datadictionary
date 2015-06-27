@@ -358,7 +358,7 @@ function setup_SearchByOrgUnit(me) {
 									console.log('Getting programs...');
 
 									// Retrieve Program List
-									var requestUrl_programList = apiPath + 'programs.json?paging=no&fields=id,name,type,description,organisationUnits[id,level],programStages[id,dataEntryType,programStageDataElements]';
+									var requestUrl_programList = apiPath + 'programs.json?paging=no&fields=id,name,type,description,organisationUnits[id,level],programStages[id,name,dataEntryType,programStageDataElements]';
 
 									RESTUtil.getAsynchData(requestUrl_programList, function(programList) {
 														// requestCount++;
@@ -401,8 +401,8 @@ function setup_SearchByOrgUnit(me) {
 
 //																		var tooltip = {};
 																		var totalInstances = 0;
-																		console.log("stages");
-																		console.log(item_program.programStages);
+																		var numberInstancesColumn = "";
+																		var numberProgramStages = item_program.programStages.length; 
 																		$.each(item_program.programStages, function(i_ps,item_ps) {
 																			
 																				//Count number of data elements
@@ -412,30 +412,28 @@ function setup_SearchByOrgUnit(me) {
 																				var programInstancesURL = apiPath + 'analytics/events/aggregate/' + item_program.id +'.json?stage=' + item_ps.id + '&dimension=pe:LAST_12_MONTHS&filter=ou:' +  me.countryListTag.val() + '&outputType=EVENT&displayProperty=SHORTNAME';
 																				RESTUtil.getAsynchData(programInstancesURL, function(programInstanceList) {
 																					console.log(programInstanceList);
+																					var subtotalInstances = 0;
 																					$.each(programInstanceList.rows, function(i_pi, item_pi) {
 //																						tooltip[item_pi[0]] = item_pi[1];
-																						totalInstances += parseInt(item_pi[1]);
+																						subtotalInstances += parseInt(item_pi[1]);
 																					});
-																				},
-																				function() {
-																					alert('Failed to retrieve program stages.');
-																				},
-																				function() {
-																					requestCount++;
-																				},
-																				function() {
-																					requestCount--;
+																					totalInstances += subtotalInstances;
+																					numberInstancesColumn += item_ps.name + ": " + subtotalInstances + "</br>";
 																					
-																					//if (requestCountProgram == 0) {
+																					numberProgramStages--;
+																					
+																					
+//																					if (requestCountProgram == 0) {
+																					if (numberProgramStages == 0) {
 																						//Formatted tooltip
-//																						var tooltipKeys = Object.keys(tooltip);
-//																						tooltipKeys.sort();
-//																						var formattedTooltip = "";
-//																						var totalInstances = 0;
-//																						jQuery.each(tooltipKeys, function(i, key){
-//																							formattedTooltip += key.substring(4,6) + "-" + key.substring(0,4) + " => " + tooltip[key] + "%\n";
-//																							totalInstances += tooltip[key];
-//																					    });
+	//																					var tooltipKeys = Object.keys(tooltip);
+	//																					tooltipKeys.sort();
+	//																					var formattedTooltip = "";
+	//																					var totalInstances = 0;
+	//																					jQuery.each(tooltipKeys, function(i, key){
+	//																						formattedTooltip += key.substring(4,6) + "-" + key.substring(0,4) + " => " + tooltip[key] + "%\n";
+	//																						totalInstances += tooltip[key];
+	//																				    });
 																					
 																						if (item_program.type == 3) {
 																							var isCustomEvent = (item_program.programStages[0].dataSetType == 'custom')?'Y':'N';
@@ -461,7 +459,7 @@ function setup_SearchByOrgUnit(me) {
 																																	  organizationUnitByLevel,
 																																	  deCount,
 																																	  //'<span title="' + formattedTooltip + '">' + totalInstances + "</span>",
-																																	  totalInstances,
+																																	  numberInstancesColumn,
 																																	  'not implemented yet',
 																																	  'not currently possible'
 																																	]).draw();
@@ -471,9 +469,19 @@ function setup_SearchByOrgUnit(me) {
 																							
 																							orgUnitStructure._children.push({"id": item_program.id, "name":item_program.name, "type": "Tracker", "numberTrackerInstances":totalInstances, "numberDataElements":deCount});
 																						}
-																						
-																						checkRequestCount(me, requestCount);
-																					//}
+																					}
+																					
+																				},
+																				function() {
+																					alert('Failed to retrieve program stages.');
+																				},
+																				function() {
+																					requestCount++;
+																				},
+																				function() {
+																					requestCount--;
+																					
+																					checkRequestCount(me, requestCount);
 																					//checkRequestCountProgram(me, requestCountProgram, totalInstances, deCount, organizationUnitByLevel, item_program);
 																				});	
 																		});
