@@ -96,6 +96,9 @@ function getTipContent(d) {
 	if (d.type != undefined){
 		content += "<p>Type: <span style='color:red'>" + d.type + "</span></p>";
 	}
+	else if (d.type == undefined && d.numberDataValues == undefined) {
+		content += "<p><span style='color:red'>No data values for this element</span></p>";
+	}
 	if (content == ""){
 		content += "<span style='color:red'>Node:</span> " + getLabel(d);
 	}
@@ -161,7 +164,14 @@ function color(d) {
 	}
 	else{
 		//It is a data element
-		nodeColor = color(d.parent);
+		if (d.numberDataValues == undefined){
+			//If no datavalues highlight it
+			nodeColor = "#cccc00";
+		}
+		else{
+			nodeColor = color(d.parent);
+			
+		}
 	}
 
 	return nodeColor;
