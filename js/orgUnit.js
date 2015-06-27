@@ -43,8 +43,11 @@ function setup_SearchByOrgUnit(me) {
 	});
 	
 	me.orgUnitGraphSelector.click(function(e){
-//		maxNumber = orgUnitStructure[$(this).val()];
 		calculateMaxNumber(orgUnitStructure, $(this).val())
+		update();
+	});
+	
+	me.orgUnitScaleSelector.click(function(e){
 		update();
 	});
 	

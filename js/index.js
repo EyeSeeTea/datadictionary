@@ -54,6 +54,7 @@ function DataManager() {
 	
 	//Graph settings
 	me.orgUnitGraphSelector = $('#graphSelector');
+	me.orgUnitScaleSelector = $('#scaleSelector');
 	
 	//Settings
 	me.settingDialogFormTag = $( '#settingDialogForm' );
