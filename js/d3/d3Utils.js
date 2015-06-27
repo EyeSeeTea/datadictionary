@@ -124,11 +124,11 @@ function calculateRadius(d) {
 	
 	if ($('#scaleSelector').val() == 'linear'){
 		//return (value / maxNumber) * 50|| 0;
-		return linearScale(value);
+		return linearScale(value)||0;
 	}
 	else{
 		//return Math.log((value/maxNumber)+1) * 50|| 0;
-		return logScale(value + 1);
+		return logScale(value + 1)|| 0;
 	}
 }
 
