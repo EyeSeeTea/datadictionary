@@ -66,7 +66,6 @@ function setup_SearchByOrgUnit(me) {
 				$("#tableMode").click();
 		
 				var requestCount = 0;
-				var requestCountProgram = 0;
 
 				var loadingTagName = 'dataLoading';
 
@@ -422,8 +421,6 @@ function setup_SearchByOrgUnit(me) {
 																					
 																					numberProgramStages--;
 																					
-																					
-//																					if (requestCountProgram == 0) {
 																					if (numberProgramStages == 0) {
 																						//Formatted tooltip
 	//																					var tooltipKeys = Object.keys(tooltip);
@@ -480,9 +477,7 @@ function setup_SearchByOrgUnit(me) {
 																				},
 																				function() {
 																					requestCount--;
-																					
 																					checkRequestCount(me, requestCount);
-																					//checkRequestCountProgram(me, requestCountProgram, totalInstances, deCount, organizationUnitByLevel, item_program);
 																				});	
 																		});
 
@@ -524,50 +519,6 @@ function setup_SearchByOrgUnit(me) {
 								});
 
 			});
-}
-
-
-function checkRequestCountProgram(me, requestCountProgram, totalInstances, deCount, organizationUnitByLevel, item_program){
-	if (requestCountProgram == 0) {
-		//Formatted tooltip
-//		var tooltipKeys = Object.keys(tooltip);
-//		tooltipKeys.sort();
-//		var formattedTooltip = "";
-//		var totalInstances = 0;
-//		jQuery.each(tooltipKeys, function(i, key){
-//			formattedTooltip += key.substring(4,6) + "-" + key.substring(0,4) + " => " + tooltip[key] + "%\n";
-//			totalInstances += tooltip[key];
-//	    });
-	
-		if (item_program.type == 3) {
-			var isCustomEvent = (item_program.programStages[0].dataSetType == 'custom')?'Y':'N';
-			
-			me.infoList_Event_DataTable.row.add([
-													  '<b>' + item_program.name + '</b></br>' + Util.getNotEmpty(item_program.description),
-													  organizationUnitByLevel,
-													  deCount,
-													  //'<span title="' + formattedTooltip + '">' + totalInstances + "</span>",
-													  totalInstances,
-													  isCustomEvent,
-													  'not currently possible'
-													]).draw();
-			
-			me.summary.numberOfEvents++;
-		} else if (item_program.type == 1) {
-		
-			me.infoList_Tracker_DataTable.row.add([
-													  '<b>' + item_program.name + '</b></br>' + Util.getNotEmpty(item_program.description),
-													  organizationUnitByLevel,
-													  deCount,
-													  //'<span title="' + formattedTooltip + '">' + totalInstances + "</span>",
-													  totalInstances,
-													  'not implemented yet',
-													  'not currently possible'
-													]).draw();
-			
-			me.summary.numberOfTrackers++;
-		}
-	}
 }
 
 
