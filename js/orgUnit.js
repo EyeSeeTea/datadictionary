@@ -565,7 +565,7 @@ function setDataSetLinkAction(me) {
 
 			// Set the change tab to dataSet one (first one)
 			$("#tabs").tabs();
-			$("#tabs").tabs("option", "active", 0);
+			$("#tabs").tabs("option", "active", 1);
 		}
 
 		return false;
