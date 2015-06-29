@@ -1,6 +1,6 @@
 var apiPath = "../../dhis/api/";
 //var apiPath = "../../api/";
-var dhisPath = "../../dhis/";
+//var dhisPath = "../../dhis/";
 
 var _queryURL_getOrgUnit = apiPath + "organisationUnits";
 
@@ -54,6 +54,7 @@ function DataManager() {
 	
 	//Graph settings
 	me.orgUnitGraphSelector = $('#graphSelector');
+	me.orgUnitScaleSelector = $('#scaleSelector');
 	
 	//Settings
 	me.settingDialogFormTag = $( '#settingDialogForm' );

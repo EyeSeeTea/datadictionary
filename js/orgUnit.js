@@ -43,8 +43,11 @@ function setup_SearchByOrgUnit(me) {
 	});
 	
 	me.orgUnitGraphSelector.click(function(e){
-//		maxNumber = orgUnitStructure[$(this).val()];
 		calculateMaxNumber(orgUnitStructure, $(this).val())
+		update();
+	});
+	
+	me.orgUnitScaleSelector.click(function(e){
 		update();
 	});
 	
@@ -66,7 +69,6 @@ function setup_SearchByOrgUnit(me) {
 				$("#tableMode").click();
 		
 				var requestCount = 0;
-				var requestCountProgram = 0;
 
 				var loadingTagName = 'dataLoading';
 
@@ -358,7 +360,7 @@ function setup_SearchByOrgUnit(me) {
 									console.log('Getting programs...');
 
 									// Retrieve Program List
-									var requestUrl_programList = apiPath + 'programs.json?paging=no&fields=id,name,type,description,organisationUnits[id,level],programStages[id,dataEntryType,programStageDataElements]';
+									var requestUrl_programList = apiPath + 'programs.json?paging=no&fields=id,name,type,description,organisationUnits[id,level],programStages[id,name,dataEntryType,programStageDataElements]';
 
 									RESTUtil.getAsynchData(requestUrl_programList, function(programList) {
 														// requestCount++;
@@ -401,8 +403,8 @@ function setup_SearchByOrgUnit(me) {
 
 //																		var tooltip = {};
 																		var totalInstances = 0;
-																		console.log("stages");
-																		console.log(item_program.programStages);
+																		var numberInstancesColumn = "";
+																		var numberProgramStages = item_program.programStages.length; 
 																		$.each(item_program.programStages, function(i_ps,item_ps) {
 																			
 																				//Count number of data elements
@@ -412,30 +414,26 @@ function setup_SearchByOrgUnit(me) {
 																				var programInstancesURL = apiPath + 'analytics/events/aggregate/' + item_program.id +'.json?stage=' + item_ps.id + '&dimension=pe:LAST_12_MONTHS&filter=ou:' +  me.countryListTag.val() + '&outputType=EVENT&displayProperty=SHORTNAME';
 																				RESTUtil.getAsynchData(programInstancesURL, function(programInstanceList) {
 																					console.log(programInstanceList);
+																					var subtotalInstances = 0;
 																					$.each(programInstanceList.rows, function(i_pi, item_pi) {
 //																						tooltip[item_pi[0]] = item_pi[1];
-																						totalInstances += parseInt(item_pi[1]);
+																						subtotalInstances += parseInt(item_pi[1]);
 																					});
-																				},
-																				function() {
-																					alert('Failed to retrieve program stages.');
-																				},
-																				function() {
-																					requestCount++;
-																				},
-																				function() {
-																					requestCount--;
+																					totalInstances += subtotalInstances;
+																					numberInstancesColumn += item_ps.name + ": " + subtotalInstances + "</br>";
 																					
-																					//if (requestCountProgram == 0) {
+																					numberProgramStages--;
+																					
+																					if (numberProgramStages == 0) {
 																						//Formatted tooltip
-//																						var tooltipKeys = Object.keys(tooltip);
-//																						tooltipKeys.sort();
-//																						var formattedTooltip = "";
-//																						var totalInstances = 0;
-//																						jQuery.each(tooltipKeys, function(i, key){
-//																							formattedTooltip += key.substring(4,6) + "-" + key.substring(0,4) + " => " + tooltip[key] + "%\n";
-//																							totalInstances += tooltip[key];
-//																					    });
+	//																					var tooltipKeys = Object.keys(tooltip);
+	//																					tooltipKeys.sort();
+	//																					var formattedTooltip = "";
+	//																					var totalInstances = 0;
+	//																					jQuery.each(tooltipKeys, function(i, key){
+	//																						formattedTooltip += key.substring(4,6) + "-" + key.substring(0,4) + " => " + tooltip[key] + "%\n";
+	//																						totalInstances += tooltip[key];
+	//																				    });
 																					
 																						if (item_program.type == 3) {
 																							var isCustomEvent = (item_program.programStages[0].dataSetType == 'custom')?'Y':'N';
@@ -461,7 +459,7 @@ function setup_SearchByOrgUnit(me) {
 																																	  organizationUnitByLevel,
 																																	  deCount,
 																																	  //'<span title="' + formattedTooltip + '">' + totalInstances + "</span>",
-																																	  totalInstances,
+																																	  numberInstancesColumn,
 																																	  'not implemented yet',
 																																	  'not currently possible'
 																																	]).draw();
@@ -471,10 +469,18 @@ function setup_SearchByOrgUnit(me) {
 																							
 																							orgUnitStructure._children.push({"id": item_program.id, "name":item_program.name, "type": "Tracker", "numberTrackerInstances":totalInstances, "numberDataElements":deCount});
 																						}
-																						
-																						checkRequestCount(me, requestCount);
-																					//}
-																					//checkRequestCountProgram(me, requestCountProgram, totalInstances, deCount, organizationUnitByLevel, item_program);
+																					}
+																					
+																				},
+																				function() {
+																					alert('Failed to retrieve program stages.');
+																				},
+																				function() {
+																					requestCount++;
+																				},
+																				function() {
+																					requestCount--;
+																					checkRequestCount(me, requestCount);
 																				});	
 																		});
 
@@ -519,50 +525,6 @@ function setup_SearchByOrgUnit(me) {
 }
 
 
-function checkRequestCountProgram(me, requestCountProgram, totalInstances, deCount, organizationUnitByLevel, item_program){
-	if (requestCountProgram == 0) {
-		//Formatted tooltip
-//		var tooltipKeys = Object.keys(tooltip);
-//		tooltipKeys.sort();
-//		var formattedTooltip = "";
-//		var totalInstances = 0;
-//		jQuery.each(tooltipKeys, function(i, key){
-//			formattedTooltip += key.substring(4,6) + "-" + key.substring(0,4) + " => " + tooltip[key] + "%\n";
-//			totalInstances += tooltip[key];
-//	    });
-	
-		if (item_program.type == 3) {
-			var isCustomEvent = (item_program.programStages[0].dataSetType == 'custom')?'Y':'N';
-			
-			me.infoList_Event_DataTable.row.add([
-													  '<b>' + item_program.name + '</b></br>' + Util.getNotEmpty(item_program.description),
-													  organizationUnitByLevel,
-													  deCount,
-													  //'<span title="' + formattedTooltip + '">' + totalInstances + "</span>",
-													  totalInstances,
-													  isCustomEvent,
-													  'not currently possible'
-													]).draw();
-			
-			me.summary.numberOfEvents++;
-		} else if (item_program.type == 1) {
-		
-			me.infoList_Tracker_DataTable.row.add([
-													  '<b>' + item_program.name + '</b></br>' + Util.getNotEmpty(item_program.description),
-													  organizationUnitByLevel,
-													  deCount,
-													  //'<span title="' + formattedTooltip + '">' + totalInstances + "</span>",
-													  totalInstances,
-													  'not implemented yet',
-													  'not currently possible'
-													]).draw();
-			
-			me.summary.numberOfTrackers++;
-		}
-	}
-}
-
-
 function checkRequestCount(me, requestCount) {
 	if (requestCount == 0) {
 		me.infoList_SummaryTableTag.find("#dataSets_InfoList_Summary").text(me.summary.numberOfDatasets + " (" + me.summary.dataValues + ")");
@@ -603,7 +565,7 @@ function setDataSetLinkAction(me) {
 
 			// Set the change tab to dataSet one (first one)
 			$("#tabs").tabs();
-			$("#tabs").tabs("option", "active", 0);
+			$("#tabs").tabs("option", "active", 1);
 		}
 
 		return false;

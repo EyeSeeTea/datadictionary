@@ -96,6 +96,9 @@ function getTipContent(d) {
 	if (d.type != undefined){
 		content += "<p>Type: <span style='color:red'>" + d.type + "</span></p>";
 	}
+	else if (d.type == undefined && d.numberDataValues == undefined) {
+		content += "<p><span style='color:red'>No data values for this element</span></p>";
+	}
 	if (content == ""){
 		content += "<span style='color:red'>Node:</span> " + getLabel(d);
 	}
@@ -108,22 +111,25 @@ function calculateTextPosition(d){
 }
 
 function calculateRadius(d) {
+	var value = 0;
 	if ($('#graphSelector').val() in d){
-//		if (d.type == "Organization Unit" && $('#graphSelector').val() == 'numberDataValues'){
-//			return ((d[$('#graphSelector').val()] + d["numberTrackerInstances"] + d["numberEventInstances"])/ maxNumber) * 50|| 0;
-//		}
-//		else{
-			return (d[$('#graphSelector').val()] / maxNumber) * 50|| 0;
-//		}
+		value =	d[$('#graphSelector').val()];
 	}
 	else if ("numberTrackerInstances" in d){
-		return (d["numberTrackerInstances"] / maxNumber) * 50|| 0;
+		value =	d["numberTrackerInstances"];
 	}
 	else{
-		return (d["numberEventInstances"] / maxNumber) * 50|| 0;
+		value =	d["numberEventInstances"];
 	}
 	
-//	return Math.sqrt(d.numberDataValues) / 2 || 0;
+	if ($('#scaleSelector').val() == 'linear'){
+		//return (value / maxNumber) * 50|| 0;
+		return linearScale(value)||0;
+	}
+	else{
+		//return Math.log((value/maxNumber)+1) * 50|| 0;
+		return logScale(value + 1)|| 0;
+	}
 }
 
 function calculateMaxNumber(tree, selectedRadius){
@@ -141,6 +147,9 @@ function calculateMaxNumber(tree, selectedRadius){
 	else{
 		maxNumber = tree.numberDataElements
 	}
+	
+	logScale = d3.scale.log().domain([ 1, maxNumber ]).range([ 0, 50 ]);
+	linearScale = d3.scale.linear().domain([ 0, maxNumber ]).range([ 0, 50 ]);
 }
 
 //Color leaf nodes orange, and packages white or blue.
@@ -161,7 +170,14 @@ function color(d) {
 	}
 	else{
 		//It is a data element
-		nodeColor = color(d.parent);
+		if (d.numberDataValues == undefined){
+			//If no datavalues highlight it
+			nodeColor = "#cccc00";
+		}
+		else{
+			//Otherwise use parent color
+			nodeColor = color(d.parent);
+		}
 	}
 
 	return nodeColor;
