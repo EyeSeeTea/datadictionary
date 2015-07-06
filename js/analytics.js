@@ -33,7 +33,7 @@ function setup_Analytics(me, afterFunc) {
 							$.each(json_Data_details.userGroupAccesses, function(i_userGroupAccesses, item_userGroupAccesses) {
 								if (item_userGroupAccesses.userGroupUid in userGrouspNameDict){
 									groups +=  userGrouspNameDict[item_userGroupAccesses.userGroupUid] + ': ' + item_userGroupAccesses.access 
-									//+ " <a style='color:#f45e00' href='" + apiPath + "userGroups/" + item_userGroupAccesses.userGroupUid + "/users/" + userId + "'>join</a> | <a style='color:#f45e00' target='_blank' href='" + dhisPath + "dhis-web-maintenance-user/editUserGroupForm.action?userGroupId=" + item_userGroupAccesses.userGroupUid +"'>edit</a>"
+									+ " <a style='color:#f45e00' href='" + apiPath + "userGroups/" + item_userGroupAccesses.userGroupUid + "/users/" + userId + "'>join</a> | <a style='color:#f45e00' target='_blank' href='" + dhisPath + "dhis-web-maintenance-user/editUserGroupForm.action?userGroupId=" + item_userGroupAccesses.userGroupUid +"'>edit</a>"
 									+ '</br>';
 								}	
 								else{
@@ -44,7 +44,7 @@ function setup_Analytics(me, afterFunc) {
 									RESTUtil.getAsynchData(requestUrl_analytics_userGroups, function(json_UserGroups_details) {
 										userGrouspNameDict[item_userGroupAccesses.userGroupUid] = json_UserGroups_details.name;
 										groups +=  userGrouspNameDict[item_userGroupAccesses.userGroupUid] + ': ' + item_userGroupAccesses.access
-										//+ " <a style='color:#f45e00' href='" + apiPath + "userGroups/" + item_userGroupAccesses.userGroupUid + "/users/" + userId + "'>join</a> | <a style='color:#f45e00' target='_blank' href='" + dhisPath + "dhis-web-maintenance-user/editUserGroupForm.action?userGroupId=" + item_userGroupAccesses.userGroupUid +"'>edit</a>"
+										+ " <a style='color:#f45e00' href='" + apiPath + "userGroups/" + item_userGroupAccesses.userGroupUid + "/users/" + userId + "'>join</a> | <a style='color:#f45e00' target='_blank' href='" + dhisPath + "dhis-web-maintenance-user/editUserGroupForm.action?userGroupId=" + item_userGroupAccesses.userGroupUid +"'>edit</a>"
 										+ '</br>';
 									},
 									function() {
