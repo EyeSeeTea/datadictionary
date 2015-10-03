@@ -1682,8 +1682,6 @@ function DataManager() {
 
 				me.getDataElementsBtnTag.click();
 			}
-		} else if (tabSelection == 'Dashboard') {
-			
 		} else if (tabSelection == 'Group') {
 			// Select the type first
 			me.groupTypeTag.val(me.paramSearchType);
@@ -1723,12 +1721,11 @@ function DataManager() {
 				
 				$('#infoList_Analytics').show();
 				
-				setup_Analytics(me, function() {
-					if (me.paramTab == 'Analytics')
-						me.setParameterAction(me.paramTab);
-				});	
+				setup_Analytics(me, function() {});	
 			}
 		});
+		if (me.paramTab == 'Dashboard')
+			$('a[href="#tabs-3"]').trigger( "click" );
 		
 		// Data Elements Groups Tab
 		setup_SearchByGroup(me, "DE", $('#tabs-7'), function() {
