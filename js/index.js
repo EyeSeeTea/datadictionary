@@ -208,8 +208,7 @@ function DataManager() {
 		});
 
 		// Step 3a. Sort the person by name
-		$.when
-				.apply($, deferredArrActions_getData)
+		$.when.apply($, deferredArrActions_getData)
 				.then(
 						function() {
 
@@ -217,39 +216,24 @@ function DataManager() {
 									me.dataListWithDetail, "name");
 
 							if (type == "DE_DS" || type == "DE") {
-								me
-										.dataElementDataModify(
+								me.dataElementDataModify(
 												me.dataListWithDetail,
 												loadingTagName,
 												function() {
 
-													me
-															.setUp_DataTable_DataElement(
-																	type,
-																	tbListTag,
-																	me.dataListWithDetail);
+													me.setUp_DataTable_DataElement(type, tbListTag, me.dataListWithDetail);
 
 													// Display the section.
 													listDivTag.show();
 
-													me
-															.setDivOriginalHeights(tbListTag
-																	.find('div.limitedView'));
+													me.setDivOriginalHeights(tbListTag.find('div.limitedView'));
 
-													me
-															.setUpDivToggleAction(tbListTag
-																	.find('div.limitedView,div.limitedView_Toggle'));
+													me.setUpDivToggleAction(tbListTag.find('div.limitedView,div.limitedView_Toggle'));
 
-													me
-															.setUp_TransposedExcelBtn(
-																	tbListTag,
-																	me.dataListWithDetail);
+													me.setUp_TransposedExcelBtn(tbListTag, me.dataListWithDetail);
 
 													if (me.paramOption == "DE") {
-														me
-																.setUp_DEAttributeValueExcelBtn(
-																		tbListTag,
-																		me.dataListWithDetail);
+														me.setUp_DEAttributeValueExcelBtn(tbListTag,me.dataListWithDetail);
 													}
 												});
 							} else if (type == "IND") {
@@ -1655,32 +1639,29 @@ function DataManager() {
 		if (me.paramTab != '') {
 			var tabIndex = 0;
 
-			if (me.paramTab == 'DataSet') {
+			if (me.paramTab == 'Country') {
+				// We keep country although now it is for any org unit level in general in order to allow old links to keep working
 				tabIndex = 0;
-			} else if (me.paramTab == 'Country') {
+			} else if (me.paramTab == 'DataSet') {
 				tabIndex = 1;
-			} else if (me.paramTab == 'Group') {
+			} else if (me.paramTab == 'Dashboard') {
 				tabIndex = 2;
+			} else if (me.paramTab == 'Group') {
+				if (me.paramSearchType == 'DE'){
+					tabIndex = 6;	
+				}
+				else{
+					tabIndex = 7;
+				}
 			}
 
 			$("#tabs").tabs();
 			$("#tabs").tabs("option", "active", tabIndex);
-
 		}
 	}
 
 	me.setParameterAction = function(tabSelection) {
-		if (tabSelection == 'DataSet') {
-			// Set DataSet value
-			me.dataSetFullListTag.val(me.paramSearchValue);
-
-			if (me.dataSetFullListTag.val() != '') {
-				me.dataSetFullListTag.change();
-				// me.selectDataSet( me.dataSetFullListTag.val() );
-
-				me.getDataElementsBtnTag.click();
-			}
-		} else if (tabSelection == 'Country') {
+		if (tabSelection == 'Country') {
 			me.countryListTag.val(me.paramSearchValue);
 
 			if (me.countryListTag.val() != '') {
@@ -1691,6 +1672,18 @@ function DataManager() {
 
 				me.retrieveData_CountryTag.click();
 			}
+		} else if (tabSelection == 'DataSet') {
+			// Set DataSet value
+			me.dataSetFullListTag.val(me.paramSearchValue);
+
+			if (me.dataSetFullListTag.val() != '') {
+				me.dataSetFullListTag.change();
+				// me.selectDataSet( me.dataSetFullListTag.val() );
+
+				me.getDataElementsBtnTag.click();
+			}
+		} else if (tabSelection == 'Dashboard') {
+			
 		} else if (tabSelection == 'Group') {
 			// Select the type first
 			me.groupTypeTag.val(me.paramSearchType);
@@ -1739,13 +1732,13 @@ function DataManager() {
 		
 		// Data Elements Groups Tab
 		setup_SearchByGroup(me, "DE", $('#tabs-7'), function() {
-			if (me.paramTab == 'Group')
+			if (me.paramTab == 'Group' && me.paramSearchType == 'DE')
 				me.setParameterAction(me.paramTab);
 		});
 		
 		// Indicator Groups Tab
 		setup_SearchByGroup(me, "IND", $('#tabs-8'), function() {
-			if (me.paramTab == 'Group')
+			if (me.paramTab == 'Group' && me.paramSearchType == 'IND')
 				me.setParameterAction(me.paramTab);
 		});
 
