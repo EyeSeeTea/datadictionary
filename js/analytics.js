@@ -43,17 +43,28 @@ function setup_Analytics(me, afterFunc) {
 										+ '.json?fields=name';
 										RESTUtil.getAsynchData(requestUrl_analytics_userGroups, function(json_UserGroups_details) {
 											
-											$.each(editSQLView.rows, function(i_editLink, item_editLink) {
-												if (item_editLink[2] == json_UserGroups_details.name){
-													editLink = dhisPath + "dhis-web-maintenance-user/editUserGroupForm.action?userGroupId=" + item_editLink[0];
+											// Do not add links if the user belongs to this group
+											var belongsToGroup = false;
+											$.each(user_data.userGroups, function(i_belongUserGroups, item_belongUserGroups) {
+												if (item_userGroupAccesses.userGroupUid == item_belongUserGroups.id){
+													belongsToGroup=true;
 													return false;
 												}
 											});
+											var joinEditLinks = "";
+											if (!belongsToGroup){
+												$.each(editSQLView.rows, function(i_editLink, item_editLink) {
+													if (item_editLink[2] == json_UserGroups_details.name){
+														editLink = dhisPath + "dhis-web-maintenance-user/editUserGroupForm.action?userGroupId=" + item_editLink[0];
+														return false;
+													}
+												});
+												joinEditLinks = " <a style='color:#f45e00' href='#' onclick='submitData_URL(this, \"" + apiPath + "userGroups/" + item_userGroupAccesses.userGroupUid + "/users/" + userId + "\")'>join</a> | <a style='color:#f45e00' target='_blank' href='" + editLink +"'>edit</a>";
+											}
 											
 											userGrouspNameDict[item_userGroupAccesses.userGroupUid] = json_UserGroups_details.name + ': ' + item_userGroupAccesses.access 
-											+ " <a style='color:#f45e00' href='javascript:submitData_URL(\"" + apiPath + "userGroups/" + item_userGroupAccesses.userGroupUid + "/users/" + userId + "\");'>join</a> | <a style='color:#f45e00' target='_blank' href='" + editLink +"'>edit</a>"
+											+ joinEditLinks
 											+ '</br>';
-											//groups += createGroupsLink(userGrouspNameDict[item_userGroupAccesses.userGroupUid], item_userGroupAccesses, userId);
 											groups += userGrouspNameDict[item_userGroupAccesses.userGroupUid];
 										},
 										function() {
@@ -93,7 +104,7 @@ function setup_Analytics(me, afterFunc) {
 	afterFunc();
 }
 
-function submitData_URL( url, successFunc, failFunc )
+function submitData_URL( el, url, successFunc, failFunc )
 {		
 	$.ajax({
 	  type: "POST",
@@ -101,6 +112,7 @@ function submitData_URL( url, successFunc, failFunc )
 	  //data: JSON.stringify( jsonData ),
 	  contentType: "text/plain; charset=utf-8",
 	  success: function( msg ) {
+		  $(this).closest('tr').css("background-color", 'whitesmoke');
 		  successFunc();
 		},
 	  error: function( msg ) {
