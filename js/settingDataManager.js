@@ -22,6 +22,8 @@ function SettingDataPopupForm(me)
 	
 	var sqlViewSettings = $('#sqlViewSettings');
 	
+	var sqlViewEditSettings = $('#sqlViewEditSettings');
+	
 	//Not being used at the moment
 	//me.dataLoadingTemplateMain = '<div class="dataLoading main" style="display:none;"><img src="img/ui-anim_basic.gif"/></div>';
 	

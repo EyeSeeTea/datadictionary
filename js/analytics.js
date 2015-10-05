@@ -1,5 +1,4 @@
 function setup_Analytics(me, afterFunc) {
-	var loadingTagName = 'dataLoading';
 	
 	if (typeof me.infoList_DataSet_Analytics == "undefined"){
 		me.infoList_DataSet_Analytics = $("#infoList_Analytics").DataTable({
@@ -7,80 +6,107 @@ function setup_Analytics(me, afterFunc) {
 			"columns": [{"width":"25%"}, null, null, {"width":"20%"}, {"width":"25%"}],
 			"pageLength": 50});
 	}
+
+	var requestUrl_AnalyticsEditSQLView = me.queryURL_analyticsSQLView + $("#sqlViewEditSettings").val() + "/data";
 	
-	var requestUrl_AnalyticsSQLView = me.queryURL_analyticsSQLView + $("#sqlViewSettings").val() + "/data";
-	var userGrouspNameDict = {};
-	var userId;
-	
-	RESTUtil.getAsynchData(me.queryURL_me, function(user_data) {
+	RESTUtil.getAsynchData(requestUrl_AnalyticsEditSQLView, function (editSQLView){
 		
-		userId = user_data.id;
+		var loadingTagName = 'dataLoading';
+		var requestUrl_AnalyticsSQLView = me.queryURL_analyticsSQLView + $("#sqlViewSettings").val() + "/data";
+		var userGrouspNameDict = {};
+		var userId;
 		
-		RESTUtil.getAsynchData(me.queryURL_analytics_ownDashboard, function(json_Data_owner) {
-			RESTUtil.getAsynchData(requestUrl_AnalyticsSQLView, function(json_Data) {
-				console.log(json_Data);
-				
-				$.each(json_Data.rows, function(i_dashboard, item_dashboard) {
-					var requestUrl_analytics = me.queryURL_analytics
-					+ item_dashboard[1]
-					+ '.json?fields=itemCount,user[name],userGroupAccesses';
-					
-				
-					RESTUtil.getAsynchData(requestUrl_analytics, function(json_Data_details) {
-						if (json_Data_details.userGroupAccesses.length > 0){
-							var groups = "";
-							var queries = 0;
-							$.each(json_Data_details.userGroupAccesses, function(i_userGroupAccesses, item_userGroupAccesses) {
-								if (item_userGroupAccesses.userGroupUid in userGrouspNameDict){
-									groups +=  userGrouspNameDict[item_userGroupAccesses.userGroupUid] + ': ' + item_userGroupAccesses.access 
-									+ " <a style='color:#f45e00' href='" + apiPath + "userGroups/" + item_userGroupAccesses.userGroupUid + "/users/" + userId + "'>join</a> | <a style='color:#f45e00' target='_blank' href='" + dhisPath + "dhis-web-maintenance-user/editUserGroupForm.action?userGroupId=" + item_userGroupAccesses.userGroupUid +"'>edit</a>"
-									+ '</br>';
-								}	
-								else{
-									
-									var requestUrl_analytics_userGroups = me.queryURL_analytics_userGroups
-									+ item_userGroupAccesses.userGroupUid
-									+ '.json?fields=name';
-									RESTUtil.getAsynchData(requestUrl_analytics_userGroups, function(json_UserGroups_details) {
-										userGrouspNameDict[item_userGroupAccesses.userGroupUid] = json_UserGroups_details.name;
-										groups +=  userGrouspNameDict[item_userGroupAccesses.userGroupUid] + ': ' + item_userGroupAccesses.access
-										+ " <a style='color:#f45e00' href='" + apiPath + "userGroups/" + item_userGroupAccesses.userGroupUid + "/users/" + userId + "'>join</a> | <a style='color:#f45e00' target='_blank' href='" + dhisPath + "dhis-web-maintenance-user/editUserGroupForm.action?userGroupId=" + item_userGroupAccesses.userGroupUid +"'>edit</a>"
-										+ '</br>';
-									},
-									function() {
-									},
-									function() {
-										queries++;
-									},
-									function() {
-										queries--;
-										addRowToTable(me, json_Data_owner, item_dashboard, json_Data_details, groups, queries);
-									});
-								}
-								
-							});
-							
-						}
-						else{
-							addRowToTable(me, json_Data_owner, item_dashboard, json_Data_details);
-						}
-						
-					});
-	
-				})
-				
-			}, function() {
-				alert('Failed to load analytics.');
-			}, function() {
-				QuickLoading.dialogShowAdd(loadingTagName);
-			}, function() {
-				QuickLoading.dialogShowRemove(loadingTagName);
-			});
+		RESTUtil.getAsynchData(me.queryURL_me, function(user_data) {
 			
+			userId = user_data.id;
+			
+			RESTUtil.getAsynchData(me.queryURL_analytics_ownDashboard, function(json_Data_owner) {
+				RESTUtil.getAsynchData(requestUrl_AnalyticsSQLView, function(json_Data) {
+					$.each(json_Data.rows, function(i_dashboard, item_dashboard) {
+						var requestUrl_analytics = me.queryURL_analytics
+						+ item_dashboard[1]
+						+ '.json?fields=itemCount,user[name],userGroupAccesses';
+						
+					
+						RESTUtil.getAsynchData(requestUrl_analytics, function(json_Data_details) {
+							if (json_Data_details.userGroupAccesses.length > 0){
+								var groups = "";
+								var queries = 0;
+								$.each(json_Data_details.userGroupAccesses, function(i_userGroupAccesses, item_userGroupAccesses) {
+									if (item_userGroupAccesses.userGroupUid in userGrouspNameDict){
+										groups += userGrouspNameDict[item_userGroupAccesses.userGroupUid];
+									}	
+									else{
+										
+										var requestUrl_analytics_userGroups = me.queryURL_analytics_userGroups
+										+ item_userGroupAccesses.userGroupUid
+										+ '.json?fields=name';
+										RESTUtil.getAsynchData(requestUrl_analytics_userGroups, function(json_UserGroups_details) {
+											
+											$.each(editSQLView.rows, function(i_editLink, item_editLink) {
+												if (item_editLink[2] == json_UserGroups_details.name){
+													editLink = dhisPath + "dhis-web-maintenance-user/editUserGroupForm.action?userGroupId=" + item_editLink[0];
+													return false;
+												}
+											});
+											
+											userGrouspNameDict[item_userGroupAccesses.userGroupUid] = json_UserGroups_details.name + ': ' + item_userGroupAccesses.access 
+											+ " <a style='color:#f45e00' href='javascript:submitData_URL(\"" + apiPath + "userGroups/" + item_userGroupAccesses.userGroupUid + "/users/" + userId + "\");'>join</a> | <a style='color:#f45e00' target='_blank' href='" + editLink +"'>edit</a>"
+											+ '</br>';
+											//groups += createGroupsLink(userGrouspNameDict[item_userGroupAccesses.userGroupUid], item_userGroupAccesses, userId);
+											groups += userGrouspNameDict[item_userGroupAccesses.userGroupUid];
+										},
+										function() {
+										},
+										function() {
+											queries++;
+										},
+										function() {
+											queries--;
+											addRowToTable(me, json_Data_owner, item_dashboard, json_Data_details, groups, queries);
+										});
+									}
+									
+								});
+								
+							}
+							else{
+								addRowToTable(me, json_Data_owner, item_dashboard, json_Data_details);
+							}
+							
+						});
+
+					})
+					
+				}, function() {
+					alert('Failed to load analytics.');
+				}, function() {
+					QuickLoading.dialogShowAdd(loadingTagName);
+				}, function() {
+					QuickLoading.dialogShowRemove(loadingTagName);
+				});
+				
+			});
 		});
 	});
 	
 	afterFunc();
+}
+
+function submitData_URL( url, successFunc, failFunc )
+{		
+	$.ajax({
+	  type: "POST",
+	  url: url,
+	  //data: JSON.stringify( jsonData ),
+	  contentType: "text/plain; charset=utf-8",
+	  success: function( msg ) {
+		  successFunc();
+		},
+	  error: function( msg ) {
+		  failFunc();
+		}			   
+	});
 }
 
 function addRowToTable(me, json_Data_owner, item_dashboard, json_Data_details, groups, queries){
@@ -110,3 +136,4 @@ function addRowToTable(me, json_Data_owner, item_dashboard, json_Data_details, g
 	}
 	
 }
+
