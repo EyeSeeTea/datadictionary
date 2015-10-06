@@ -7,7 +7,7 @@ function populateCountryList(me, loadingTagName, afterFunc) {
 	var listTag = me.countryListTag;
 	listTag.empty();
 
-	var queryURL_getCountries = apiPath + "organisationUnits.json?level=" + me.orgUnitList.val();
+	var queryURL_getCountries = apiPath + "organisationUnits.json?paging=no&level=" + me.orgUnitList.val();
 	
 	RESTUtil.getAsynchData(queryURL_getCountries, function(json_Data) {
 		var json_DataOrdered = Util.sortByKey(json_Data.organisationUnits,
@@ -360,7 +360,7 @@ function setup_SearchByOrgUnit(me) {
 									console.log('Getting programs...');
 
 									// Retrieve Program List
-									var requestUrl_programList = apiPath + 'programs.json?paging=no&fields=id,name,type,description,organisationUnits[id,level],programStages[id,name,dataEntryType,programStageDataElements]';
+									var requestUrl_programList = apiPath + 'programs.json?paging=no&fields=id,name,programType,description,organisationUnits[id,level],programStages[id,name,dataEntryType,programStageDataElements]';
 
 									RESTUtil.getAsynchData(requestUrl_programList, function(programList) {
 														// requestCount++;
@@ -435,7 +435,7 @@ function setup_SearchByOrgUnit(me) {
 	//																						totalInstances += tooltip[key];
 	//																				    });
 																					
-																						if (item_program.type == 3) {
+																						if (item_program.programType == "WITHOUT_REGISTRATION") {
 																							var isCustomEvent = (item_program.programStages[0].dataSetType == 'custom')?'Y':'N';
 																							
 																							me.infoList_Event_DataTable.row.add([
@@ -452,7 +452,7 @@ function setup_SearchByOrgUnit(me) {
 																							me.summary.eventInstances += totalInstances;
 																							
 																							orgUnitStructure._children.push({"id": item_program.id, "name":item_program.name, "type": "Event", "numberEventInstances":totalInstances, "numberDataElements":deCount});
-																						} else if (item_program.type == 1) {
+																						} else if (item_program.programType == "WITH_REGISTRATION") {
 																						
 																							me.infoList_Tracker_DataTable.row.add([
 																																	  '<b>' + item_program.name + '</b></br>' + Util.getNotEmpty(item_program.description),

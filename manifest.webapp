@@ -1,1 +1,6 @@
-{"version":"1.22","name":"Data Dictionary","description":"Data Dictionary","icons":{"16":null,"48":"img/icons/icon.png","128":null},"developer":{"url":"","name":"James Chang, Adrian Quintana","company":" - EyeSeeTea Ltd.","email":" - adrianquintana@gmail.com"},"activities":{"dhis":{"href":"http://localhost:8080/dhis-web-appmanager"}},"launch_path":"index.html","installs_allowed_from":null,"default_locale":"en"}
+{"version":"1.22",
+"name":"Data Dictionary",
+"description":"Data Dictionary",
+"icons":{"16":null,"48":"img/icons/icon.png","128":null},
+"developer":{"url":"","name":"James Chang, Adrian Quintana","company":" - EyeSeeTea Ltd.","email":" - adrianquintana@gmail.com"},
+"activities":{"dhis":{"href":"../dhis/"}},"launch_path":"index.html","installs_allowed_from":null,"default_locale":"en"}

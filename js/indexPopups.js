@@ -3,8 +3,8 @@
 function DataElementPopup() {
 	var me = this;
 
-	me.queryURL_DataElements = "../../dhis/api/dataElements";
-	me.queryURL_Attributes = "../../dhis/api/attributes.json?paging=false&filter=dataElementAttribute:eq:true&fields=id,name";
+	me.queryURL_DataElements = apiPath + "dataElements";
+	me.queryURL_Attributes = apiPath + "attributes.json?paging=false&filter=dataElementAttribute:eq:true&fields=id,name";
 
 	me.dialogFormTag = $("#dataElementPopupForm");
 	me.tableTag = $('#dataElementDetailTable');
@@ -257,7 +257,7 @@ function DataElementPopup() {
 function IndicatorPopup() {
 	var me = this;
 
-	me.queryURL_Indicators = "../../dhis/api/indicators";
+	me.queryURL_Indicators = apiPath + "indicators";
 
 	me.dialogFormTag = $("#indicatorPopupForm");
 	me.tableTag = $('#indicatorDetailTable');

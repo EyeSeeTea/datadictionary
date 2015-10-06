@@ -27,7 +27,8 @@ function populateGroupList(me, groupType, listTag, loadingTag, execFunc) {
 
 						Util.populateSelect(listTag, groupTypeName	+ " Group", json_DataOrdered);
 
-						execFunc();
+						if (groupType == me.paramSearchType)
+							execFunc();
 					}, function() {
 						alert('Failed to load ' + groupTypeName
 								+ ' group list.');
@@ -46,7 +47,7 @@ function setup_SearchByGroup(me, groupType, tabTag, afterFunc) {
 	if (groupType == "DE") {
 		listTag = me.groupListTag;
 	} else if (groupType == "IND") {
-		listTag =  me.indicatorListTag;
+		listTag = me.indicatorListTag;
 	}
 	
 	populateGroupList(me, groupType, listTag,
@@ -62,7 +63,8 @@ function setup_SearchByGroup(me, groupType, tabTag, afterFunc) {
 					if (listTag.val() != '') {
 						listTag.change();
 
-						me.retrieveData_byGroupTag.click();
+						// Commenting it out as it looks it is not being used
+						//me.retrieveData_byGroupTag.click();
 					}
 				}
 
