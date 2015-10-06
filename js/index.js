@@ -1,6 +1,5 @@
-var apiPath = "../../dhis/api/";
-//var apiPath = "../../api/";
-var dhisPath = "../../dhis/";
+var dhisPath ="";
+var apiPath = "";
 
 var _queryURL_getOrgUnit = apiPath + "organisationUnits";
 
@@ -12,9 +11,13 @@ var _catComboData = {};
 
 $(document).ready(function() {
 
-	$("#tabs").tabs({disabled: [3,4,5]});
+	$.getJSON( "manifest.webapp", function( json ) {
+		dhisPath = json.activities.dhis.href;
+		apiPath = dhisPath + "api/";
 
-	_dataManager = new DataManager();
+		$("#tabs").tabs({disabled: [3,4,5]});
+		_dataManager = new DataManager();
+	} );
 
 });
 
