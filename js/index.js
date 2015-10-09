@@ -6,6 +6,10 @@ var _queryURL_getOrgUnit = apiPath + "organisationUnits";
 var _dataManager;
 var _catComboData = {};
 
+//We keep country although now it is for any org unit level in general in order to allow old links to keep working
+var tabsMap = ['Country','DataSet','Dashboard','Users','OrgGroups','DB','Group','Group'];
+var typeMap = ['','','','','','','DE','IND'];
+
 // ======================================================
 // Document Ready Run
 
@@ -15,7 +19,20 @@ $(document).ready(function() {
 		dhisPath = json.activities.dhis.href;
 		apiPath = dhisPath + "api/";
 
-		$("#tabs").tabs({disabled: [3,4,5]});
+		$("#tabs").tabs({disabled: [3,4,5],activate: function(event ,ui){
+            //Change url without reloading page
+            var typeString = (typeMap[ui.newTab.index()]!='')?('&Type=' + typeMap[ui.newTab.index()]):'';
+			var explorerUrl = '//' + location.host + location.pathname + '?Tab=' + tabsMap[ui.newTab.index()] + typeString;
+			if(history.pushState) {history.pushState(null, null, explorerUrl);}
+        }});
+		
+		$('.action_select').click(function(){
+			//Change url without reloading page
+            var typeString = (typeMap[$("#tabs").tabs('option', 'selected')]!='')?('&Type=' + typeMap[$("#tabs").tabs('option', 'selected')]):'';
+			var explorerUrl = '//' + location.host + location.pathname + '?Tab=' + tabsMap[$("#tabs").tabs('option', 'selected')] + typeString + "&Value=" + $(this).val();
+			if(history.pushState) {history.pushState(null, null, explorerUrl);}
+		});
+		
 		_dataManager = new DataManager();
 	} );
 
@@ -1642,14 +1659,9 @@ function DataManager() {
 		if (me.paramTab != '') {
 			var tabIndex = 0;
 
-			if (me.paramTab == 'Country') {
-				// We keep country although now it is for any org unit level in general in order to allow old links to keep working
-				tabIndex = 0;
-			} else if (me.paramTab == 'DataSet') {
-				tabIndex = 1;
-			} else if (me.paramTab == 'Dashboard') {
-				tabIndex = 2;
-			} else if (me.paramTab == 'Group') {
+			tabIndex = tabsMap.indexOf(me.paramTab)
+			//We keep country although now it is for any org unit level in general in order to allow old links to keep working
+			if (tabIndex == 6) {
 				if (me.paramSearchType == 'DE'){
 					tabIndex = 6;	
 				}
