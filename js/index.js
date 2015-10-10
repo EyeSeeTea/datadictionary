@@ -19,24 +19,29 @@ $(document).ready(function() {
 		dhisPath = json.activities.dhis.href;
 		apiPath = dhisPath + "api/";
 
-		$("#tabs").tabs({disabled: [3,4,5],activate: function(event ,ui){
-            //Change url without reloading page
-            var typeString = (typeMap[ui.newTab.index()]!='')?('&Type=' + typeMap[ui.newTab.index()]):'';
-			var explorerUrl = '//' + location.host + location.pathname + '?Tab=' + tabsMap[ui.newTab.index()] + typeString;
-			if(history.pushState) {history.pushState(null, null, explorerUrl);}
+		// Change url when a new tab is selected
+		$("#tabs").tabs({disabled: [3,4,5], activate: function(event ,ui){
+			refreshURL(tabsMap[ui.newTab.index()], typeMap[ui.newTab.index()], $("#tabs div.ui-tabs-panel:visible").find('.action_select').val());
         }});
 		
-		$('.action_select').click(function(){
-			//Change url without reloading page
-            var typeString = (typeMap[$("#tabs").tabs('option', 'selected')]!='')?('&Type=' + typeMap[$("#tabs").tabs('option', 'selected')]):'';
-			var explorerUrl = '//' + location.host + location.pathname + '?Tab=' + tabsMap[$("#tabs").tabs('option', 'selected')] + typeString + "&Value=" + $(this).val();
-			if(history.pushState) {history.pushState(null, null, explorerUrl);}
+		// Change url when dropdownlist is selected
+		$('.action_select').on('click change', function(){
+			refreshURL(tabsMap[$("#tabs").tabs('option', 'selected')], typeMap[$("#tabs").tabs('option', 'selected')], $(this).val())
 		});
 		
 		_dataManager = new DataManager();
 	} );
 
 });
+
+//Change url without reloading page
+function refreshURL(selectedTab, selectedType, selectedValue){
+	var tabString = '?Tab=' + selectedTab;
+	var typeString = (selectedType!='')?('&Type=' + selectedType):'';
+	var valueString = (selectedValue != '' && typeof selectedValue != 'undefined')?"&Value=" + selectedValue:"";
+	var explorerUrl = '//' + location.host + location.pathname + tabString + typeString + valueString;
+	if(history.pushState) {history.pushState(null, null, explorerUrl);}
+}
 
 // -------------------------------------------
 // -- Data Element Manager Class
