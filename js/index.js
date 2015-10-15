@@ -6,6 +6,10 @@ var _queryURL_getOrgUnit = apiPath + "organisationUnits";
 var _dataManager;
 var _catComboData = {};
 
+//We keep country although now it is for any org unit level in general in order to allow old links to keep working
+var tabsMap = ['Country','DataSet','Dashboard','Users','OrgGroups','DB','Group','Group'];
+var typeMap = ['','','','','','','DE','IND'];
+
 // ======================================================
 // Document Ready Run
 
@@ -15,11 +19,29 @@ $(document).ready(function() {
 		dhisPath = json.activities.dhis.href;
 		apiPath = dhisPath + "api/";
 
-		$("#tabs").tabs({disabled: [3,4,5]});
+		// Change url when a new tab is selected
+		$("#tabs").tabs({disabled: [3,4,5], activate: function(event ,ui){
+			refreshURL(tabsMap[ui.newTab.index()], typeMap[ui.newTab.index()], $("#tabs div.ui-tabs-panel:visible").find('.action_select').val());
+        }});
+		
+		// Change url when dropdownlist is selected
+		$('.action_select').on('click change', function(){
+			refreshURL(tabsMap[$("#tabs").tabs('option', 'selected')], typeMap[$("#tabs").tabs('option', 'selected')], $(this).val())
+		});
+		
 		_dataManager = new DataManager();
 	} );
 
 });
+
+//Change url without reloading page
+function refreshURL(selectedTab, selectedType, selectedValue){
+	var tabString = '?Tab=' + selectedTab;
+	var typeString = (selectedType!='')?('&Type=' + selectedType):'';
+	var valueString = (selectedValue != '' && typeof selectedValue != 'undefined')?"&Value=" + selectedValue:"";
+	var explorerUrl = '//' + location.host + location.pathname + tabString + typeString + valueString;
+	if(history.pushState) {history.pushState(null, null, explorerUrl);}
+}
 
 // -------------------------------------------
 // -- Data Element Manager Class
@@ -1642,14 +1664,9 @@ function DataManager() {
 		if (me.paramTab != '') {
 			var tabIndex = 0;
 
-			if (me.paramTab == 'Country') {
-				// We keep country although now it is for any org unit level in general in order to allow old links to keep working
-				tabIndex = 0;
-			} else if (me.paramTab == 'DataSet') {
-				tabIndex = 1;
-			} else if (me.paramTab == 'Dashboard') {
-				tabIndex = 2;
-			} else if (me.paramTab == 'Group') {
+			tabIndex = tabsMap.indexOf(me.paramTab)
+			//We keep country although now it is for any org unit level in general in order to allow old links to keep working
+			if (tabIndex == 6) {
 				if (me.paramSearchType == 'DE'){
 					tabIndex = 6;	
 				}

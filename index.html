@@ -48,7 +48,7 @@
 	<span id="headerText" onclick="window.location.href='../../dhis-web-dashboard-integration/index.action'" style="cursor:pointer" title="View home page">PSI MIS</span>
 	<span id="headerTitle">Data Dictionary</span>
 	<div id="headerRightSideControls">		
-			<a href="https://docs.google.com/document/d/1kas42KhcTIIL0cE9_PVwcEJw97wunVaAafwKuM0JaBc" target="_blank" style="color: White;">v 1.31</a>
+			<a href="https://docs.google.com/document/d/1kas42KhcTIIL0cE9_PVwcEJw97wunVaAafwKuM0JaBc" target="_blank" style="color: White;">v 1.32</a>
 			| 
 			<button id="settingPopupFormOpen">Settings</button>
 			| <button type="button" id="closeButton" onclick="window.location.href='../../dhis-web-dashboard-integration/index.action'"><span nameId='closeButton'>Close</span></button>
@@ -115,7 +115,7 @@
 				<table class="tabFilters">
 					<tr>
 						<td style="font-weight:bold;">
-							<span id="orgUnitLabel"></span>: <select id="countryList"></select> <img style="max-width: 16px;cursor: pointer; cursor: hand;" title="Click on Settings to change the organization unit level" src="images/help.png"/>
+							<span id="orgUnitLabel"></span>: <select id="countryList" class="action_select"></select> <img style="max-width: 16px;cursor: pointer; cursor: hand;" title="Click on Settings to change the organization unit level" src="images/help.png"/>
 						</td>
 						<td>
 							<div id='countriesLoading' style='display:none'>
@@ -301,7 +301,7 @@ Users: Number of users having access to at least one org. unit." src="images/hel
 					<tr id="trDataSetSelection">
 						<td>&nbsp;</td>
 						<td>
-							<select id="dataSetFullList"></select> 
+							<select id="dataSetFullList" class="action_select"></select> 
 						</td>
 						<td>
 							&nbsp;&nbsp;<button type="button" id="getDataElementsBtn" class="input_button">Get DataElements</button> 
@@ -376,7 +376,7 @@ Users: Number of users having access to at least one org. unit." src="images/hel
 			<div class="content">
 				<table>
 					<tr style="font-weight: bold">
-						<td>Data Element Groups: <select id="groupList"></select></td>
+						<td>Data Element Groups: <select id="groupList" class="action_select"></select></td>
 					</tr>
 				</table>
 
@@ -396,7 +396,7 @@ Users: Number of users having access to at least one org. unit." src="images/hel
 			<div class="content">
 				<table>
 					<tr style="font-weight: bold">
-						<td>Indicator Groups: <select id="indicatorList"></select></td>
+						<td>Indicator Groups: <select id="indicatorList" class="action_select"></select></td>
 					</tr>
 					
 				</table>
