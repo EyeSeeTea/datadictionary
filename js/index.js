@@ -18,6 +18,7 @@
  */
 var dhisPath ="";
 var apiPath = "";
+var layout = "";
 
 var _queryURL_getOrgUnit = apiPath + "organisationUnits";
 
@@ -34,8 +35,16 @@ var typeMap = ['','','','','','','DE','IND'];
 $(document).ready(function() {
 
 	$.getJSON( "manifest.webapp", function( json ) {
+		// Read layout, dhis and api path from manifest.webapp 
+		layout = json.layout;
 		dhisPath = json.activities.dhis.href;
 		apiPath = dhisPath + "api/";
+
+		// Configure dhis and api path components
+		configureDhisPathComponents();
+		
+		// Set Layout
+		setLayout();
 
 		// Change url when a new tab is selected
 		$("#tabs").tabs({disabled: [3,4,5], activate: function(event ,ui){
@@ -51,6 +60,26 @@ $(document).ready(function() {
 	} );
 
 });
+
+function configureDhisPathComponents(){
+	$('#headerBanner').attr("onclick", "window.location.href=\"" + dhisPath + "dhis-web-dashboard-integration/index.action\"");
+	$('#headerText').attr("onclick", "window.location.href=\"" + dhisPath + "dhis-web-dashboard-integration/index.action\"");
+	$('#closeButton').attr("onclick", "window.location.href=\"" + dhisPath + "dhis-web-dashboard-integration/index.action\"");
+}
+
+function setLayout(){
+	if (layout == 'jhpiego'){
+		$('#headerText').text('JADE Dev');
+		$('#header').css({'background-color':'#305B75'});
+	}
+	else if (layout == 'psi') {
+		$('#headerText').text('PSI MIS');
+		$('#header').css({'background-color':'#467e4a'})
+		$('#versionText').attr("href", "https://docs.google.com/document/d/1kas42KhcTIIL0cE9_PVwcEJw97wunVaAafwKuM0JaBc");
+		$('#versionText').attr("target","_blank");
+	}
+	
+}
 
 //Change url without reloading page
 function refreshURL(selectedTab, selectedType, selectedValue){

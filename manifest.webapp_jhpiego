@@ -4,9 +4,9 @@
 	"description":"Data Dictionary",
 	"icons":{"16":null,"48":"img/icons/icon.png","128":null},
 	"developer":{"url":"","name":"James Chang, Adrian Quintana","company":" - EyeSeeTea Ltd.","email":" - adrianquintana@gmail.com"},
-	"activities":{"dhis":{"href":"../dhis/"}},
+	"activities":{"dhis":{"href":"../../../"}},
 	"launch_path":"index.html",
 	"installs_allowed_from":null,
 	"default_locale":"en",
-	"layout":"psi"
+	"layout":"jhpiego"
 }
