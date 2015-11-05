@@ -15,6 +15,10 @@ DHIS2, a flexible, web-based open source information system to collect and analy
 * Org Groups (In progress)
 * DB Progress (In progress)
 
+## Preferences
+ * Organization Unit Level: Set the level for the organization unit. It defines the organization unit level for the Org Unit Tab.
+ * Dashboard SQL View Id: Show the sqlViewSettings and sqlViewEditSettings Id for the dashboard tab. These fields are read only and the moment they have to be defined in the code before deploying the app.
+
 ## Configuration
 Configure the DHIS url in [the manifest.webapp](manifest.webapp#L7) depending on your DHIS server instance:
 ```
