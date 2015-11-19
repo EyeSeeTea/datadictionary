@@ -39,3 +39,11 @@ For the dashboard tabs two sql views are required:
 ```
 
 This sql views have to be inserted in the DHIS2 server. Its ids will be shown in the preference menu.
+
+## Feedback
+
+We’d love to hear your thoughts on the initiative in general, improvements, new features or any of the technologies being used. Just drop as a line at <a href="hello@eyeseetea.com">hello@eyeseetea.com</a> and let us know! If you prefer, you can also create a new issue on our GitHub repository. Note that you will have to register and be logged in to GitHub to create a new issue.
+
+## License
+
+This app is licensed under GPLv3. Please respect the terms of that license.
