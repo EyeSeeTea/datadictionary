@@ -57,7 +57,7 @@ function DataElementPopup() {
 	}
 
 	me.load_DEData = function(id, execFunc) {
-		RESTUtil.getAsynchData(me.queryURL_DataElements + '/' + id + '.json',
+		RESTUtil.getAsynchData(me.queryURL_DataElements + '/' + id + '.json?fields=id,code,displayName,shortName,description,valueType,zeroIsSignificant,aggregationOperator,categoryCombo[id,name],lastUpdated,dataElementGroups',
 				function(data) {
 					execFunc(data);
 				}, function(msg) {
@@ -80,14 +80,14 @@ function DataElementPopup() {
 		table.append(me
 				.getRowFormated("Code", me.formatJsonData(jsonData.code)));
 		table.append(me
-				.getRowFormated("Name", me.formatJsonData(jsonData.name)));
+				.getRowFormated("Name", me.formatJsonData(jsonData.displayName)));
 		table.append(me.getRowFormated("Short name", me
 				.formatJsonData(jsonData.shortName)));
 		table.append(me.getRowFormated("Description", me
 				.formatJsonData(jsonData.description),
 				"height: 70px; vertical-align:top;"));
 		table.append(me.getRowFormated("Value Type", me.formatValueType(me
-				.formatJsonData(jsonData.type))));
+				.formatJsonData(jsonData.valueType))));
 		table.append(me.getRowFormated("Store Zero Data Value",
 				me.formatBooleanVal(me
 						.formatJsonData(jsonData.zeroIsSignificant))));

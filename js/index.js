@@ -268,7 +268,7 @@ function DataManager() {
 
 		$.each(json_listData, function(i_data, item_data) {
 			deferredArrActions_getData.push(RESTUtil.getAsynchData(queryURL
-					+ item_data.id + ".json", function(json_dataDetail) {
+					+ item_data.id + ".json?fields=indicatorGroups[id,name],numeratorDescription,denominatorDescription,dataElementGroups[id,name],name,id,valueType,description,categoryCombo[id,displayName]", function(json_dataDetail) {
 				me.dataListWithDetail.push(json_dataDetail);
 			}, function() {
 			}, function() {
@@ -285,7 +285,7 @@ function DataManager() {
 						function() {
 
 							me.dataListWithDetail = Util.sortByKey(
-									me.dataListWithDetail, "name");
+									me.dataListWithDetail, "displayName");
 
 							if (type == "DE_DS" || type == "DE") {
 								me.dataElementDataModify(
@@ -1141,7 +1141,7 @@ function DataManager() {
 									}
 								},
 								{
-									data : 'categoryComboName',
+									data : 'categoryCombo.displayName',
 									"title" : "Disaggregation (Cat Combo)"
 								},
 								{
@@ -1149,12 +1149,12 @@ function DataManager() {
 									"title" : "Dimensions",
 									"render" : function(data, type, full) {
 
-										var catId = (full.categoryComboName != ""
-												&& full.categoryComboName != "default" && full.categoryComboId != "") ? full.categoryComboId
+										var catId = (full.categoryCombo.displayName != ""
+												&& full.categoryCombo.displayName != "default" && full.categoryCombo.id != "") ? full.categoryCombo.id
 												: "";
 
 										// For 'default', set the catcombo.
-										if (full.categoryComboName == "default")
+										if (full.categoryCombo.displayName == "default")
 											me.setCatComboData(
 													full.categoryComboId,
 													_catComboData);
@@ -1174,7 +1174,7 @@ function DataManager() {
 									}
 								},
 								{
-									data : 'type',
+									data : 'valueType',
 									"title" : "Value Type",
 									"render" : function(data, type, full) {
 										return me.getValueDataTypeName(data);
@@ -1303,19 +1303,36 @@ function DataManager() {
 	me.getValueDataTypeName = function(data, deData) {
 		var typeName = "";
 
-		if (data == 'int')
+//		if (data == 'int')
+//			typeName = 'Number';
+//		else if (data == 'string') {
+//			typeName = (deData !== undefined && deData.textType == "longText") ? "Long Text"
+//					: "Text";
+//		} else if (data == 'bool')
+//			typeName = 'Yes/No';
+//		else if (data == 'trueOnly')
+//			typeName = 'Yes Only';
+//		else if (data == 'date')
+//			typeName = 'Date';
+//		else if (data == 'username')
+//			typeName = 'User Name';
+
+		if (data == 'NUMBER')
 			typeName = 'Number';
-		else if (data == 'string') {
-			typeName = (deData !== undefined && deData.textType == "longText") ? "Long Text"
-					: "Text";
-		} else if (data == 'bool')
+		else if (data == 'LONG_TEXT')
+			typeName = "Long Text"
+		else if (data == 'TEXT')
+			typeName = "Text";
+		else if (data == 'BOOLEAN')
 			typeName = 'Yes/No';
-		else if (data == 'trueOnly')
+		else if (data == 'TRUE_ONLY')
 			typeName = 'Yes Only';
-		else if (data == 'date')
+		else if (data == 'DATE')
 			typeName = 'Date';
-		else if (data == 'username')
+		else if (data == 'USERNAME')
 			typeName = 'User Name';
+		else
+			typeName = data
 
 		return typeName;
 	}
