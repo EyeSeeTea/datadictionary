@@ -136,7 +136,7 @@ function setup_SearchByOrgUnit(me) {
 														function(i_ds,item_ds) {
 															var requestUrl_dataSetDetail = apiPath + 'dataSets/'
 																	+ item_ds.id
-																	+ '.json?fields=id,shortName,name,description,dataSetType,dataElements[id,name,valueType],organisationUnits[id,level]';
+																	+ '.json?fields=id,shortName,name,description,dataSetType,dataElements[id,name,valueType,aggregationType,lastUpdated],organisationUnits[id,level]';
 
 															RESTUtil.getAsynchData(requestUrl_dataSetDetail,
 																	function(json_dataSet) {
