@@ -24,6 +24,12 @@ Configure the DHIS url in [the manifest.webapp](manifest.webapp#L7) depending on
 ```
 "activities":{"dhis":{"href":"../dhis/"}}
 ```
+You will find some sample files in the root folder.
+
+There is also [a 'layout' parameter in the manifest.webapp](manifest.webapp#L11) that allows you to customise the application. This parameter is currently read in the index.js and layout changes are applied depending on it.
+```
+"layout":"[INSERT_LAYOUT]"
+```
 
 ### Dashboard tab configuration
 
