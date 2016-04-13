@@ -30,7 +30,7 @@ function populateCountryList(me, loadingTagName, afterFunc) {
 	
 	RESTUtil.getAsynchData(queryURL_getCountries, function(json_Data) {
 		var json_DataOrdered = Util.sortByKey(json_Data.organisationUnits,
-				"name");
+				"displayName");
 
 		Util.populateSelect(listTag, me.orgUnitList.find("option:selected").text(), json_DataOrdered);
 
@@ -136,7 +136,7 @@ function setup_SearchByOrgUnit(me) {
 														function(i_ds,item_ds) {
 															var requestUrl_dataSetDetail = apiPath + 'dataSets/'
 																	+ item_ds.id
-																	+ '.json?fields=id,shortName,name,description,dataSetType,dataElements[id,name],organisationUnits[id,level]';
+																	+ '.json?fields=id,shortName,name,description,dataSetType,dataElements[id,name,valueType,aggregationType,lastUpdated],organisationUnits[id,level]';
 
 															RESTUtil.getAsynchData(requestUrl_dataSetDetail,
 																	function(json_dataSet) {
@@ -185,11 +185,12 @@ function setup_SearchByOrgUnit(me) {
 																						// Transform data element ids in a array of ids
 																						var dataElementsIds = [];
 																						$.each(json_dataSet.dataElements, function(i_dataElement, item_dataElement) {
-																							dataElementsIds.push(item_dataElement.id);
-																							if (orgUnitDataElements.indexOf(item_dataElement.id) == -1){
-																								orgUnitDataElements.push(item_dataElement.id);
+																							if (item_dataElement.valueType != "DATE"){
+																								dataElementsIds.push(item_dataElement.id);
+																								if (orgUnitDataElements.indexOf(item_dataElement.id) == -1){
+																									orgUnitDataElements.push(item_dataElement.id);
+																								}
 																							}
-																							
 																						});
 																						
 																						//Getting data values
@@ -211,7 +212,7 @@ function setup_SearchByOrgUnit(me) {
 																											var categoryElementsUrl = apiPath + 'analytics.json?dimension=co&dimension=dx:' + item_row[0] + '&filter=ou:' + me.countryListTag.val() + '&filter=pe:LAST_12_MONTHS&aggregationType=COUNT&displayProperty=SHORTNAME';
 																											RESTUtil.getAsynchData(categoryElementsUrl, function(categoryElementsList) {
 																												$.each(categoryElementsList.rows, function(i_ce, item_ce) {
-																													item_de["_children"].push({"id": item_ce[0], "shortName":categoryElementsList.metaData.names[item_ce[0]], "numberDataValues":item_ce[2]});
+																													item_de["_children"].push({"id": item_ce[1], "shortName":categoryElementsList.metaData.names[item_ce[1]], "numberDataValues":item_ce[2]});
 																												});
 																											});
 																										}

@@ -36,12 +36,12 @@ function populateGroupList(me, groupType, listTag, loadingTag, execFunc) {
 	}
 
 	RESTUtil.getAsynchData(
-					apiPath + urlName	+ '.json?paging=false&fields=id,name',
+					apiPath + urlName	+ '.json?paging=false&fields=id,displayName',
 					function(json_Data) {
 						var json_DataList = (groupType == "IND") ? json_Data.indicatorGroups
 								: json_Data.dataElementGroups;
 
-						var json_DataOrdered = Util.sortByKey(json_DataList, "name");
+						var json_DataOrdered = Util.sortByKey(json_DataList, "displayName");
 
 						Util.populateSelect(listTag, groupTypeName	+ " Group", json_DataOrdered);
 

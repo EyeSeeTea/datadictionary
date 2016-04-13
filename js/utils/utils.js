@@ -28,7 +28,7 @@ Util.populateSelect = function( selectObj, selectName, json_Data )
 
 	$.each( json_Data, function( i, item ) {
 
-		selectObj.append( $( '<option></option>' ).attr( "value", item.id ).text( item.name ) );
+		selectObj.append( $( '<option></option>' ).attr( "value", item.id ).text( item.displayName ) );
 	});
 }
 

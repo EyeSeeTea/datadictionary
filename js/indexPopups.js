@@ -57,7 +57,7 @@ function DataElementPopup() {
 	}
 
 	me.load_DEData = function(id, execFunc) {
-		RESTUtil.getAsynchData(me.queryURL_DataElements + '/' + id + '.json',
+		RESTUtil.getAsynchData(me.queryURL_DataElements + '/' + id + '.json?fields=id,code,displayName,displayShortName,description,valueType,zeroIsSignificant,aggregationType,categoryCombo[id,name],lastUpdated,dataElementGroups[id,name]',
 				function(data) {
 					execFunc(data);
 				}, function(msg) {
@@ -80,19 +80,19 @@ function DataElementPopup() {
 		table.append(me
 				.getRowFormated("Code", me.formatJsonData(jsonData.code)));
 		table.append(me
-				.getRowFormated("Name", me.formatJsonData(jsonData.name)));
+				.getRowFormated("Name", me.formatJsonData(jsonData.displayName)));
 		table.append(me.getRowFormated("Short name", me
-				.formatJsonData(jsonData.shortName)));
+				.formatJsonData(jsonData.displayShortName)));
 		table.append(me.getRowFormated("Description", me
 				.formatJsonData(jsonData.description),
 				"height: 70px; vertical-align:top;"));
 		table.append(me.getRowFormated("Value Type", me.formatValueType(me
-				.formatJsonData(jsonData.type))));
+				.formatJsonData(jsonData.valueType))));
 		table.append(me.getRowFormated("Store Zero Data Value",
 				me.formatBooleanVal(me
 						.formatJsonData(jsonData.zeroIsSignificant))));
-		table.append(me.getRowFormated("Aggregation operator", me
-				.formatJsonData(jsonData.aggregationOperator)));
+		table.append(me.getRowFormated("Aggregation Type", me
+				.formatJsonData(jsonData.aggregationType)));
 		table.append(me.getRowFormated("Disaggregation (Cat Combos)",
 				jsonData.categoryCombo.name));
 		// empty is not selected
@@ -310,7 +310,7 @@ function IndicatorPopup() {
 	}
 
 	me.load_Data = function(id, execFunc) {
-		RESTUtil.getAsynchData(me.queryURL_Indicators + '/' + id + '.json',
+		RESTUtil.getAsynchData(me.queryURL_Indicators + '/' + id + '.json?fields=id,code,displayName,displayShortName,description,annualized,numerator,denominator,numeratorDescription,denominatorDescription,categoryCombo[id,name],lastUpdated,indicatorGroups[id,name],indicatorType[id,name],dataSets[id,name]',
 				function(data) {
 					execFunc(data);
 				}, function(msg) {
@@ -328,7 +328,7 @@ function IndicatorPopup() {
 		table.append(me
 				.getRowFormated("Name", me.formatJsonData(jsonData.name)));
 		table.append(me.getRowFormated("Short name", me
-				.formatJsonData(jsonData.shortName)));
+				.formatJsonData(jsonData.displayShortName)));
 		table.append(me.getRowFormated("Display name", me
 				.formatJsonData(jsonData.displayName)));
 		table.append(me.getRowFormated("Description", me

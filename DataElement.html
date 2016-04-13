@@ -127,7 +127,7 @@
 			table.append( getRowFormated( "Description", formatJsonData( jsonData.description ), "height: 70px; vertical-align:top;" ) );
 			table.append( getRowFormated( "Value Type", formatValueType( formatJsonData( jsonData.type ) ) ) );
 			table.append( getRowFormated( "Store Zero Data Value", formatBooleanVal( formatJsonData( jsonData.zeroIsSignificant ) ) ) );
-			table.append( getRowFormated( "Aggregation operator", formatJsonData( jsonData.aggregationOperator ) ) );
+			table.append( getRowFormated( "Aggregation Type", formatJsonData( jsonData.aggregationType ) ) );
 			table.append( getRowFormated( "Disaggregation (Cat Combos)", jsonData.categoryCombo.name ) );
 			// empty is not selected
 			//table.append( getRowFormated( "Option set", getObjectName( jsonData.optionSet ) ) );
