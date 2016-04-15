@@ -33,7 +33,7 @@ There is also [a 'layout' parameter in the manifest.webapp](manifest.webapp#L11)
 
 ### Dashboard tab configuration
 
-For the dashboard tabs two sql views are required:
+For the dashboard tab two sql views are required:
 - sqlView: This sql view lists all the dashboards in the database. This information can be retrieved using the dhis2 API. The sql view id can be configured [here](index.html#L98)
 ```
 <input id="sqlViewSettings" type="text" value="[INSERT_SQLVIEW_ID]"/>
@@ -46,9 +46,15 @@ For the dashboard tabs two sql views are required:
 These ids will be shown in the preference menu.
 
 The sql views have to be created in the DHIS2 server. Find below the sql sentences:
-- sqlView: SELECT * FROM dashboard;
+- sqlView:
+```
+SELECT * FROM dashboard;
+```
 
-- sqlViewEdit: SELECT usergroupid, uid, name, userid FROM usergroup;
+- sqlViewEdit:
+```
+SELECT usergroupid, uid, name, userid FROM usergroup;
+```
 
 ## Feedback
 
