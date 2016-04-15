@@ -43,8 +43,12 @@ For the dashboard tabs two sql views are required:
 ```
 <input id="sqlViewEditSettings" type="text" value="[INSERT_SQLVIEW_EDIT_ID]"/
 ```
+These ids will be shown in the preference menu.
 
-This sql views have to be inserted in the DHIS2 server. Its ids will be shown in the preference menu.
+The sql views have to be created in the DHIS2 server. Find below the sql sentences:
+- sqlView: SELECT * FROM dashboard;
+
+- sqlViewEdit: SELECT usergroupid, uid, name, userid FROM usergroup;
 
 ## Feedback
 
