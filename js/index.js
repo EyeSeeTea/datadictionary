@@ -1043,12 +1043,12 @@ function DataManager() {
 						$.each(me.dataSetList_Saved, function(i_dataSet,
 								item_dataSet) {
 
-							if (item_dataSet.name.search(new RegExp(
+							if (item_dataSet.displayName.search(new RegExp(
 									request.term, 'i')) == 0) {
 								dstsSetListFound.push({
 									"id" : item_dataSet.id,
-									"label" : item_dataSet.name,
-									"value" : item_dataSet.name,
+									"label" : item_dataSet.displayName,
+									"value" : item_dataSet.displayName,
 									"dataSet" : item_dataSet
 								});
 							}

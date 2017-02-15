@@ -17,7 +17,7 @@
    along with Data Dictionary.  If not, see <http://www.gnu.org/licenses/>.*/
   
 .ui-autocomplete-loading {
-	background: white url('images/ui-anim_basic.gif') right center no-repeat;
+	background: white url('../images/ui-anim_basic.gif') right center no-repeat;
 }
 
 .ui-tabs-nav li a:focus {
