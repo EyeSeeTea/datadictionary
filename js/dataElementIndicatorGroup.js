@@ -124,7 +124,7 @@ function getGroupTypeData(me, typeId, dataType, data) {
 		if (dataType == "queryUrl") {
 			return "dataElementGroups"
 		} else if (dataType == "data") {
-			return DataHelpers.getDataElements(data);
+			return data.dataElements;
 		} else if (dataType == "name") {
 			return "dataElement";
 		}
