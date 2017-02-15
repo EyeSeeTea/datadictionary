@@ -24,8 +24,8 @@ function RESTUtil() {
 }
 
 RESTUtil.getAsynchData = function(url, actionSuccess, actionError,
-		loadingStart, loadingEnd) {
-	return $.ajax({
+		loadingStart, loadingEnd, extraOptions) {
+	return $.ajax(_.defaults(extraOptions || {}, {
 		type : "GET",
 		dataType : "json",
 		url : url,
@@ -39,7 +39,7 @@ RESTUtil.getAsynchData = function(url, actionSuccess, actionError,
 			if (loadingStart !== undefined)
 				loadingStart();
 		}
-	}).always(function(data) {
+	})).always(function(data) {
 		if (loadingEnd !== undefined)
 			loadingEnd();
 	});

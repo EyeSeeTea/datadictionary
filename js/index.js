@@ -1809,33 +1809,33 @@ function DataManager() {
 				me.setParameterAction(me.paramTab);
 		});
 		
-		// Analytics Tab (as it is quite demanding in terms of js processing it is loaded on tab click)
-		$('a[href="#tabs-3"]').click(function(){
-			if (!$('#infoList_Analytics').is(":visible")){
+		me.settingDataPopupForm = new SettingDataPopupForm(me, function() {
+		  // Analytics Tab (as it is quite demanding in terms of js processing it is loaded on tab click)
+		  $('a[href="#tabs-3"]').click(function(){
+			  if (!$('#infoList_Analytics').is(":visible")){
 				
-				$('#infoList_Analytics').show();
+				  $('#infoList_Analytics').show();
 				
-				setup_Analytics(me, function() {});	
-			}
-		});
-		if (me.paramTab == 'Dashboard')
-			$('a[href="#tabs-3"]').trigger( "click" );
+				  setup_Analytics(me, function() {});	
+			  }
+		  });
+		  if (me.paramTab == 'Dashboard')
+			  $('a[href="#tabs-3"]').trigger( "click" );
 		
-		// Data Elements Groups Tab
-		setup_SearchByGroup(me, "DE", $('#tabs-7'), function() {
-			if (me.paramTab == 'Group' && me.paramSearchType == 'DE')
-				me.setParameterAction(me.paramTab);
-		});
+		  // Data Elements Groups Tab
+		  setup_SearchByGroup(me, "DE", $('#tabs-7'), function() {
+			  if (me.paramTab == 'Group' && me.paramSearchType == 'DE')
+				  me.setParameterAction(me.paramTab);
+		  });
 		
-		// Indicator Groups Tab
-		setup_SearchByGroup(me, "IND", $('#tabs-8'), function() {
-			if (me.paramTab == 'Group' && me.paramSearchType == 'IND')
-				me.setParameterAction(me.paramTab);
+		  // Indicator Groups Tab
+		  setup_SearchByGroup(me, "IND", $('#tabs-8'), function() {
+			  if (me.paramTab == 'Group' && me.paramSearchType == 'IND')
+				  me.setParameterAction(me.paramTab);
+		  });
+
+		  me.setupTopSection();
 		});
-
-		me.setupTopSection();		
-		me.settingDataPopupForm = new SettingDataPopupForm(me);
-
 	}
 		
 	// -- Initial Run

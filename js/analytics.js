@@ -25,12 +25,14 @@ function setup_Analytics(me, afterFunc) {
 			"pageLength": 50});
 	}
 
-	var requestUrl_AnalyticsEditSQLView = me.queryURL_analyticsSQLView + $("#sqlViewEditSettings").val() + "/data";
+	var requestUrl_AnalyticsEditSQLView = me.queryURL_analyticsSQLView + 
+		$("#sqlViewEditSettings").val() + "/data";
 	
 	RESTUtil.getAsynchData(requestUrl_AnalyticsEditSQLView, function (editSQLView){
 		
 		var loadingTagName = 'dataLoading';
-		var requestUrl_AnalyticsSQLView = me.queryURL_analyticsSQLView + $("#sqlViewSettings").val() + "/data";
+		var requestUrl_AnalyticsSQLView = me.queryURL_analyticsSQLView + 
+			$("#sqlViewSettings").val() + "/data";
 		var userGrouspNameDict = {};
 		var userId;
 		
@@ -86,6 +88,7 @@ function setup_Analytics(me, afterFunc) {
 											groups += userGrouspNameDict[item_userGroupAccesses.userGroupUid];
 										},
 										function() {
+											console.error('Failed to load analytics: ' + requestUrl_analytics_userGroups);
 										},
 										function() {
 											queries++;
@@ -108,7 +111,7 @@ function setup_Analytics(me, afterFunc) {
 					})
 					
 				}, function() {
-					alert('Failed to load analytics.');
+					console.error('Failed to load analytics: ' + requestUrl_AnalyticsSQLView);
 				}, function() {
 					QuickLoading.dialogShowAdd(loadingTagName);
 				}, function() {
