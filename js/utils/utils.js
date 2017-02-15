@@ -189,6 +189,10 @@ Util.getParameterByName = function( name )
 	return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
+Util.splitVersionString = function(version, nparts) {
+  return _.map(version.split("."), function(s) { return parseInt(s) }).slice(0, nparts);
+}
+
 
 // -- Utility Class/Methods
 // -------------------------------------------

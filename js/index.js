@@ -35,28 +35,38 @@ var typeMap = ['','','','','','','DE','IND'];
 $(document).ready(function() {
 
 	$.getJSON( "manifest.webapp", function( json ) {
-		// Read layout, dhis and api path from manifest.webapp 
-		layout = json.layout;
-		dhisPath = json.activities.dhis.href;
-		apiPath = dhisPath + "api/";
 
-		// Configure dhis and api path components
-		configureDhisPathComponents();
-		
-		// Set Layout
-		setLayout();
+		getServerInfo(dhisPath, function(info) {
+			var apiVersionPath = getApiVersionPath(info.version);
 
-		// Change url when a new tab is selected
-		$("#tabs").tabs({disabled: [3,4,5], activate: function(event ,ui){
-			refreshURL(tabsMap[ui.newTab.index()], typeMap[ui.newTab.index()], $("#tabs div.ui-tabs-panel:visible").find('.action_select').val());
-        }});
-		
-		// Change url when dropdownlist is selected
-		$('.action_select').on('click change', function(){
-			refreshURL(tabsMap[$("#tabs").tabs('option', 'selected')], typeMap[$("#tabs").tabs('option', 'selected')], $(this).val())
+			if (!apiVersionPath) {
+				$(document.body).empty();
+				alert("Unsupported DHIS2 version: " + info.version);
+			} else {
+				// Read layout, dhis and api path from manifest.webapp 
+				layout = json.layout;
+				dhisPath = json.activities.dhis.href;
+				apiPath = dhisPath + "api/" + apiVersionPath + "/";
+
+				// Configure dhis and api path components
+				configureDhisPathComponents();
+	
+				// Set Layout
+				setLayout();
+
+				// Change url when a new tab is selected
+				$("#tabs").tabs({disabled: [3,4,5], activate: function(event ,ui){
+					refreshURL(tabsMap[ui.newTab.index()], typeMap[ui.newTab.index()], $("#tabs div.ui-tabs-panel:visible").find('.action_select').val());
+				}});
+
+				// Change url when dropdownlist is selected
+				$('.action_select').on('click change', function(){
+					refreshURL(tabsMap[$("#tabs").tabs('option', 'selected')], typeMap[$("#tabs").tabs('option', 'selected')], $(this).val())
+				});
+
+				_dataManager = new DataManager();
+			}
 		});
-		
-		_dataManager = new DataManager();
 	} );
 
 });
@@ -1827,19 +1837,26 @@ function DataManager() {
 		me.settingDataPopupForm = new SettingDataPopupForm(me);
 
 	}
-
+		
 	// -- Initial Run
 	// ---------------------------------------
+	
 
-	// Methods
-	// --------------------------
-
-	// Initial Run Call
 	me.initialRun();
-
 }
 
-// -- Data Element Manager Class
-// -------------------------------------------
+// Return server info. 
+// See https://docs.dhis2.org/master/en/developer/html/webapi_system_resource.html
+getServerInfo = function(rootPath, onSuccess) {
+	RESTUtil.getAsynchData(rootPath + "/api/system/info", onSuccess);
+}
 
-
+// Return the newest version path of the API known to work. Return null if server unsupported.
+getApiVersionPath = function(serverVersion) {
+	var versionDigits = Util.splitVersionString(serverVersion || "", 2);
+	if (versionDigits[0] >= 2 && versionDigits[1] >= 25) {
+		return "25";
+	} else { 
+		return null;
+	}
+};
