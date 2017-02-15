@@ -31,7 +31,10 @@ RESTUtil.getAsynchData = function(url, actionSuccess, actionError,
 		url : url,
 		async : true,
 		success : actionSuccess,
-		error : actionError,
+		error : function(xhr) {
+			if (actionError !== undefined)
+				actionError(xhr);
+		},
 		beforeSend : function(xhr) {
 			if (loadingStart !== undefined)
 				loadingStart();
