@@ -220,7 +220,7 @@ function DataManager() {
 		// me.queryURL_DataSetDetailGet = apiPath + "dataSets/";
 
 		RESTUtil.getAsynchData(queryStr, function(data) {
-			runFunc(data.dataElements);
+			runFunc(DataHelpers.getDataElements(data));
 		}, function() {
 			alert('Failed to retrieve dataElement list.');
 		}, function() {
