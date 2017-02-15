@@ -185,3 +185,8 @@ div.limitedView_Toggle {
 .hidden {
 	display: none;
 }
+
+#settings {
+  border-collapse: separate; 
+  border-spacing: 10px;
+}
