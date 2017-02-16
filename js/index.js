@@ -1808,17 +1808,16 @@ function DataManager() {
 			if (me.paramTab == 'DataSet')
 				me.setParameterAction(me.paramTab);
 		});
+
+		$('a[href="#tabs-3"]').click(function(){
+			if (!$('#infoList_Analytics').is(":visible")){
+				$('#infoList_Analytics').show();
+				setup_Analytics(me, function() {});	
+			}
+		});
 		
 		me.settingDataPopupForm = new SettingDataPopupForm(me, function() {
 		  // Analytics Tab (as it is quite demanding in terms of js processing it is loaded on tab click)
-		  $('a[href="#tabs-3"]').click(function(){
-			  if (!$('#infoList_Analytics').is(":visible")){
-				
-				  $('#infoList_Analytics').show();
-				
-				  setup_Analytics(me, function() {});	
-			  }
-		  });
 		  if (me.paramTab == 'Dashboard')
 			  $('a[href="#tabs-3"]').trigger( "click" );
 		
