@@ -139,14 +139,15 @@ function SettingDataPopupForm(me, afterSetup)
 			me.orgUnitList.val(config.orgUnitLevel);
 			sqlViewSettings.val(config.dashboardList);
 			sqlViewEditSettings.val(config.dashboardJoin);
-			if (afterSetup) 
-				afterSetup();
 		}).error(function(xhr) {
 		  if (xhr.status === 404) {
 			  me.orgUnitList.val(defaultOrgUnit);
 			} else {
 			  alert("Cannot get settings");
 			}
+		}).always(function(xhr) {
+			if (afterSetup) 
+				afterSetup();
 		});
 	}
 	
