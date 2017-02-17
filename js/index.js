@@ -106,6 +106,27 @@ function refreshURL(selectedTab, selectedType, selectedValue){
 function DataManager() {
 	var me = this;
 
+	me.sqlViews = {
+		dashboard_list: {
+			name: "DataDictionary - Dashboard List",
+			type: "VIEW",
+			cacheStrategy: "RESPECT_SYSTEM_SETTING",
+			sqlQuery: "SELECT * FROM dashboard;"
+		},
+		dashboard_join: {
+			name: "DataDictionary - Dashboard Join",
+			type: "VIEW",
+			cacheStrategy: "RESPECT_SYSTEM_SETTING",
+			sqlQuery: "SELECT usergroupid, uid, name, userid FROM usergroup;"
+		}
+	};
+
+	me.adminRole = {
+		name: "DataDictionary admin",
+		description: "Can change global settings of the DataDictionary app",
+		authorities: ["Admin Data Dictionary"]
+	};
+
 	me.queryURL_DataElementGet = apiPath + "dataElements/";
 	me.queryURL_IndicatorGet = apiPath + "indicators/";
 	me.queryURL_DataElementListGet = apiPath + "dataElements.json?paging=false";
@@ -1790,11 +1811,60 @@ function DataManager() {
 		}
 
 	}
+	
+	var getObjectIdFromCreateRequest = function(data, statusText, xhr) { 
+		return statusText == "success" && data.response ? data.response.uid : null;
+	}
+	
+	var executeSqlView = function(sqlViewId) {
+		return RESTUtil
+			.post(apiPath + "sqlViews/" + sqlViewId + "/execute")
+			.then(function(data, statusText, xhr) { return statusText == "success" ? sqlViewId : null; })
+	}
+	
+	me.createSqlView = function(sqlView) {
+		return RESTUtil.get(apiPath + "sqlViews", {filter: "displayName:eq:" + sqlView.name})
+			.then(function(data) {
+				if (_.isEmpty(data.sqlViews)) {
+					return RESTUtil.post(apiPath + "sqlViews", sqlView)
+						.then(getObjectIdFromCreateRequest)
+						.then(executeSqlView);
+				} else {
+					return data.sqlViews[0].id;
+				}
+			});
+	}; 
+	
+	me.createUserRole = function(userRole) {
+		return RESTUtil.get(apiPath + "userRoles", {filter: "name:eq:" + userRole.name})
+			.then(function(data) {
+				if (_.isEmpty(data.userRoles)) {
+					return RESTUtil.post(apiPath + "userRoles", userRole)
+						.then(getObjectIdFromCreateRequest);
+				} else {
+					return data.userRoles[0].id;
+				}
+			});
+	}
+
+	me.setup = function(afterFunc) {
+		$.when(
+			me.createSqlView(me.sqlViews.dashboard_list),
+			me.createSqlView(me.sqlViews.dashboard_join),
+			me.createUserRole(me.adminRole)
+		).then(function(dashboardListId, dashboardJoinId, adminRoleId) {
+			var defaultSettings = _.pick({
+				"dashboardList": dashboardListId,
+				"dashboardJoin": dashboardJoinId
+			}, _.identity);
+			afterFunc(defaultSettings);
+		});
+	} 
 
 	// ---------------------------------------
 	// -- Initial Run
 
-	me.initialRun = function() {
+	me.initialRun = function(defaultSettings) {
 		
 		// Parameter Get and Set Tab.
 		me.getParameters();
@@ -1816,7 +1886,7 @@ function DataManager() {
 			}
 		});
 		
-		me.settingDataPopupForm = new SettingDataPopupForm(me, function() {
+		me.settingDataPopupForm = new SettingDataPopupForm(me, defaultSettings, function() {
 		  // Analytics Tab (as it is quite demanding in terms of js processing it is loaded on tab click)
 		  if (me.paramTab == 'Dashboard')
 			  $('a[href="#tabs-3"]').trigger( "click" );
@@ -1840,8 +1910,7 @@ function DataManager() {
 	// -- Initial Run
 	// ---------------------------------------
 	
-
-	me.initialRun();
+	me.setup(me.initialRun);
 }
 
 // Return server info. 
