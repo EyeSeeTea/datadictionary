@@ -23,7 +23,7 @@ var _sectionName_General = "General";
 // Class - SettingPopupForm
 //		- Used for popup Setting Form
 
-function SettingDataPopupForm(me, afterSetup)
+function SettingDataPopupForm(me, settings, afterSetup)
 {
 //	var that = this;
 
@@ -32,7 +32,9 @@ function SettingDataPopupForm(me, afterSetup)
 	
 	var dataStoreSettingsKey = "datadictionary/settings"
 	
-	var defaultOrgUnit = "3";
+	var defaultOrgUnitLevel = "3";
+	
+	var defaultSettings = _.defaults(settings, {orgUnitLevel: defaultOrgUnitLevel});
 	
 	var orgUnitLabel = $('#orgUnitLabel');
 	
@@ -43,7 +45,7 @@ function SettingDataPopupForm(me, afterSetup)
 	var sqlViewSettings = $('#sqlViewSettings');
 	
 	var sqlViewEditSettings = $('#sqlViewEditSettings');
-	
+
 	//Not being used at the moment
 	//me.dataLoadingTemplateMain = '<div class="dataLoading main" style="display:none;"><img src="img/ui-anim_basic.gif"/></div>';
 	
@@ -70,9 +72,7 @@ function SettingDataPopupForm(me, afterSetup)
 		
 		return RESTUtil.getAsynchData(
 			getSettingsPath(), 
-			function() {
-			  setup_Analytics(me, function() {}); 
-			},
+			function() { setup_Analytics(me, function() {}); },
 			function(xhr) {
 				// First try to update the existing settings (PUT), otherwise create them (POST)
 				if (method == "PUT" && xhr.status == 404) {
@@ -83,9 +83,9 @@ function SettingDataPopupForm(me, afterSetup)
 			},
 			function() { loadingTag.show(); },
 			function() { loadingTag.hide(); },
-			{type: method, contentType: 'application/json', dataType: "json", data: JSON.stringify(data)}
+			{type: method, contentType: 'application/json', data: JSON.stringify(data)}
 		);
-	}
+	};
 	
 	function retrieveAndSetValueSelection(type, value, selectTag)
 	{
@@ -134,14 +134,18 @@ function SettingDataPopupForm(me, afterSetup)
 		});
 	}
 	
+	function updateView(settings) {
+		me.orgUnitList.val(settings.orgUnitLevel);
+		sqlViewSettings.val(settings.dashboardList);
+		sqlViewEditSettings.val(settings.dashboardJoin);
+	}
+	
 	function loadSettings() {
-		get(getSettingsPath(), function(config) {
-			me.orgUnitList.val(config.orgUnitLevel);
-			sqlViewSettings.val(config.dashboardList);
-			sqlViewEditSettings.val(config.dashboardJoin);
+		return get(getSettingsPath(), function(dbSettings) {
+		  updateView(_.defaults(dbSettings, defaultSettings));
 		}).error(function(xhr) {
 		  if (xhr.status === 404) {
-			  me.orgUnitList.val(defaultOrgUnit);
+			  updateView(defaultSettings);
 			} else {
 			  alert("Cannot get settings");
 			}
@@ -179,7 +183,7 @@ function SettingDataPopupForm(me, afterSetup)
 
 	function retrieveAndPopulate( returnFunc )
 	{
-		retrieveAndSetValueSelection("", defaultOrgUnit, me.orgUnitList).always(loadSettings);
+		retrieveAndSetValueSelection("", defaultOrgUnitLevel, me.orgUnitList).always(loadSettings);
 		
 		if ( returnFunc !== undefined ) returnFunc();
 	}

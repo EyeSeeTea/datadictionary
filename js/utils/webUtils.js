@@ -44,3 +44,22 @@ RESTUtil.getAsynchData = function(url, actionSuccess, actionError,
 			loadingEnd();
 	});
 }
+
+RESTUtil.get = function(url, data, options) {
+	return $.ajax(_.defaults(options || {}, {
+		url: url,
+		data: data,
+		type: "GET",
+		dataType: "json"
+	}));
+}
+
+RESTUtil.post = function(url, data, options) {
+	return $.ajax(_.defaults(options || {}, {
+		url: url,
+		data: JSON.stringify(data),
+		type: "POST",
+		dataType: "json",
+		contentType: "application/json"
+	}));
+}
