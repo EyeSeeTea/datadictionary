@@ -18,7 +18,6 @@
  */
 var dhisPath ="";
 var apiPath = "";
-var layout = "";
 
 var _queryURL_getOrgUnit = apiPath + "organisationUnits";
 
@@ -35,28 +34,37 @@ var typeMap = ['','','','','','','DE','IND'];
 $(document).ready(function() {
 
 	$.getJSON( "manifest.webapp", function( json ) {
-		// Read layout, dhis and api path from manifest.webapp 
-		layout = json.layout;
-		dhisPath = json.activities.dhis.href;
-		apiPath = dhisPath + "api/";
 
-		// Configure dhis and api path components
-		configureDhisPathComponents();
-		
-		// Set Layout
-		setLayout();
+		getServerInfo(dhisPath, function(info) {
+			var apiVersionPath = getApiVersionPath(info.version);
 
-		// Change url when a new tab is selected
-		$("#tabs").tabs({disabled: [3,4,5], activate: function(event ,ui){
-			refreshURL(tabsMap[ui.newTab.index()], typeMap[ui.newTab.index()], $("#tabs div.ui-tabs-panel:visible").find('.action_select').val());
-        }});
-		
-		// Change url when dropdownlist is selected
-		$('.action_select').on('click change', function(){
-			refreshURL(tabsMap[$("#tabs").tabs('option', 'selected')], typeMap[$("#tabs").tabs('option', 'selected')], $(this).val())
+			if (!apiVersionPath) {
+				$(document.body).empty();
+				alert("Unsupported DHIS2 version: " + info.version);
+			} else {
+				// Read dhis and api path from manifest.webapp 
+				dhisPath = json.activities.dhis.href;
+				apiPath = dhisPath + "api/" + apiVersionPath + "/";
+
+				// Configure dhis and api path components
+				configureDhisPathComponents();
+	
+				// Set Layout define on manifest.webapp
+				setLayout(json.layout);
+
+				// Change url when a new tab is selected
+				$("#tabs").tabs({disabled: [3,4,5], activate: function(event ,ui){
+					refreshURL(tabsMap[ui.newTab.index()], typeMap[ui.newTab.index()], $("#tabs div.ui-tabs-panel:visible").find('.action_select').val());
+				}});
+
+				// Change url when dropdownlist is selected
+				$('.action_select').on('click change', function(){
+					refreshURL(tabsMap[$("#tabs").tabs('option', 'selected')], typeMap[$("#tabs").tabs('option', 'selected')], $(this).val())
+				});
+
+				_dataManager = new DataManager();
+			}
 		});
-		
-		_dataManager = new DataManager();
 	} );
 
 });
@@ -67,7 +75,7 @@ function configureDhisPathComponents(){
 	$('#closeButton').attr("onclick", "window.location.href=\"" + dhisPath + "dhis-web-dashboard-integration/index.action\"");
 }
 
-function setLayout(){
+function setLayout(layout){
 	if (layout == 'jhpiego'){
 		$('#headerText').text('JADE Dev');
 		$('#header').css({'background-color':'#305B75'});
@@ -75,10 +83,9 @@ function setLayout(){
 	else if (layout == 'psi') {
 		$('#headerText').text('PSI MIS');
 		$('#header').css({'background-color':'#467e4a'})
-		$('#versionText').attr("href", "https://docs.google.com/document/d/1kas42KhcTIIL0cE9_PVwcEJw97wunVaAafwKuM0JaBc");
-		$('#versionText').attr("target","_blank");
 	}
-	
+	$('#versionText').attr("href", "https://docs.google.com/document/d/1kas42KhcTIIL0cE9_PVwcEJw97wunVaAafwKuM0JaBc");
+	$('#versionText').attr("target","_blank");
 }
 
 //Change url without reloading page
@@ -210,7 +217,7 @@ function DataManager() {
 		// me.queryURL_DataSetDetailGet = apiPath + "dataSets/";
 
 		RESTUtil.getAsynchData(queryStr, function(data) {
-			runFunc(data.dataElements);
+			runFunc(DataHelpers.getDataElements(data));
 		}, function() {
 			alert('Failed to retrieve dataElement list.');
 		}, function() {
@@ -1033,12 +1040,12 @@ function DataManager() {
 						$.each(me.dataSetList_Saved, function(i_dataSet,
 								item_dataSet) {
 
-							if (item_dataSet.name.search(new RegExp(
+							if (item_dataSet.displayName.search(new RegExp(
 									request.term, 'i')) == 0) {
 								dstsSetListFound.push({
 									"id" : item_dataSet.id,
-									"label" : item_dataSet.name,
-									"value" : item_dataSet.name,
+									"label" : item_dataSet.displayName,
+									"value" : item_dataSet.displayName,
 									"dataSet" : item_dataSet
 								});
 							}
@@ -1798,48 +1805,54 @@ function DataManager() {
 			if (me.paramTab == 'DataSet')
 				me.setParameterAction(me.paramTab);
 		});
-		
-		// Analytics Tab (as it is quite demanding in terms of js processing it is loaded on tab click)
+
 		$('a[href="#tabs-3"]').click(function(){
 			if (!$('#infoList_Analytics').is(":visible")){
-				
 				$('#infoList_Analytics').show();
-				
 				setup_Analytics(me, function() {});	
 			}
 		});
-		if (me.paramTab == 'Dashboard')
-			$('a[href="#tabs-3"]').trigger( "click" );
 		
-		// Data Elements Groups Tab
-		setup_SearchByGroup(me, "DE", $('#tabs-7'), function() {
-			if (me.paramTab == 'Group' && me.paramSearchType == 'DE')
-				me.setParameterAction(me.paramTab);
-		});
+		me.settingDataPopupForm = new SettingDataPopupForm(me, function() {
+		  // Analytics Tab (as it is quite demanding in terms of js processing it is loaded on tab click)
+		  if (me.paramTab == 'Dashboard')
+			  $('a[href="#tabs-3"]').trigger( "click" );
 		
-		// Indicator Groups Tab
-		setup_SearchByGroup(me, "IND", $('#tabs-8'), function() {
-			if (me.paramTab == 'Group' && me.paramSearchType == 'IND')
-				me.setParameterAction(me.paramTab);
+		  // Data Elements Groups Tab
+		  setup_SearchByGroup(me, "DE", $('#tabs-7'), function() {
+			  if (me.paramTab == 'Group' && me.paramSearchType == 'DE')
+				  me.setParameterAction(me.paramTab);
+		  });
+		
+		  // Indicator Groups Tab
+		  setup_SearchByGroup(me, "IND", $('#tabs-8'), function() {
+			  if (me.paramTab == 'Group' && me.paramSearchType == 'IND')
+				  me.setParameterAction(me.paramTab);
+		  });
+
+		  me.setupTopSection();
 		});
-
-		me.setupTopSection();		
-		me.settingDataPopupForm = new SettingDataPopupForm(me);
-
 	}
-
+		
 	// -- Initial Run
 	// ---------------------------------------
+	
 
-	// Methods
-	// --------------------------
-
-	// Initial Run Call
 	me.initialRun();
-
 }
 
-// -- Data Element Manager Class
-// -------------------------------------------
+// Return server info. 
+// See https://docs.dhis2.org/master/en/developer/html/webapi_system_resource.html
+getServerInfo = function(rootPath, onSuccess) {
+	RESTUtil.getAsynchData(rootPath + "/api/system/info", onSuccess);
+}
 
-
+// Return the newest version path of the API known to work. Return null if server unsupported.
+getApiVersionPath = function(serverVersion) {
+	var versionDigits = Util.splitVersionString(serverVersion || "", 2);
+	if (versionDigits[0] >= 2 && versionDigits[1] >= 25) {
+		return "25";
+	} else { 
+		return null;
+	}
+};

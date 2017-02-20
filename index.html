@@ -44,6 +44,7 @@
 
 	<script src="js/export/excellentexport.js"></script>
 
+	<script src="js/utils/underscore-min.js"></script>
 	<script src="js/utils/dialogLoading.js"></script>
 	<script src="js/utils/utils.js"></script>
 	<script src="js/utils/webUtils.js"></script>
@@ -55,6 +56,7 @@
 	<script src="js/analytics.js"></script>
 	<script src="js/indexPopups.js"></script>
 	<script src="js/settingDataManager.js"></script>
+	<script src="js/dataHelpers.js"></script>	
  
  </head>
 
@@ -65,7 +67,7 @@
 	<span id="headerText" onclick="" style="cursor:pointer" title="View home page"></span>
 	<span id="headerTitle">Data Dictionary</span>
 	<div id="headerRightSideControls">		
-			<a id="versionText" href="#" style="color: White;">v 1.4</a>
+			<a id="versionText" href="#" style="color: White;">v 1.5</a>
 			| 
 			<button id="settingPopupFormOpen">Settings</button>
 			| <button type="button" id="closeButton" onclick="window.location.href=''"><span nameId='closeButton'>Close</span></button>
@@ -78,13 +80,14 @@
 
 	<div id="mainSec" style="margin-top: 14px; margin-left: 4px; margin-right: 4px;">
 
-		<table>
+		<table id="settings">
 			<tr id="orgUnitRow">
 				<td>
 					<span style="color:#555555;"><b>Organization Unit Level: </b></span>
 				</td>
 				<td>
 					<select id="orgUnitList"></select>
+          <img style="max-width: 16px;cursor: pointer; cursor: hand;" title="Organisation Unit Level to select by default in in the &lt;Org Unit&gt; tab" src="images/help.png"/>				
 				</td>
 				<td>
 					<div class='dataLoading' style='display:none;'><img src='images/ui-anim_basic.gif'/></div>
@@ -92,13 +95,20 @@
 			</tr>
 			<tr id="sqlViewIdRow">
 				<td>
-					<span style="color:#555555;"><b>Dashboard SQL View Id: </b></span>
+					<span style="color:#555555;"><b>Dashboard List SQLView Id: </b></span>
 				</td>
 				<td>
-					<input id="sqlViewSettings" type="text" value="a4pPlKYd2ya"/> <img style="max-width: 16px;cursor: pointer; cursor: hand;" title="This Dashboard SQL View is used to generate the dashboard tab" src="images/help.png"/>
+					<input id="sqlViewSettings" type="text" placeholder="ID" />
+					<img style="max-width: 16px;cursor: pointer; cursor: hand;" title="Dashboard SQL View facilitates listing all the dashboard in the &lt;Dashboard&gt; tab" src="images/help.png"/>
+				</td>
+			</tr>
+			<tr id="sqlViewIdRow">
+				<td>
+					<span style="color:#555555;"><b>Dashboard Join SQLView Id: </b></span>
 				</td>
 				<td>
-					<input id="sqlViewEditSettings" type="text" value="fvW4KRX1u9F"/> <img style="max-width: 16px;cursor: pointer; cursor: hand;" title="This Dashboard SQL View is used to generate the join link in the dashboard tab" src="images/help.png"/>
+					<input id="sqlViewEditSettings" type="text" placeholder="ID" />
+					<img style="max-width: 16px;cursor: pointer; cursor: hand;" title="Dashboard SQL View is used to generate the join link in the &lt;Dashboard&gt; tab" src="images/help.png"/>
 				</td>
 				<td>
 					<div class='dataLoading' style='display:none;'><img src='images/ui-anim_basic.gif'/></div>
@@ -144,7 +154,7 @@
 						</td>
 						<td>
 							<div id='dataLoading' style='display:none;font-size:11px;'>
-								<img src='images/ui-anim_basic.gif'/> It may takes up to 2 minutes to populate the data.. please wait
+								<img src='images/ui-anim_basic.gif'/> It may take up to 2 minutes to populate the data. Please wait
 							</div>
 							<div>
 								<span id="defaultCountdownSpan">Time Elapsed: </span>

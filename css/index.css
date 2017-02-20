@@ -17,12 +17,16 @@
    along with Data Dictionary.  If not, see <http://www.gnu.org/licenses/>.*/
   
 .ui-autocomplete-loading {
-	background: white url('images/ui-anim_basic.gif') right center no-repeat;
+	background: white url('../images/ui-anim_basic.gif') right center no-repeat;
 }
 
 .ui-tabs-nav li a:focus {
 	outline: none;
 }
+
+.ui-tabs .ui-state-disabled { 
+    display: none; 
+} 
 
 div#loadingMsgDiv {
 	color: #1c425c;
@@ -184,4 +188,9 @@ div.limitedView_Toggle {
 
 .hidden {
 	display: none;
+}
+
+#settings {
+  border-collapse: separate; 
+  border-spacing: 10px;
 }

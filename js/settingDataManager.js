@@ -23,12 +23,16 @@ var _sectionName_General = "General";
 // Class - SettingPopupForm
 //		- Used for popup Setting Form
 
-function SettingDataPopupForm(me)
+function SettingDataPopupForm(me, afterSetup)
 {
 //	var that = this;
 
 	var width = 700;
 	var height = 200;
+	
+	var dataStoreSettingsKey = "datadictionary/settings"
+	
+	var defaultOrgUnit = "3";
 	
 	var orgUnitLabel = $('#orgUnitLabel');
 	
@@ -43,19 +47,54 @@ function SettingDataPopupForm(me)
 	//Not being used at the moment
 	//me.dataLoadingTemplateMain = '<div class="dataLoading main" style="display:none;"><img src="img/ui-anim_basic.gif"/></div>';
 	
-
 	var dialogFormTag = $( '#settingDialogForm' );
 	
+	function get(url, onsuccess) {
+		var loadingTag = $("#settingDialogForm div.dataLoading");
+		
+		return RESTUtil.getAsynchData(
+			url, 
+			onsuccess,
+			function() { },
+			function() { loadingTag.show(); },
+			function() { loadingTag.hide(); }
+		);
+	}
 
+	function getSettingsPath() {
+		return apiPath + "dataStore/" + dataStoreSettingsKey;	
+	}
 
-	function retrieveAndSetValueSelection(type, value, selectTag, loadingTag)
+	function updateSettings(data, method) {
+		var loadingTag = $("#settingDialogForm div.dataLoading");
+		
+		return RESTUtil.getAsynchData(
+			getSettingsPath(), 
+			function() {
+			  setup_Analytics(me, function() {}); 
+			},
+			function(xhr) {
+				// First try to update the existing settings (PUT), otherwise create them (POST)
+				if (method == "PUT" && xhr.status == 404) {
+					 updateSettings(data, "POST");
+				} else {
+					alert("Error saving settings");
+				}
+			},
+			function() { loadingTag.show(); },
+			function() { loadingTag.hide(); },
+			{type: method, contentType: 'application/json', dataType: "json", data: JSON.stringify(data)}
+		);
+	}
+	
+	function retrieveAndSetValueSelection(type, value, selectTag)
 	{
 
 		if ( value === undefined ) value = "";
 
 		var queryURL = apiPath + "organisationUnitLevels.json?paging=false&fields=level,name,id";
 		
-		RESTUtil.getAsynchData( queryURL, function( json_Data )
+		return get( queryURL, function( json_Data )
 		{
 			if ( json_Data !== undefined && json_Data.organisationUnitLevels !== undefined )
 			{
@@ -92,15 +131,40 @@ function SettingDataPopupForm(me)
 				});
 				
 			}
-		}
-		, function() {}
-		, function() { loadingTag.show(); }
-		, function() { loadingTag.hide(); }
-		);
-		
-
+		});
 	}
-
+	
+	function loadSettings() {
+		get(getSettingsPath(), function(config) {
+			me.orgUnitList.val(config.orgUnitLevel);
+			sqlViewSettings.val(config.dashboardList);
+			sqlViewEditSettings.val(config.dashboardJoin);
+		}).error(function(xhr) {
+		  if (xhr.status === 404) {
+			  me.orgUnitList.val(defaultOrgUnit);
+			} else {
+			  alert("Cannot get settings");
+			}
+		}).always(function(xhr) {
+			if (afterSetup) 
+				afterSetup();
+		});
+	}
+	
+	function onSettingChange(ev) {
+		var settings = {
+			"orgUnitLevel": me.orgUnitList.val(),
+			"dashboardList": sqlViewSettings.val(),
+			"dashboardJoin": sqlViewEditSettings.val()
+		}; 
+		updateSettings(settings, "PUT");
+	}
+	
+	function setupSettingsSaveCallbacks() {
+		me.orgUnitList.change(onSettingChange);
+		sqlViewSettings.change(onSettingChange);
+		sqlViewEditSettings.change(onSettingChange);
+	}
 
 	function refreshUI(){
 		orgUnitLabel.text(me.orgUnitList.find("option:selected").text());
@@ -115,7 +179,7 @@ function SettingDataPopupForm(me)
 
 	function retrieveAndPopulate( returnFunc )
 	{
-		retrieveAndSetValueSelection("", 3, me.orgUnitList, orgUnitRow.find('div.dataLoading'));
+		retrieveAndSetValueSelection("", defaultOrgUnit, me.orgUnitList).always(loadSettings);
 		
 		if ( returnFunc !== undefined ) returnFunc();
 	}
@@ -136,7 +200,7 @@ function SettingDataPopupForm(me)
 		autoOpen: false
 		// ,dialogClass: "noTitleStuff"
 		,width: width
-		,height: height				  
+		,height: height
 		,modal: true
 		,title: "Settings"
 		,close: function( event, ui ) 
@@ -172,22 +236,18 @@ function SettingDataPopupForm(me)
 		// Initially block the div.
 		//me.formBlock( true );
 
-
 		FormPopupSetup();
-
-
 		resetDisplay();
 		
 		// Retrieve and Populate Data to HTML
 		retrieveAndPopulate();
+		setupSettingsSaveCallbacks();
 
 		// advanced Setup allow
 //		me.setUp_SettingDataEdit();
 
 		// Set up Event Handlers
 //		me.setup_Events();
-
-
 	}
 
 	// --------------------------
