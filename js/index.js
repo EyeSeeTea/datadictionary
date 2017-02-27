@@ -1125,17 +1125,35 @@ function DataManager() {
 		return groupIds;
 	}
 
-	me.setUp_DataTable_DataElement = function(type, listTag, dataList) {
+	var redrawTable = function(tableEl) {
+		tableEl.dataTable().DataTable().destroy();
+	} 
+
+	me.setUp_DataTable_DataElement = function(type, listTag, dataList, forceRedraw) {
 		var oTable;
 
 		if (type == "DE_DS") {
 			oTable = me.oTable_DE_ByDataSet;
 		} else if (type == "DE") {
 			oTable = me.oTable_DE_ByGroup;
-			;
 		}
-
-		if (oTable === undefined) {
+		
+		var objName = "tableSettings-" + type;
+		var schemaSection = "datasets";
+		var tableSettings;
+		if (!me[objName]) {
+			tableSettings = new TableSettings(me.user, schemaSection, 
+						listTag.closest(".content"), _.bind(function() {
+				redrawTable(oTable);
+				me.setUp_DataTable_DataElement(type, listTag, dataList, true);
+			}, me));
+			tableSettings.setup();
+			me[objName] = tableSettings;
+		} else {
+			tableSettings = me[objName];
+		}
+		
+		if (oTable === undefined || forceRedraw) {
 			oTable = listTag
 					.dataTable({
 						"data" : dataList,
@@ -1220,6 +1238,13 @@ function DataManager() {
 
 						],
 						"order" : [ [ 0, "asc" ], [ 1, "asc" ] ],
+						"colReorder": {
+							"realtime": false,
+							"fnReorderCallback": _.bind(tableSettings.fnReorderCallback, tableSettings)
+						},
+						"stateSave": true,
+						"stateDuration": 1e100,
+						"stateLoadCallback": _.bind(tableSettings.stateLoadCallback, tableSettings),
 						"aLengthMenu" : [ [ -1, 25, 50, 100 ],
 								[ "All", 25, 50, 100 ] ],
 						"iDisplayLength" : -1,
@@ -1306,15 +1331,14 @@ function DataManager() {
 						}
 					});
 
-			listTag.on('click', 'td', function() {
+			listTag.off("click").on('click', 'td', function() {
 
 				var anchorTag = $(this).find('a.datapopup');
 
 				if (anchorTag.length == 1) {
-					me.dataElementPopup.form_Open(anchorTag.attr('dataid'));
+					me.dataElementPopup.form_Open(anchorTag.attr('dataid'), me.user, schemaSection);
 				}
 			});
-
 		} else {
 			oTable.fnClearTable();
 			oTable.fnAddData(dataList);
@@ -1326,6 +1350,7 @@ function DataManager() {
 		} else if (type == "DE") {
 			me.oTable_DE_ByGroup = oTable;
 		}
+		return oTable;
 	}
 
 	me.getValueDataTypeName = function(data, deData) {
@@ -1628,9 +1653,18 @@ function DataManager() {
 						});
 	}
 
-	me.setUp_DataTable_Indicator = function(type, listTag, dataList) {
+	me.setUp_DataTable_Indicator = function(type, listTag, dataList, forceRedraw) {
+		var objName = "tableSettings-indicator";
+		var tableSettings = me[objName] = me[objName] || _.bind(function() {
+			var ts = new TableSettings(me.user, "indicators", listTag.closest(".content"), _.bind(function() {
+				redrawTable(me.oTable_IND_ByGroup);
+				me.setUp_DataTable_Indicator(type, listTag, dataList, true);
+			}, this));
+			ts.setup();
+			return ts;
+		}, me)();
 
-		if (me.oTable_IND_ByGroup === undefined) {
+		if (me.oTable_IND_ByGroup === undefined || forceRedraw) {
 			me.oTable_IND_ByGroup = listTag
 					.dataTable({
 						"data" : dataList,
@@ -1681,6 +1715,13 @@ function DataManager() {
 
 								} ],
 						"order" : [ [ 0, "asc" ], [ 1, "asc" ] ],
+						"colReorder": {
+							"realtime": false,
+							"fnReorderCallback": _.bind(tableSettings.fnReorderCallback, tableSettings)
+						},
+						"stateSave": true,
+						"stateDuration": 1e100,
+						"stateLoadCallback": _.bind(tableSettings.stateLoadCallback, tableSettings),
 						"aLengthMenu" : [ [ 25, 50, 100, -1 ],
 								[ 25, 50, 100, "All" ] ],
 						"iDisplayLength" : 25,
@@ -1715,8 +1756,8 @@ function DataManager() {
 			me.oTable_IND_ByGroup.fnAdjustColumnSizing();
 		}
 
-		listTag.find("a.datapopup").click(function() {
-			me.indicatorPopup.form_Open($(this).attr('dataid'));
+		listTag.find("a.datapopup").off("click").click(function() {
+			me.indicatorPopup.form_Open($(this).attr('dataid'), me.user, "indicators");
 
 			return false;
 		});
@@ -1810,13 +1851,13 @@ function DataManager() {
 	}
 	
 	var getObjectIdFromCreateRequest = function(data, statusText, xhr) { 
-		return statusText == "success" && data.response ? data.response.uid : null;
+		return data.response ? data.response.uid : null;
 	}
 	
 	var executeSqlView = function(sqlViewId) {
 		return RESTUtil
 			.post(apiPath + "sqlViews/" + sqlViewId + "/execute")
-			.then(function(data, statusText, xhr) { return statusText == "success" ? sqlViewId : null; })
+			.then(function(data, statusText, xhr) { return sqlViewId; })
 	}
 	
 	me.createSqlView = function(sqlView) {
@@ -1842,26 +1883,33 @@ function DataManager() {
 					return data.userRoles[0].id;
 				}
 			});
-	}
-
+	};
+	
 	me.setup = function(afterFunc) {
 		$.when(
+			DhisUtils.getRequestData(DhisUtils.getUserInfo(apiPath)),
 			me.createSqlView(me.sqlViews.dashboard_list),
 			me.createSqlView(me.sqlViews.dashboard_join),
 			me.createUserRole(me.adminRole)
-		).then(function(dashboardListId, dashboardJoinId, adminRoleId) {
-			var defaultSettings = _.pick({
-				"dashboardList": dashboardListId,
-				"dashboardJoin": dashboardJoinId
-			}, _.identity);
-			afterFunc(defaultSettings);
-		});
-	} 
+		).then(
+			function(user, dashboardListId, dashboardJoinId, adminRoleId) {
+				var defaultSettings = _.pick({
+					"dashboardList": dashboardListId,
+					"dashboardJoin": dashboardJoinId
+				}, _.identity);
+				afterFunc(user, defaultSettings);
+			},
+			function() {
+				alert("Error on app setup");
+			}
+		);
+	};
 
 	// ---------------------------------------
 	// -- Initial Run
 
-	me.initialRun = function(defaultSettings) {
+	me.initialRun = function(user, defaultSettings) {
+		me.user = user;
 		
 		// Parameter Get and Set Tab.
 		me.getParameters();
@@ -1869,7 +1917,7 @@ function DataManager() {
 
 		// Organization Unit TAb 
 		setup_SearchByOrgUnit(me);
-
+		
 		// Dataset & Programs Tab
 		me.setup_SearchByDataSet(function() {
 			if (me.paramTab == 'DataSet')
@@ -1884,23 +1932,23 @@ function DataManager() {
 		});
 		
 		me.settingDataPopupForm = new SettingDataPopupForm(me, defaultSettings, function() {
-		  // Analytics Tab (as it is quite demanding in terms of js processing it is loaded on tab click)
-		  if (me.paramTab == 'Dashboard')
-			  $('a[href="#tabs-3"]').trigger( "click" );
+			// Analytics Tab (as it is quite demanding in terms of js processing it is loaded on tab click)
+			if (me.paramTab == 'Dashboard')
+				$('a[href="#tabs-3"]').trigger( "click" );
 		
-		  // Data Elements Groups Tab
-		  setup_SearchByGroup(me, "DE", $('#tabs-7'), function() {
-			  if (me.paramTab == 'Group' && me.paramSearchType == 'DE')
-				  me.setParameterAction(me.paramTab);
-		  });
+			// Data Elements Groups Tab
+			setup_SearchByGroup(me, "DE", $('#tabs-7'), function() {
+				if (me.paramTab == 'Group' && me.paramSearchType == 'DE')
+					me.setParameterAction(me.paramTab);
+			});
 		
-		  // Indicator Groups Tab
-		  setup_SearchByGroup(me, "IND", $('#tabs-8'), function() {
-			  if (me.paramTab == 'Group' && me.paramSearchType == 'IND')
-				  me.setParameterAction(me.paramTab);
-		  });
+			// Indicator Groups Tab
+			setup_SearchByGroup(me, "IND", $('#tabs-8'), function() {
+				if (me.paramTab == 'Group' && me.paramSearchType == 'IND')
+					me.setParameterAction(me.paramTab);
+			});
 
-		  me.setupTopSection();
+			me.setupTopSection();
 		});
 	}
 		
@@ -1925,3 +1973,18 @@ getApiVersionPath = function(serverVersion) {
 		return null;
 	}
 };
+
+jQuery.fn.dataTable.Api.register( 'state.load()', function (callback) {
+		return this.iterator( 'table', function ( s ) {
+				var api = s.oInstance.DataTable();
+				s.oApi._fnLoadState(s, s.oInit, function() { api.draw(); callback(); });
+				var hidden_cols = [];
+				jQuery.each(s.oLoadedState.columns, function(i, column) {
+						if (!column.visible) {
+								hidden_cols.push(i);
+						}
+				});
+				api.columns().visible(true);            
+				api.columns(hidden_cols).visible(false);
+		});
+});

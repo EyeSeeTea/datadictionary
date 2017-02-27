@@ -44,13 +44,19 @@ function DataElementPopup() {
 		});
 	}
 
-	me.form_Open = function(deId) {
+	me.form_Open = function(deId, user, section) {
 
 		me.tableTag.find('tr').remove();
 
+		me.tableSettings = new TableSettings(user, section + "-popup", 
+					me.tableTag.closest(".ui-dialog"), null);
+
 		// Load the Data Element Information
 		me.load_DEData(deId, function(json_Data) {
-			me.populateTable(json_Data);
+			me.populateTable(json_Data, function() {
+				me.tableSettings.setup();
+				me.tableSettings.loadState(null);
+			});
 		});
 
 		me.dialogFormTag.dialog("open");
@@ -73,8 +79,9 @@ function DataElementPopup() {
 		});
 	}
 
-	me.populateTable = function(jsonData) {
+	me.populateTable = function(jsonData, afterFun) {
 		var table = me.tableTag;
+		table.hide();
 
 		table.append(me.getRowFormated("UID", me.formatJsonData(jsonData.id)));
 		table.append(me
@@ -112,7 +119,7 @@ function DataElementPopup() {
 
 				});
 			}
-
+			afterFun();
 		});
 
 		// table.append( me.getRowFormated( "Attributes", formatAttributes(
@@ -297,13 +304,19 @@ function IndicatorPopup() {
 		});
 	}
 
-	me.form_Open = function(id) {
+	me.form_Open = function(id, user, section) {
 
 		me.tableTag.find('tr').remove();
 
+		me.tableSettings = new TableSettings(user, section + "-popup", 
+			me.tableTag.closest(".ui-dialog"), null);
+
 		// Load the Data Element Information
 		me.load_Data(id, function(json_Data) {
-			me.populateTable(json_Data);
+			me.populateTable(json_Data, function() {
+				me.tableSettings.setup();
+				me.tableSettings.loadState(null);
+			});
 		});
 
 		me.dialogFormTag.dialog("open");
@@ -318,9 +331,10 @@ function IndicatorPopup() {
 				});
 	}
 
-	me.populateTable = function(jsonData) {
+	me.populateTable = function(jsonData, afterFun) {
 
 		var table = me.tableTag;
+		table.hide();
 
 		table.append(me.getRowFormated("UID", me.formatJsonData(jsonData.id)));
 		// table.append( me.getRowFormated( "Code", me.formatJsonData(
@@ -364,6 +378,8 @@ function IndicatorPopup() {
 		// $( '#msgInfo' ).text( getFormattedDate2( dateNow ) );
 		me.dialogFormTag.find('#msgInfo').text(
 				$.format.date(dateNow, "yyyy-MM-dd "));
+				
+		afterFun();
 	}
 
 	me.getObjectName = function(valueObj) {
