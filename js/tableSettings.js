@@ -184,34 +184,36 @@ TableSettings = function(user, schemaSection, box, redrawTable) {
 		var table = this.getTable();
 		var info = getStateInfo(key, username);
 		var link = box.find(".table-settings-selector");
+		var stateResponse = undefined;
 
-		// Does not work with async settings loading, for more info see
-		// https://github.com/DataTables/ColReorder/issues/62
-		// Perform a sync call instead
 		var deferred = (key === "default") ? 
 			$.Deferred().resolve(null) :
-			DhisUtils.loadSettings(apiPath, "datadictionary", info.configKey);
+			DhisUtils.loadSettings(apiPath, "datadictionary", info.configKey, {async: false});
 		
 		deferred
 			.done(function(state) { 
 				table.data("state-key", key);
 				link.text(info.linkText);
 				table.draw(state);
-				if (callback)
-					callback(state);
+				// TEMPORAL: Until DataTables/ColReorder#62 is fixed
+				stateResponse = state;
+				// callback(state);
 			})
 			.fail(function() {
 				table.data("state-key", key);
 				link.text(info.linkText);
 				table.draw(null);
-				if (callback)
-					callback(null); 
+				// TEMPORAL: Until DataTables/ColReorder#62 is fixed
+				stateResponse = null;
+				// callback(null); 
 			})
 			.always(_.bind(function() {
 				box.find(".table-settings-links").show();
 				box.find(".table-settings-edit").toggle(info.canEdit);
 				this.renderConfigColumns();
 			}, this));
+			
+		return stateResponse;
 	};  
 
 	var getStateInfo = function(key, username) {
@@ -238,14 +240,20 @@ TableSettings = function(user, schemaSection, box, redrawTable) {
 		}
 	}
 	
+  // There is an issue in the state loading when using the async callback. For now
+  // use sync loading with an instance variable.
 	this.stateLoadCallback = function(settings, callback) {
-		this.loadState(callback);
+		return this.loadState(callback);
 	}
 
 	this.loadState = function(callback) {
-		DhisUtils.loadSettings(apiPath, "datadictionary", getSettingsConfigKey())
+	  // TEMPORAL: Until DataTables/ColReorder#62 is fixed. Set state box within the sync promises 
+	  var state = undefined;
+	  
+		DhisUtils.loadSettings(apiPath, "datadictionary", getSettingsConfigKey(), {async: false})
 			.then(null, function() { return $.Deferred().resolve("default"); })
-			.done(_.bind(function(key) { this.loadTableState(key, callback); }, this));
+			.done(_.bind(function(key) { state = this.loadTableState(key, callback || _.identity); }, this));
+		return state;
 	}
 }
 

@@ -59,9 +59,9 @@ DhisUtils = {};
 		return saveSettings(url, data, "PUT");
 	};
 
-	DhisUtils.loadSettings = function(apiPath, namespace, key) {
+	DhisUtils.loadSettings = function(apiPath, namespace, key, options) {
 		var url = DhisUtils.getDataStorePath(apiPath, namespace, key);
-		return RESTUtil.get(url);
+		return RESTUtil.get(url, undefined, options);
 	};
 
 	DhisUtils.loadSettingsSync = function(apiPath, namespace, key, onsuccess) {
