@@ -34,14 +34,28 @@ TableSettings = function(user, schemaSection, box, redrawTable) {
 		this._bindCallbacks([
 			["click", ".table-settings-edit", this.onEditClick],
 			["click", ".toggle-column-visibility", this.onColumnVisibilityClick],
+			["click", ".select-all", this.onSelectAll],
+			["click", ".select-none", this.onSelectNone],
 			["click", ".tables-config-column-save", this.onSaveClick],
 			["click", ".tables-config-column-cancel", this.onCancelClick],
 			["click", ".table-settings-selector", this.onSelectSettingsKeyClick]
 		]);
 
+		var table = this.getTable();
 		$("#user-settings-label").text(userFullName + "'s settings");      
 		box.find(".table-settings").html($("#table-settings").get(0).innerHTML);
-		this.getTable().setup();
+		box.find(".help").attr("title", table.helpMessage);
+		table.setup();
+	};
+	
+	this.onSelectAll = function(ev) {
+	  ev.preventDefault();
+	  box.find(".toggle-column-visibility").filter(":not(.visible)").trigger("click");
+	};
+
+	this.onSelectNone = function(ev) {
+	  ev.preventDefault();
+	  box.find(".toggle-column-visibility").filter(".visible").trigger("click");
 	};
 	
 	this.onSelectSettingsKeyClick = function(ev) {
@@ -50,7 +64,11 @@ TableSettings = function(user, schemaSection, box, redrawTable) {
 		var key = table.data("state-key");
 		if (key) {
 			$("#tables-config-key-" + key).prop("checked", true);
-			$("#tables-config-key").dialog({modal: true, autoOpen: true});
+			$("#tables-config-key").dialog({
+			  title: "Visualization settings", 
+			  modal: true, 
+			  autoOpen: true
+			 });
 			$(document.body).off("change", "#tables-config-key .keys input");
 			$(document.body).on("change", "#tables-config-key .keys input",
 				_.bind(this.onSelectSettingsKeyChange, this));
@@ -226,7 +244,7 @@ TableSettings = function(user, schemaSection, box, redrawTable) {
 		} else if (key === "organization") {
 			return {
 				configKey: "tables-" + schemaSection + "-state-organization", 
-				linkText: "Organisational settings", 
+				linkText: "Organizational settings", 
 				canEdit: IsDDAdmin
 			};
 		} else if (key === "user") {
@@ -263,6 +281,8 @@ DtTable = function(el) {
 	var dtable = el.dataTable();
 	var api = dtable.DataTable();
 
+	this.helpMessage = "You can now 1) toggle the visibility of columns, 2) change the sorting criteria of the columns and 3) reorder the columns by drag&drop on the column header. Remember to press [Save] to persist the changes or press [Cancel] to reload the saved state";	
+
 	this.setup = function() {};
 	
 	this.state = function() { return api.state(); };
@@ -290,6 +310,8 @@ DtTable = function(el) {
 
 PopupTable = function(el) {
 	var columnIndexAttr = "column-index";
+	
+	this.helpMessage = "You can now 1) toggle visibility of columns and 2) reorder the rows by drag&drop directly on the table. Remember to press [Save] to persist the changes or press [Cancel] to reload the saved state";
 
 	var getRowByTitle = function(title) {
 		return el

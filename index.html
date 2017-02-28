@@ -89,7 +89,7 @@
 				</td>
 				<td>
 					<select id="orgUnitList"></select>
-          <img style="max-width: 16px;cursor: pointer; cursor: hand;" title="Organisation Unit Level to select by default in in the &lt;Org Unit&gt; tab" src="images/help.png"/>				
+          <img style="max-width: 16px;cursor: pointer; cursor: hand;" title="Organization Unit Level to select by default in in the &lt;Org Unit&gt; tab" src="images/help.png"/>				
 				</td>
 				<td>
 					<div class='dataLoading' style='display:none;'><img src='images/ui-anim_basic.gif'/></div>
@@ -184,7 +184,7 @@ Events: Number of single event without registration programs activated on the or
 
 Tracker: Number of single/multiple events with registration programs activated on the org. units.
 
-Org. Unit Groups: Number of organisation unit groups used on at least one org. unit.
+Org. Unit Groups: Number of organization unit groups used on at least one org. unit.
 
 Users: Number of users having access to at least one org. unit." src="images/help.png"/></span></th>
 						</tr>
@@ -317,7 +317,7 @@ Users: Number of users having access to at least one org. unit." src="images/hel
 			<div id="content" class="content" style="display:none;">
 
 				<div style="margin-bottom:10px;">
-				<table class="tbNone table-filter">
+				<table class="tbNone">
 					<tr>
 						<td style="font-weight:bold;">
 							DataSet:
@@ -405,7 +405,7 @@ Users: Number of users having access to at least one org. unit." src="images/hel
 		<!-- Dataelements Groups Tab -->
 		<div id="tabs-7" style="display:none;">
 			<div class="content">
-				<table class="table-filter">
+				<table>
 					<tr style="font-weight: bold">
 						<td>Data Element Groups: <select id="groupList" class="action_select"></select></td>
 					</tr>
@@ -427,7 +427,7 @@ Users: Number of users having access to at least one org. unit." src="images/hel
 		<!-- Indicator Tab -->
 		<div id="tabs-8" style="display:none;">
 			<div class="content">
-				<table class="table-filter">
+				<table>
 					<tr style="font-weight: bold">
 						<td>Indicator Groups: <select id="indicatorList" class="action_select"></select></td>
 					</tr>
@@ -469,18 +469,26 @@ Users: Number of users having access to at least one org. unit." src="images/hel
 	    <a href="#" class="table-settings-selector"></a>
 	    <a href="#" class="table-settings-edit"><img src='images/edit.png'/></a>
 	  </div>
-	  
-	  <div class="tables-config-columns" style="display: none;">
-	    <span class="columns"></span>
-	    <div class="actions">
-	      <button class="tables-config-column-save">Save</button>
-	      <button class="tables-config-column-cancel">Cancel</button>
-	      <div class="spinner"></div>
+
+		<div id="dataElementList" class="areaStyle tables-config-columns" 
+		     style="display: none;width:98%;margin-top:20px;">
+			<div class="section" style="padding: 10px 20px;" >
+	      <div class="columns"></div>
+	      <div class="selection-actions">
+	        Select: 
+	        <a href="#" class="select-none">None</a>
+	        |
+	        <a href="#" class="select-all">All</a>
 	     </div>
 	     
-      <div class="help">
-        <img style="max-width: 16px;cursor: pointer; cursor: hand;" src="images/help.png"/>
-        Order columns by drag&drop. Remember to press Save before leaving to persist the changes	      
+	      <span class="actions">
+	        <button class="tables-config-column-save">Save</button>
+	        <button class="tables-config-column-cancel">Cancel</button>
+	        <div class="spinner"></div>
+        </span>
+	       
+        <img style="max-width: 16px;cursor: pointer; cursor: hand;" src="images/help.png"
+             class="help" title=""/>
       </div>
 	  </div>
 	</div>
@@ -500,7 +508,7 @@ Users: Number of users having access to at least one org. unit." src="images/hel
       <br />
       <label for="tables-config-key-organization">
         <input name="tables-config-key" id="tables-config-key-organization" type="radio" value="organization" />
-        <span>Organisational settings</span>
+        <span>Organizational settings</span>
       </label>
       
       <br />
