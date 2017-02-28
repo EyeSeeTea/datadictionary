@@ -1156,7 +1156,7 @@ function DataManager() {
 	}
 
 	var redrawTable = function(tableEl) {
-		tableEl.dataTable().DataTable().destroy();
+		tableEl.fnDestroy();
 	} 
 
 	// attributes = [{id: String, name: String}]
@@ -1280,6 +1280,7 @@ function DataManager() {
 		
 		if (oTable === undefined || forceRedraw) {
 			oTable = listTag
+					.empty()
 					.dataTable({
 						"data" : dataList,
 						"columns" : me.getDataElementColumns(attributes),
@@ -1763,6 +1764,7 @@ function DataManager() {
 
 		if (me.oTable_IND_ByGroup === undefined || forceRedraw) {
 			me.oTable_IND_ByGroup = listTag
+					.empty()
 					.dataTable({
 						"data" : dataList,
 						"columns" : me.getIndicatorColumns(attributes),
