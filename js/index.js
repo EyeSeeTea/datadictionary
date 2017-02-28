@@ -129,6 +129,15 @@ function DataManager() {
 	me.queryURL_DataElementListGet = apiPath + "dataElements.json?paging=false";
 	me.queryURL_DataSetListGet = apiPath + "dataSets.json?paging=false";
 	me.queryURL_DataSetDetailGet = apiPath + "dataSets/";
+	me.queryURL_DataElementAttributes = apiPath + "attributes.json?" + 
+		"paging=false&filter=dataElementAttribute:eq:true&fields=id,name";
+	me.queryURL_IndicatorAttributes = apiPath + "attributes.json?" + 
+		"paging=false&filter=indicatorAttribute:eq:true&fields=id,name";
+	me.queryUrl_AttributesByType = {
+		"DE": me.queryURL_DataElementAttributes,
+		"DE_DS": me.queryURL_DataElementAttributes,
+		"IND": me.queryURL_IndicatorAttributes
+	};
 
 	me.queryURL_analyticsSQLView = apiPath + "sqlViews/";
 	me.queryURL_analytics = apiPath + "dashboards/";
@@ -278,7 +287,7 @@ function DataManager() {
 			runFunc(dataSetList);
 		});
 	}
-
+	
 	me.retrieveAndPopulateData = function(type, json_listData, loadingTagName,
 			tbListTag, listDivTag) {
 
@@ -294,9 +303,10 @@ function DataManager() {
 
 		var deferredArrActions_getData = [];
 
+		 
 		$.each(json_listData, function(i_data, item_data) {
 			deferredArrActions_getData.push(RESTUtil.getAsynchData(queryURL
-					+ item_data.id + ".json?fields=indicatorGroups[id,name],numeratorDescription,denominatorDescription,dataElementGroups[id,name],name,id,valueType,description,categoryCombo[id,displayName]", function(json_dataDetail) {
+					+ item_data.id + ".json?fields=indicatorGroups[id,name],numeratorDescription,denominatorDescription,dataElementGroups[id,name],name,id,valueType,description,categoryCombo[id,displayName],attributeValues[value,attribute[id,name]]", function(json_dataDetail) {
 				me.dataListWithDetail.push(json_dataDetail);
 			}, function() {
 			}, function() {
@@ -306,14 +316,34 @@ function DataManager() {
 			}));
 
 		});
+		
+		var attributes = undefined;
+		var getAttributesRequest = RESTUtil.getAsynchData(
+			me.queryUrl_AttributesByType[type], 
+			function(data) { attributes = data.attributes; }, 
+			function() {}, 
+			function() { QuickLoading.dialogShowAdd(loadingTagName); }, 
+			function() { QuickLoading.dialogShowRemove(loadingTagName); }
+		);
+			
+		deferredArrActions_getData.push(getAttributesRequest);			
 
 		// Step 3a. Sort the person by name
 		$.when.apply($, deferredArrActions_getData)
 				.then(
 						function() {
-
 							me.dataListWithDetail = Util.sortByKey(
 									me.dataListWithDetail, "displayName");
+							
+							// Convert dataList[].attributeValues :: 
+							//   [{attribute: {id: String, name: String}, value: String}]} 
+							// into an indexable object dataList[].attributes :: 
+							//   {id: value}
+							_.each(me.dataListWithDetail, function(object) {
+								object.attributes = _.object(_.map(object.attributeValues, function(attrVal) {
+									return [attrVal.attribute.id, attrVal.value];
+								}));
+							});
 
 							if (type == "DE_DS" || type == "DE") {
 								me.dataElementDataModify(
@@ -321,7 +351,7 @@ function DataManager() {
 												loadingTagName,
 												function() {
 
-													me.setUp_DataTable_DataElement(type, tbListTag, me.dataListWithDetail);
+													me.setUp_DataTable_DataElement(type, tbListTag, me.dataListWithDetail, attributes);
 
 													// Display the section.
 													listDivTag.show();
@@ -340,7 +370,7 @@ function DataManager() {
 								me.indicatorDataModify(me.dataListWithDetail);
 
 								me.setUp_DataTable_Indicator(type, tbListTag,
-										me.dataListWithDetail);
+										me.dataListWithDetail, attributes);
 
 								// Display the section.
 								listDivTag.show();
@@ -1129,7 +1159,102 @@ function DataManager() {
 		tableEl.dataTable().DataTable().destroy();
 	} 
 
-	me.setUp_DataTable_DataElement = function(type, listTag, dataList, forceRedraw) {
+	// attributes = [{id: String, name: String}]
+	var getAttributeColumns = function(attributes) {
+		return _.map(attributes, function(attribute) {
+			return {
+				data: 'attributes.' + attribute.id,
+				title: attribute.name,
+				defaultContent: ""
+			};
+		});
+	}; 
+
+	me.getDataElementColumns = function(attributes) { 
+		var baseColumns = [
+			{
+				data : 'dataElementGroupNames',
+				"title" : "DE Group",
+				"render" : function(data, type, full) {
+					return (Util.checkValue(data)) ? data
+							: '&lt;not assigned&gt;';
+					// return data + '-' + JSON.stringify(
+					// full ) ;
+				}
+			},
+			{
+				data : 'name',
+				"title" : "DE Name",
+				"render" : function(data, type, full) {
+					return "<a href='' class='datapopup' dataid='"
+							+ full.id
+							+ "' onclick='return false;'>"
+							+ data + "</a>";
+				}
+			},
+			{
+				data : 'id',
+				"title" : "UID",
+				"render" : function(data, type, full) {
+					return '<span class="tdSmall">' + data
+							+ '</span>';
+				}
+			},
+			{
+				data : 'categoryCombo.displayName',
+				"title" : "Disaggregation (Cat Combo)"
+			},
+			{
+				data : 'id',
+				"title" : "Dimensions",
+				"render" : function(data, type, full) {
+
+					var catId = (full.categoryCombo.displayName != ""
+							&& full.categoryCombo.displayName != "default" && full.categoryCombo.id != "") ? full.categoryCombo.id
+							: "";
+
+					// For 'default', set the catcombo.
+					if (full.categoryCombo.displayName == "default")
+						me.setCatComboData(
+								full.categoryComboId,
+								_catComboData);
+
+					var degsids = me
+							.getGroupIdStr(full.dataElementGroups);
+
+					// full.dimensions = "test";
+					var dimensions = me
+							.formatDimensions(full.dimensions);
+
+					// Have a div tag with deid and data??
+					return '<div deid="' + full.id
+							+ '" catid="' + catId
+							+ '" degsids="' + degsids
+							+ '" >' + dimensions + '</div>';
+				}
+			},
+			{
+				data : 'valueType',
+				"title" : "Value Type",
+				"render" : function(data, type, full) {
+					return me.getValueDataTypeName(data);
+				}
+			},
+			{
+				data : 'description',
+				"title" : "DE Description",
+				"render" : function(data, type, full) {
+					return '<div class="limitedView_Container"><div class="limitedView">'
+							+ data.replace(/[\n\r\t]/g, "")
+							+ '</div></div>';
+				}
+			}
+		];
+		
+		return baseColumns.concat(getAttributeColumns(attributes));
+	}
+		
+	me.setUp_DataTable_DataElement = function(type, listTag, dataList, attributes, forceRedraw) {
 		var oTable;
 
 		if (type == "DE_DS") {
@@ -1145,7 +1270,7 @@ function DataManager() {
 			tableSettings = new TableSettings(me.user, schemaSection, 
 						listTag.closest(".content"), _.bind(function() {
 				redrawTable(oTable);
-				me.setUp_DataTable_DataElement(type, listTag, dataList, true);
+				me.setUp_DataTable_DataElement(type, listTag, dataList, attributes, true);
 			}, me));
 			tableSettings.setup();
 			me[objName] = tableSettings;
@@ -1157,86 +1282,7 @@ function DataManager() {
 			oTable = listTag
 					.dataTable({
 						"data" : dataList,
-						"columns" : [
-								{
-									data : 'dataElementGroupNames',
-									"title" : "DE Group",
-									"render" : function(data, type, full) {
-										return (Util.checkValue(data)) ? data
-												: '&lt;not assigned&gt;';
-										// return data + '-' + JSON.stringify(
-										// full ) ;
-									}
-								},
-								{
-									data : 'name',
-									"title" : "DE Name",
-									"render" : function(data, type, full) {
-										return "<a href='' class='datapopup' dataid='"
-												+ full.id
-												+ "' onclick='return false;'>"
-												+ data + "</a>";
-									}
-								},
-								{
-									data : 'id',
-									"title" : "UID",
-									"render" : function(data, type, full) {
-										return '<span class="tdSmall">' + data
-												+ '</span>';
-									}
-								},
-								{
-									data : 'categoryCombo.displayName',
-									"title" : "Disaggregation (Cat Combo)"
-								},
-								{
-									data : 'id',
-									"title" : "Dimensions",
-									"render" : function(data, type, full) {
-
-										var catId = (full.categoryCombo.displayName != ""
-												&& full.categoryCombo.displayName != "default" && full.categoryCombo.id != "") ? full.categoryCombo.id
-												: "";
-
-										// For 'default', set the catcombo.
-										if (full.categoryCombo.displayName == "default")
-											me.setCatComboData(
-													full.categoryComboId,
-													_catComboData);
-
-										var degsids = me
-												.getGroupIdStr(full.dataElementGroups);
-
-										// full.dimensions = "test";
-										var dimensions = me
-												.formatDimensions(full.dimensions);
-
-										// Have a div tag with deid and data??
-										return '<div deid="' + full.id
-												+ '" catid="' + catId
-												+ '" degsids="' + degsids
-												+ '" >' + dimensions + '</div>';
-									}
-								},
-								{
-									data : 'valueType',
-									"title" : "Value Type",
-									"render" : function(data, type, full) {
-										return me.getValueDataTypeName(data);
-									}
-								},
-								{
-									data : 'description',
-									"title" : "DE Description",
-									"render" : function(data, type, full) {
-										return '<div class="limitedView_Container"><div class="limitedView">'
-												+ data.replace(/[\n\r\t]/g, "")
-												+ '</div></div>';
-									}
-								}
-
-						],
+						"columns" : me.getDataElementColumns(attributes),
 						"order" : [ [ 0, "asc" ], [ 1, "asc" ] ],
 						"colReorder": {
 							"realtime": false,
@@ -1331,8 +1377,8 @@ function DataManager() {
 						}
 					});
 
-			listTag.off("click").on('click', 'td', function() {
-
+			listTag.off("click", "td").on('click', 'td', function(ev) {
+				ev.preventDefault();
 				var anchorTag = $(this).find('a.datapopup');
 
 				if (anchorTag.length == 1) {
@@ -1653,12 +1699,63 @@ function DataManager() {
 						});
 	}
 
-	me.setUp_DataTable_Indicator = function(type, listTag, dataList, forceRedraw) {
+	me.getIndicatorColumns = function(attributes) {
+		var baseColumns = [
+			{
+				data : 'indicatorGroupNames',
+				"title" : "IND Group",
+				"render" : function(data, type, full) {
+					return (Util.checkValue(data)) ? data
+							: '&lt;not assigned&gt;';
+				}
+			},
+			{
+				data : 'name',
+				"title" : "IND Name",
+				"render" : function(data, type, full) {
+					return "<a href='' class='datapopup' dataid='"
+							+ full.id
+							+ "'>"
+							+ data
+							+ "</a>";
+				}
+			},
+			{
+				data : 'id',
+				"title" : "UID",
+				"render" : function(data, type, full) {
+					return '<span class="tdSmall">' + data
+							+ '</span>';
+				}
+			},
+			{
+				data : 'numeratorDescription',
+				"title" : "Numberator Description"
+			},
+			{
+				data : 'denominatorDescription',
+				"title" : "Denominator Description"
+			},
+			{
+				data : 'description',
+				"title" : "DE Description",
+				"render" : function(data, type, full) {
+					return '<div class="limitedView">'
+							+ data
+							+ '</div><div class="limitedView_Toggle">...... More ......</div>';
+				}
+			} 
+		];
+			
+		return baseColumns.concat(getAttributeColumns(attributes));
+	};
+	
+	me.setUp_DataTable_Indicator = function(type, listTag, dataList, attributes, forceRedraw) {
 		var objName = "tableSettings-indicator";
 		var tableSettings = me[objName] = me[objName] || _.bind(function() {
 			var ts = new TableSettings(me.user, "indicators", listTag.closest(".content"), _.bind(function() {
 				redrawTable(me.oTable_IND_ByGroup);
-				me.setUp_DataTable_Indicator(type, listTag, dataList, true);
+				me.setUp_DataTable_Indicator(type, listTag, dataList, attributes, true);
 			}, this));
 			ts.setup();
 			return ts;
@@ -1668,52 +1765,7 @@ function DataManager() {
 			me.oTable_IND_ByGroup = listTag
 					.dataTable({
 						"data" : dataList,
-						"columns" : [
-								{
-									data : 'indicatorGroupNames',
-									"title" : "IND Group",
-									"render" : function(data, type, full) {
-										return (Util.checkValue(data)) ? data
-												: '&lt;not assigned&gt;';
-									}
-								},
-								{
-									data : 'name',
-									"title" : "IND Name",
-									"render" : function(data, type, full) {
-										return "<a href='' class='datapopup' dataid='"
-												+ full.id
-												+ "'>"
-												+ data
-												+ "</a>";
-									}
-								},
-								{
-									data : 'id',
-									"title" : "UID",
-									"render" : function(data, type, full) {
-										return '<span class="tdSmall">' + data
-												+ '</span>';
-									}
-								},
-								{
-									data : 'numeratorDescription',
-									"title" : "Numberator Description"
-								},
-								{
-									data : 'denominatorDescription',
-									"title" : "Denominator Description"
-								},
-								{
-									data : 'description',
-									"title" : "DE Description",
-									"render" : function(data, type, full) {
-										return '<div class="limitedView">'
-												+ data
-												+ '</div><div class="limitedView_Toggle">...... More ......</div>';
-									}
-
-								} ],
+						"columns" : me.getIndicatorColumns(attributes),
 						"order" : [ [ 0, "asc" ], [ 1, "asc" ] ],
 						"colReorder": {
 							"realtime": false,
@@ -1750,19 +1802,19 @@ function DataManager() {
 						}
 					});
 
+			listTag.off("click", "td").on('click', 'td', function(ev) {
+				ev.preventDefault();
+				var anchorTag = $(this).find('a.datapopup');
+
+				if (anchorTag.length == 1) {
+					me.indicatorPopup.form_Open(anchorTag.attr('dataid'), me.user, "indicators");
+				}
+			});
 		} else {
 			me.oTable_IND_ByGroup.fnClearTable();
 			me.oTable_IND_ByGroup.fnAddData(dataList);
 			me.oTable_IND_ByGroup.fnAdjustColumnSizing();
 		}
-
-		listTag.find("a.datapopup").off("click").click(function() {
-			me.indicatorPopup.form_Open($(this).attr('dataid'), me.user, "indicators");
-
-			return false;
-		});
-
-		// return oTable;
 	}
 
 	me.setUp_RunClick_DataSetDataElement = function(btnTag) {

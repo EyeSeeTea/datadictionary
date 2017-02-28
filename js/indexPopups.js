@@ -63,7 +63,7 @@ function DataElementPopup() {
 	}
 
 	me.load_DEData = function(id, execFunc) {
-		RESTUtil.getAsynchData(me.queryURL_DataElements + '/' + id + '.json?fields=id,code,displayName,displayShortName,description,valueType,zeroIsSignificant,aggregationType,categoryCombo[id,name],lastUpdated,dataElementGroups[id,name]',
+		RESTUtil.getAsynchData(me.queryURL_DataElements + '/' + id + '.json?fields=id,code,displayName,displayShortName,description,valueType,zeroIsSignificant,aggregationType,categoryCombo[id,name],lastUpdated,dataElementGroups[id,name],attributeValues[value,attribute[id,name]]',
 				function(data) {
 					execFunc(data);
 				}, function(msg) {
@@ -71,7 +71,7 @@ function DataElementPopup() {
 				});
 	}
 
-	me.loadAttributData = function(execFunc) {
+	me.loadAttributeData = function(execFunc) {
 		RESTUtil.getAsynchData(me.queryURL_Attributes, function(data) {
 			execFunc(data.attributes);
 		}, function(msg) {
@@ -106,19 +106,13 @@ function DataElementPopup() {
 		// table.append( me.getRowFormated( "Option set", getObjectName(
 		// jsonData.optionSet ) ) );
 
-		me.loadAttributData(function(attributeList) {
-			if (attributeList !== undefined) {
-				$.each(attributeList, function(i, item) {
-
-					// if ( item.dataElementAttribute !== undefined &&
-					// item.dataElementAttribute )
-					table.append(me.getRowFormated(item.name, me
-							.getAttributeValue(item.id,
-									jsonData.attributeValues),
-							"background-color: #eee;"));
-
-				});
-			}
+		me.loadAttributeData(function(attributeList) {
+			$.each(attributeList || [], function(i, item) {
+				table.append(
+					me.getRowFormated(item.name, me.getAttributeValue(item.id, jsonData.attributeValues),
+					"background-color: #eee;")
+				);
+			});
 			afterFun();
 		});
 
@@ -283,6 +277,7 @@ function IndicatorPopup() {
 	var me = this;
 
 	me.queryURL_Indicators = apiPath + "indicators";
+	me.queryURL_Attributes = apiPath + "attributes.json?paging=false&filter=indicatorAttribute:eq:true&fields=id,name";
 
 	me.dialogFormTag = $("#indicatorPopupForm");
 	me.tableTag = $('#indicatorDetailTable');
@@ -323,13 +318,21 @@ function IndicatorPopup() {
 	}
 
 	me.load_Data = function(id, execFunc) {
-		RESTUtil.getAsynchData(me.queryURL_Indicators + '/' + id + '.json?fields=id,code,displayName,displayShortName,description,annualized,numerator,denominator,numeratorDescription,denominatorDescription,categoryCombo[id,name],lastUpdated,indicatorGroups[id,name],indicatorType[id,name],dataSets[id,name]',
+		RESTUtil.getAsynchData(me.queryURL_Indicators + '/' + id + '.json?fields=id,code,displayName,displayShortName,description,annualized,numerator,denominator,numeratorDescription,denominatorDescription,categoryCombo[id,name],lastUpdated,indicatorGroups[id,name],indicatorType[id,name],dataSets[id,name],attributeValues[value,attribute[id,name]]',
 				function(data) {
 					execFunc(data);
 				}, function(msg) {
 					console.log('Indicator retrieval was unsuccessful.');
 				});
 	}
+
+	me.loadAttributeData = function(execFunc) {
+		RESTUtil.getAsynchData(me.queryURL_Attributes, function(data) {
+			execFunc(data.attributes);
+		}, function(msg) {
+			console.log('Attributes retrieval was unsuccessful.');
+		});
+	};
 
 	me.populateTable = function(jsonData, afterFun) {
 
@@ -378,8 +381,16 @@ function IndicatorPopup() {
 		// $( '#msgInfo' ).text( getFormattedDate2( dateNow ) );
 		me.dialogFormTag.find('#msgInfo').text(
 				$.format.date(dateNow, "yyyy-MM-dd "));
-				
-		afterFun();
+
+		me.loadAttributeData(function(attributeList) {
+			$.each(attributeList || [], function(i, item) {
+				table.append(
+					me.getRowFormated(item.name, me.getAttributeValue(item.id, jsonData.attributeValues),
+					"background-color: #eee;")
+				);
+			});
+			afterFun();
+		});
 	}
 
 	me.getObjectName = function(valueObj) {
@@ -427,6 +438,21 @@ function IndicatorPopup() {
 
 		if (url.length > 0) {
 			returnVal = "<a href='" + url + "' target='_blank'>" + url + "</a>";
+		}
+
+		return returnVal;
+	}
+
+	me.getAttributeValue = function(attributeId, attributes) {
+		var returnVal = "";
+
+		if (attributes !== undefined) {
+			$.each(attributes, function(i, item) {
+
+				if (item.attribute.id == attributeId) {
+					returnVal = item.value;
+				}
+			});
 		}
 
 		return returnVal;
