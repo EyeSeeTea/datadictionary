@@ -19,7 +19,6 @@
 
 TableSettings = function(user, schemaSection, box, redrawTable) {
 	var username = user.userCredentials.username;
-	var userFullName = user.name;
 	var IsDDAdmin = _(user.authorities).contains("Admin Data Dictionary");
 	
 	this._bindCallbacks = function(callbacks) {
@@ -42,7 +41,6 @@ TableSettings = function(user, schemaSection, box, redrawTable) {
 		]);
 
 		var table = this.getTable();
-		$("#user-settings-label").text(userFullName + "'s settings");      
 		box.find(".table-settings").html($("#table-settings").get(0).innerHTML);
 		box.find(".help").attr("title", table.helpMessage);
 		table.setup();
@@ -251,7 +249,7 @@ TableSettings = function(user, schemaSection, box, redrawTable) {
 		} else if (key === "user") {
 			return {
 				configKey: "tables-" + schemaSection + "-state-user-" + username, 
-				linkText: userFullName + "'s settings", 
+				linkText: "My settings", 
 				canEdit: true
 			};
 		} else {
