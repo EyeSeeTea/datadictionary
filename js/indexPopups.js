@@ -48,8 +48,8 @@ function DataElementPopup() {
 
 		me.tableTag.find('tr').remove();
 
-		me.tableSettings = new TableSettings(user, section + "-popup", 
-					me.tableTag.closest(".ui-dialog"), null);
+		me.tableSettings = new TableSettings(user, "custom", section + "-popup", 
+		  me.tableTag.closest(".ui-dialog"), null);
 
 		// Load the Data Element Information
 		me.load_DEData(deId, function(json_Data) {
@@ -303,7 +303,7 @@ function IndicatorPopup() {
 
 		me.tableTag.find('tr').remove();
 
-		me.tableSettings = new TableSettings(user, section + "-popup", 
+		me.tableSettings = new TableSettings(user, "custom", section + "-popup", 
 			me.tableTag.closest(".ui-dialog"), null);
 
 		// Load the Data Element Information

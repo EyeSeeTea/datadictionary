@@ -1267,8 +1267,8 @@ function DataManager() {
 		var schemaSection = "datasets";
 		var tableSettings;
 		if (!me[objName]) {
-			tableSettings = new TableSettings(me.user, schemaSection, 
-						listTag.closest(".content"), _.bind(function() {
+			tableSettings = new TableSettings(me.user, "datatables", schemaSection, 
+					listTag.closest(".content"), _.bind(function() {
 				redrawTable(oTable);
 				me.setUp_DataTable_DataElement(type, listTag, dataList, attributes, true);
 			}, me));
@@ -1754,7 +1754,8 @@ function DataManager() {
 	me.setUp_DataTable_Indicator = function(type, listTag, dataList, attributes, forceRedraw) {
 		var objName = "tableSettings-indicator";
 		var tableSettings = me[objName] = me[objName] || _.bind(function() {
-			var ts = new TableSettings(me.user, "indicators", listTag.closest(".content"), _.bind(function() {
+			var ts = new TableSettings(me.user, "datatables", "indicators", 
+					listTag.closest(".content"), _.bind(function() {
 				redrawTable(me.oTable_IND_ByGroup);
 				me.setUp_DataTable_Indicator(type, listTag, dataList, attributes, true);
 			}, this));

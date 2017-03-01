@@ -17,7 +17,7 @@
  *  along with Data Dictionary.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-TableSettings = function(user, schemaSection, box, redrawTable) {
+TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 	var username = user.userCredentials.username;
 	var IsDDAdmin = _(user.authorities).contains("Admin Data Dictionary");
 	
@@ -47,13 +47,13 @@ TableSettings = function(user, schemaSection, box, redrawTable) {
 	};
 	
 	this.onSelectAll = function(ev) {
-	  ev.preventDefault();
-	  box.find(".toggle-column-visibility").filter(":not(.visible)").trigger("click");
+		ev.preventDefault();
+		box.find(".toggle-column-visibility").filter(":not(.visible)").trigger("click");
 	};
 
 	this.onSelectNone = function(ev) {
-	  ev.preventDefault();
-	  box.find(".toggle-column-visibility").filter(".visible").trigger("click");
+		ev.preventDefault();
+		box.find(".toggle-column-visibility").filter(".visible").trigger("click");
 	};
 	
 	this.onSelectSettingsKeyClick = function(ev) {
@@ -63,9 +63,9 @@ TableSettings = function(user, schemaSection, box, redrawTable) {
 		if (key) {
 			$("#tables-config-key-" + key).prop("checked", true);
 			$("#tables-config-key").dialog({
-			  title: "Visualization settings", 
-			  modal: true, 
-			  autoOpen: true
+				title: "Visualization settings", 
+				modal: true, 
+				autoOpen: true
 			 });
 			$(document.body).off("change", "#tables-config-key .keys input");
 			$(document.body).on("change", "#tables-config-key .keys input",
@@ -87,7 +87,7 @@ TableSettings = function(user, schemaSection, box, redrawTable) {
 	
 	this.onEditClick = function(ev) {
 		ev.preventDefault();
-		this.toggleTableConfig();  
+		this.toggleTableConfig();
 	};
 	
 	this.toggleTableConfig = function() {
@@ -126,12 +126,13 @@ TableSettings = function(user, schemaSection, box, redrawTable) {
 	};
 	
 	this.getTable = function() {
-		if (box.find(".dataTable").length > 0) {
-			return new DtTable(box.find(".dataTable"));
-		} else if (box.find(".listTable").length > 0) {
-			return new PopupTable(box.find(".listTable"));
+		var classes = {"datatables": DtTable, "custom": CustomTable};
+		var klass = classes[tableType];
+		var tableEl = box.find(".listTable");
+		if (klass && tableEl.length > 0) {
+			return new klass(tableEl);
 		} else {
-			throw "Cannot find table in box";
+			throw "Cannot get table";
 		}
 	};
 	
@@ -192,7 +193,7 @@ TableSettings = function(user, schemaSection, box, redrawTable) {
 	this.onCancelClick = function(ev) {
 		ev.preventDefault();
 		var table = this.getTable();
-		this.toggleTableConfig(table);  
+		this.toggleTableConfig(table);
 		this.restoreState();
 	};
 	
@@ -228,10 +229,10 @@ TableSettings = function(user, schemaSection, box, redrawTable) {
 			box.find(".table-settings-links").show();
 			box.find(".table-settings-edit").toggle(info.canEdit);
 			this.renderConfigColumns();
-		}, this));              
+		}, this));
 			
 		return stateResponse;
-	};  
+	};
 
 	var getStateInfo = function(key, username) {
 		if (key === "default") {
@@ -257,16 +258,16 @@ TableSettings = function(user, schemaSection, box, redrawTable) {
 		}
 	}
 	
-  // There is an issue in the state loading when using the async callback. For now
-  // use sync loading with an instance variable.
+	// There is an issue in the state loading when using the async callback. For now
+	// use sync loading with an instance variable.
 	this.stateLoadCallback = function(settings, callback) {
 		return this.loadState(callback);
 	}
 
 	this.loadState = function(callback) {
-	  // TEMPORAL: Until DataTables/ColReorder#62 is fixed. Set state box within the sync promises 
-	  var state = undefined;
-	  
+		// TEMPORAL: Until DataTables/ColReorder#62 is fixed. Set state box within the sync promises 
+		var state = undefined;
+		
 		DhisUtils.loadSettings(apiPath, "datadictionary", getSettingsConfigKey(), {async: false})
 			.then(null, function() { return $.Deferred().resolve("default"); })
 			.done(_.bind(function(key) { state = this.loadTableState(key, callback || _.identity); }, this));
@@ -277,8 +278,12 @@ TableSettings = function(user, schemaSection, box, redrawTable) {
 // Table interfaces: datatables.js used in main page, custom tables used on popup details 
 
 DtTable = function(el) {
-	var dtable = el.dataTable();
-	var api = dtable.DataTable();
+	var dtable, api;
+	
+	if ($.fn.dataTable.isDataTable(el)) {
+		dtable = el.dataTable();
+		api = dtable.DataTable();
+	}
 
 	this.helpMessage = "You can now 1) toggle the visibility of columns, 2) change the sorting criteria of the columns and 3) reorder the columns by drag&drop on the column header. Remember to press [Save] to persist the changes or press [Cancel] to reload the saved state";	
 
@@ -301,13 +306,13 @@ DtTable = function(el) {
 	this.isColumnVisible = function(idx) { return api.column(idx).visible(); };
 
 	this.setColumnVisible = function(idx, visibility) { 
-		return api.column(idx).visible(visibility);  
+		return api.column(idx).visible(visibility);
 	};
 	
 	this.data = _.bind(el.data, el);
 };
 
-PopupTable = function(el) {
+CustomTable = function(el) {
 	var columnIndexAttr = "column-index";
 	
 	this.helpMessage = "You can now 1) toggle visibility of columns and 2) reorder the rows by drag&drop directly on the table. Remember to press [Save] to persist the changes or press [Cancel] to reload the saved state";
@@ -386,11 +391,11 @@ PopupTable = function(el) {
 	};
 	
 	this.isColumnVisible = function(key) {
-		return getRowByTitle(key).is(":visible");  
+		return getRowByTitle(key).is(":visible");
 	};
 
 	this.setColumnVisible = function(key, visibility) {
-		return getRowByTitle(key).toggle(visibility);  
+		return getRowByTitle(key).toggle(visibility);
 	};
 	
 	this.data = _.bind(el.data, el);
