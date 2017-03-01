@@ -139,11 +139,11 @@ TableSettings = function(user, schemaSection, box, redrawTable) {
 	
 	this.onColumnVisibilityClick = function(ev) {
 		ev.preventDefault();
-		var el = $(ev.target);
+		var toggleColumnEl = $(ev.target);
 		var table = this.getTable();
-		var columnKey = el.data("column-key");
-		el.toggleClass("visible");
-		table.setColumnVisible(columnKey, el.hasClass("visible"));
+		var columnKey = toggleColumnEl.data("column-key");
+		toggleColumnEl.toggleClass("visible");
+		table.setColumnVisible(columnKey, toggleColumnEl.hasClass("visible"));
 	};
 	
 	this.fnReorderCallback = function() {
@@ -209,7 +209,7 @@ TableSettings = function(user, schemaSection, box, redrawTable) {
 			DhisUtils.loadSettings(apiPath, "datadictionary", info.configKey, {async: false});
 		
 		deferred
-			.done(function(state) { 
+			.done(function(state) {
 				table.data("state-key", key);
 				link.text(info.linkText);
 				table.draw(state);
@@ -229,7 +229,7 @@ TableSettings = function(user, schemaSection, box, redrawTable) {
 				box.find(".table-settings-links").show();
 				box.find(".table-settings-edit").toggle(info.canEdit);
 				this.renderConfigColumns();
-			}, this));
+			}, this));              
 			
 		return stateResponse;
 	};  
@@ -285,7 +285,7 @@ DtTable = function(el) {
 
 	this.setup = function() {};
 	
-	this.state = function() { return api.state(); };
+	this.state = function() { return _.omit(api.state(), "start"); };
 
 	this.editStarted = function(onReorder) {};
 	
@@ -373,9 +373,7 @@ PopupTable = function(el) {
 	
 	this.getColumns = function() {
 		return _.chain(el.find("td.title"))
-			.map(function(td) { 
-				return {key: $(td).text(), title: $(td).text()};
-			})
+			.map(function(td) { return {key: $(td).text(), title: $(td).text()}; })
 			.value();
 	};
 	
