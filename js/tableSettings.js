@@ -225,11 +225,12 @@ TableSettings = function(user, schemaSection, box, redrawTable) {
 				stateResponse = null;
 				// callback(null); 
 			})
-			.always(_.bind(function() {
-				box.find(".table-settings-links").show();
-				box.find(".table-settings-edit").toggle(info.canEdit);
-				this.renderConfigColumns();
-			}, this));              
+		// TEMPORAL: Until DataTables/ColReorder#62 is fixed, use always with async promise
+		_.defer(_.bind(function() {
+			box.find(".table-settings-links").show();
+			box.find(".table-settings-edit").toggle(info.canEdit);
+			this.renderConfigColumns();
+		}, this));              
 			
 		return stateResponse;
 	};  
