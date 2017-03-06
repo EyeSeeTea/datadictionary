@@ -19,7 +19,8 @@
 
 TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 	var username = user.userCredentials.username;
-	var IsDDAdmin = _(user.authorities).contains("Admin Data Dictionary");
+	var IsDDAdmin = _(user.authorities).contains("Admin Data Dictionary") ||
+	                _(user.authorities).contains("ALL");
 	
 	this._bindCallbacks = function(callbacks) {
 		_.each(callbacks, _.bind(function(cb) {
