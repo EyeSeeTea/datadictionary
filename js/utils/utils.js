@@ -193,10 +193,5 @@ Util.checkDataExists = function(obj) {
   return (obj != null && typeof obj[Symbol.iterator] === 'function');
 }
 
-Util.splitVersionString = function(version, nparts) {
-  return _.map(version.split("."), function(s) { return parseInt(s) }).slice(0, nparts);
-}
-
-
 // -- Utility Class/Methods
 // -------------------------------------------

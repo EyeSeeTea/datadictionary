@@ -2020,12 +2020,18 @@ getServerInfo = function(rootPath, onSuccess) {
 }
 
 // Return the newest version path of the API known to work. Return null if server unsupported.
-getApiVersionPath = function(serverVersion) {
-	var versionDigits = Util.splitVersionString(serverVersion || "", 2);
-	if (versionDigits[0] >= 2 && versionDigits[1] >= 25) {
-		return "25";
-	} else { 
+getApiVersionPath = function(version) {
+	var parts = _.map(version.split(".").slice(0, 2), function(s) { return parseInt(s); });
+	var majorVersion = parts[0], minorVersion = parts[1];
+
+	if (parts.length < 2 || majorVersion !== 2) {
 		return null;
+	} else if (minorVersion < 25) {
+		return null;
+	} else if (minorVersion <= 26) {
+		return minorVersion;
+	} else {
+		return "26";
 	}
 };
 
