@@ -229,6 +229,9 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 		_.defer(_.bind(function() {
 			box.find(".table-settings-links").show();
 			box.find(".table-settings-edit").toggle(info.canEdit);
+			if (!info.canEdit) {
+			  $(".tables-config-columns").slideUp();
+			 }
 			this.renderConfigColumns();
 		}, this));
 			
