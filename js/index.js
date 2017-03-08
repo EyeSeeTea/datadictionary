@@ -1155,10 +1155,6 @@ function DataManager() {
 		return groupIds;
 	}
 
-	var redrawTable = function(tableEl) {
-		tableEl.fnDestroy();
-	} 
-
 	// attributes = [{id: String, name: String}]
 	var getAttributeColumns = function(attributes) {
 		return _.map(attributes, function(attribute) {
@@ -1267,11 +1263,21 @@ function DataManager() {
 		var schemaSection = "datasets";
 		var tableSettings;
 		if (!me[objName]) {
-			tableSettings = new TableSettings(me.user, "datatables", schemaSection, 
-					listTag.closest(".content"), _.bind(function() {
-				redrawTable(oTable);
+			var redrawTable = function() {
+				oTable.fnDestroy();
 				me.setUp_DataTable_DataElement(type, listTag, dataList, attributes, true);
-			}, me));
+			};
+			
+			var onSettingsUpdate = function() {
+				var relatedObjName = "tableSettings-" + (type == "DE_DS" ? "DE" : "DE_DS");
+				var relatedTableSettings = me[relatedObjName];
+				if (relatedTableSettings) {
+					relatedTableSettings.redraw();
+				} 
+			};
+			tableSettings = new TableSettings(me.user, "datatables", schemaSection, 
+					listTag.closest(".content"), redrawTable, onSettingsUpdate);
+			
 			tableSettings.setup();
 			me[objName] = tableSettings;
 		} else {
@@ -1756,7 +1762,7 @@ function DataManager() {
 		var tableSettings = me[objName] = me[objName] || _.bind(function() {
 			var ts = new TableSettings(me.user, "datatables", "indicators", 
 					listTag.closest(".content"), _.bind(function() {
-				redrawTable(me.oTable_IND_ByGroup);
+				me.oTable_IND_ByGroup.fnDestroy();
 				me.setUp_DataTable_Indicator(type, listTag, dataList, attributes, true);
 			}, this));
 			ts.setup();

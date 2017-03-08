@@ -17,9 +17,12 @@
  *  along with Data Dictionary.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
+TableSettings = function(user, tableType, schemaSection, box, redrawTable, onSettingsUpdate) {
 	var username = user.userCredentials.username;
 	var isDDAdmin = DhisUtils.idWebAppAdmin(user);
+	
+	this.onSettingsUpdate = onSettingsUpdate || _.identity;
+	this.redraw = redrawTable;
 	
 	this._bindCallbacks = function(callbacks) {
 		_.each(callbacks, _.bind(function(cb) {
@@ -90,6 +93,7 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 		ev.preventDefault();
 		var newKey = $(ev.target).val()
 		this.saveSettings(getSettingsConfigKey(), newKey, _.bind(this.restoreState, this));
+		this.onSettingsUpdate();
 	};
 	
 	this.onEditClick = function(ev) {
@@ -100,7 +104,6 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 	this.toggleTableConfig = function() {
 		var table = this.getTable();
 		var configColumnsBox = box.find(".tables-config-columns");
-		var editButton = $(".table-settings-edit");
 		var editStarted = !configColumnsBox.is(":visible");
 		
 		if (editStarted) {
@@ -166,9 +169,9 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 		var state = table.state();
 		var key = table.data("state-key");
 		var info = getStateInfo(key, username);
-		var editButton = box.find(".table-settings-edit");
 		this.saveSettings(info.configKey, state, 
 			_.bind(function() { this.toggleTableConfig(table); }, this));
+		this.onSettingsUpdate();
 	};
 
 	this.saveSettings = function(key, value, onsuccess) {
