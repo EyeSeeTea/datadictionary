@@ -474,13 +474,18 @@ Users: Number of users having access to at least one org. unit." src="images/hel
 		     style="display: none;width:98%;margin-top:20px;">
 			<div class="section" style="padding: 10px 20px;" >
 	      <div class="columns"></div>
+	      
 	      <div class="selection-actions">
 	        Select: 
 	        <a href="#" class="select-none">None</a>
 	        |
 	        <a href="#" class="select-all">All</a>
-	     </div>
-	     
+	      </div>
+	      
+	      <div class="actions">
+	        <a href="#" class="reset-to-default">Reset to default settings</a>
+	      </div>
+        
 	      <span class="actions">
 	        <button class="tables-config-column-save">Save</button>
 	        <button class="tables-config-column-cancel">Cancel</button>
@@ -495,12 +500,6 @@ Users: Number of users having access to at least one org. unit." src="images/hel
 
   <div id="tables-config-key" class="ui-widget" style="margin:0;padding:0;display:none">
     <div class="keys">
-      <input type="hidden" id="tables-config-table-id"></input>
-      <label for="tables-config-key-default">
-        <input name="tables-config-key" id="tables-config-key-default" type="radio" value="default" />
-        <span>Default settings</span>
-       </label>
-      <br />
       <label for="tables-config-key-user">
         <input name="tables-config-key" id="tables-config-key-user" type="radio" value="user" />
         <span id="user-settings-label">My settings</span>

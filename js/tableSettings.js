@@ -37,13 +37,21 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 			["click", ".select-none", this.onSelectNone],
 			["click", ".tables-config-column-save", this.onSaveClick],
 			["click", ".tables-config-column-cancel", this.onCancelClick],
-			["click", ".table-settings-selector", this.onSelectSettingsKeyClick]
+			["click", ".table-settings-selector", this.onSelectSettingsKeyClick],
+			["click", ".reset-to-default", this.onResetToDefaultClick]
 		]);
 
 		var table = this.getTable();
 		box.find(".table-settings").html($("#table-settings").get(0).innerHTML);
 		box.find(".help").attr("title", table.helpMessage);
 		table.setup();
+	};
+	
+	this.onResetToDefaultClick = function(ev) {
+		ev.preventDefault();
+		var table = this.getTable();
+		table.data("reset-to-default", true);
+		this.restoreState();
 	};
 	
 	this.onSelectAll = function(ev) {
@@ -81,8 +89,7 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 	this.onSelectSettingsKeyChange = function(ev) {
 		ev.preventDefault();
 		var newKey = $(ev.target).val()
-		this.saveSettings(getSettingsConfigKey(schemaSection), 
-			newKey, _.bind(this.restoreState, this));
+		this.saveSettings(getSettingsConfigKey(), newKey, _.bind(this.restoreState, this));
 	};
 	
 	this.onEditClick = function(ev) {
@@ -197,17 +204,14 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 		this.restoreState();
 	};
 	
-	this.loadTableState = function(key, callback) {
+	this.loadTableState = function(dbkey, callback) {
+		var key = _.contains(["user", "organization"], dbkey) ? dbkey : "organization";
 		var table = this.getTable();
 		var info = getStateInfo(key, username);
 		var link = box.find(".table-settings-selector");
 		var stateResponse = undefined;
 
-		var deferred = (key === "default") ? 
-			$.Deferred().resolve(null) :
-			DhisUtils.loadSettings(apiPath, "datadictionary", info.configKey, {async: false});
-		
-		deferred
+		DhisUtils.loadSettings(apiPath, "datadictionary", info.configKey, {async: false})
 			.done(function(state) {
 				table.data("state-key", key);
 				link.text(info.linkText);
@@ -229,7 +233,7 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 			box.find(".table-settings-links").show();
 			box.find(".table-settings-edit").toggle(info.canEdit);
 			if (!info.canEdit) {
-			  $(".tables-config-columns").slideUp();
+				$(".tables-config-columns").slideUp();
 			 }
 			this.renderConfigColumns();
 		}, this));
@@ -238,33 +242,32 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 	};
 
 	var getStateInfo = function(key, username) {
-		if (key === "default") {
-			return {
-				configKey: null, 
-				linkText: "Default settings", 
-				canEdit: false
-			};
-		} else if (key === "organization") {
-			return {
-				configKey: "tables-" + schemaSection + "-state-organization", 
-				linkText: "Organizational settings", 
-				canEdit: isDDAdmin
-			};
-		} else if (key === "user") {
+		if (key === "user") {
 			return {
 				configKey: "tables-" + schemaSection + "-state-user-" + username, 
 				linkText: "My settings", 
 				canEdit: true
 			};
-		} else {
-			throw "[tableSettings:getStateInfo] Unknown key: " + key;
+		} else { // organization
+			return {
+				configKey: "tables-" + schemaSection + "-state-organization", 
+				linkText: "Organizational settings", 
+				canEdit: isDDAdmin
+			};
 		}
 	}
 	
 	// There is an issue in the state loading when using the async callback. For now
 	// use sync loading with an instance variable.
 	this.stateLoadCallback = function(settings, callback) {
-		return this.loadState(callback);
+		var table = this.getTable();
+		if (table.data("reset-to-default")) {
+			table.data("reset-to-default", false);
+			_.defer(_.bind(this.renderConfigColumns, this));
+			return null;
+		} else {
+			return this.loadState(callback);
+		}
 	}
 
 	this.loadState = function(callback) {
@@ -272,7 +275,7 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 		var state = undefined;
 		
 		DhisUtils.loadSettings(apiPath, "datadictionary", getSettingsConfigKey(), {async: false})
-			.then(null, function() { return $.Deferred().resolve("default"); })
+			.then(null, function() { return $.Deferred().resolve("organization"); })
 			.done(_.bind(function(key) { state = this.loadTableState(key, callback || _.identity); }, this));
 		return state;
 	}
@@ -328,7 +331,7 @@ CustomTable = function(el) {
 	};
 	
 	this.setup = function() {
-		// Save original positions of rows to use on default settings
+		// Save original positions of rows to use as initial settings
 		el.find("tr").each(function(idx, tr) { $(tr).attr(columnIndexAttr, idx); });
 	};
 
