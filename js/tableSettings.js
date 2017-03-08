@@ -19,8 +19,7 @@
 
 TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 	var username = user.userCredentials.username;
-	var IsDDAdmin = _(user.authorities).contains("Admin Data Dictionary") ||
-	                _(user.authorities).contains("ALL");
+	var isDDAdmin = DhisUtils.idWebAppAdmin(user);
 	
 	this._bindCallbacks = function(callbacks) {
 		_.each(callbacks, _.bind(function(cb) {
@@ -249,7 +248,7 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 			return {
 				configKey: "tables-" + schemaSection + "-state-organization", 
 				linkText: "Organizational settings", 
-				canEdit: IsDDAdmin
+				canEdit: isDDAdmin
 			};
 		} else if (key === "user") {
 			return {

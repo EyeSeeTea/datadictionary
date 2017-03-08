@@ -71,4 +71,9 @@ DhisUtils = {};
 			success: onsuccess
 		}));
 	};
+	
+  DhisUtils.idWebAppAdmin = function(user) {
+	  return _(user.authorities).contains("Admin Data Dictionary") ||
+	         _(user.authorities).contains("ALL");
+  }	
 })();

@@ -29,6 +29,7 @@ function SettingDataPopupForm(me, settings, afterSetup)
 
 	var width = 700;
 	var height = 200;
+	var isDDAdmin = DhisUtils.idWebAppAdmin(me.user);
 	
 	var dataStoreSettingsKey = "datadictionary/settings"
 	
@@ -164,10 +165,11 @@ function SettingDataPopupForm(me, settings, afterSetup)
 		updateSettings(settings, "PUT");
 	}
 	
-	function setupSettingsSaveCallbacks() {
-		me.orgUnitList.change(onSettingChange);
-		sqlViewSettings.change(onSettingChange);
-		sqlViewEditSettings.change(onSettingChange);
+	function setupInputFields() {
+		var disabled = !isDDAdmin;
+		me.orgUnitList.prop("disabled", disabled).change(onSettingChange);
+		sqlViewSettings.prop("disabled", disabled).change(onSettingChange);
+		sqlViewEditSettings.prop("disabled", disabled).change(onSettingChange);
 	}
 
 	function refreshUI(){
@@ -245,7 +247,7 @@ function SettingDataPopupForm(me, settings, afterSetup)
 		
 		// Retrieve and Populate Data to HTML
 		retrieveAndPopulate();
-		setupSettingsSaveCallbacks();
+		setupInputFields();
 
 		// advanced Setup allow
 //		me.setUp_SettingDataEdit();
