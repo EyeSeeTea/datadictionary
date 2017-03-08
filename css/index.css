@@ -251,3 +251,11 @@ div.limitedView_Toggle {
 .ui-sortable-helper {
   cursor: move;
 }
+
+.ui-sortable {
+    cursor: pointer;
+}
+
+.ui-sortable-helper {
+    cursor: move;
+}
