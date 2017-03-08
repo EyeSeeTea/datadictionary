@@ -63,7 +63,7 @@ function DataElementPopup() {
 	}
 
 	me.load_DEData = function(id, execFunc) {
-		RESTUtil.getAsynchData(me.queryURL_DataElements + '/' + id + '.json?fields=id,code,displayName,displayShortName,description,valueType,zeroIsSignificant,aggregationType,categoryCombo[id,name],lastUpdated,dataElementGroups[id,name],attributeValues[value,attribute[id,name]]',
+		RESTUtil.getAsynchData(me.queryURL_DataElements + '/' + id + '.json?fields=id,code,displayName,displayShortName,description,valueType,zeroIsSignificant,aggregationType,categoryCombo[id,name],lastUpdated,dataElementGroups[id,name],attributeValues[value,attribute[id,name]],created,user[id,displayName]',
 				function(data) {
 					execFunc(data);
 				}, function(msg) {
@@ -120,6 +120,12 @@ function DataElementPopup() {
 		// jsonData.attributes ) ) );
 		table.append(me.getRowFormated("Data Element Groups", me
 				.formatGroups(jsonData.dataElementGroups)));
+
+		table.append(me.getRowFormated("Created By", 
+				me.formatJsonData(jsonData.user && jsonData.user.displayName)));
+
+		table.append(me.getRowFormated("Created On", $.format.date(
+				new Date(jsonData.created), "yyyy-MM-dd hh:mm a")));
 
 		table.append(me.getRowFormated("Last Updated On", $.format.date(
 				new Date(jsonData.lastUpdated), "yyyy-MM-dd hh:mm a")));
@@ -318,7 +324,7 @@ function IndicatorPopup() {
 	}
 
 	me.load_Data = function(id, execFunc) {
-		RESTUtil.getAsynchData(me.queryURL_Indicators + '/' + id + '.json?fields=id,code,displayName,displayShortName,description,annualized,numerator,denominator,numeratorDescription,denominatorDescription,categoryCombo[id,name],lastUpdated,indicatorGroups[id,name],indicatorType[id,name],dataSets[id,name],attributeValues[value,attribute[id,name]]',
+		RESTUtil.getAsynchData(me.queryURL_Indicators + '/' + id + '.json?fields=id,code,displayName,displayShortName,description,annualized,numerator,denominator,numeratorDescription,denominatorDescription,categoryCombo[id,name],lastUpdated,indicatorGroups[id,name],indicatorType[id,name],dataSets[id,name],attributeValues[value,attribute[id,name]],created,user[id,displayName]',
 				function(data) {
 					execFunc(data);
 				}, function(msg) {
@@ -372,6 +378,12 @@ function IndicatorPopup() {
 
 		table.append(me.getRowFormated("DataSets", me
 				.formatGroups(jsonData.dataSets)));
+
+		table.append(me.getRowFormated("Created By", 
+				me.formatJsonData(jsonData.user && jsonData.user.displayName)));
+
+		table.append(me.getRowFormated("Created On", $.format.date(
+				new Date(jsonData.created), "yyyy-MM-dd hh:mm a")));
 
 		table.append(me.getRowFormated("Last Updated On", $.format.date(
 				new Date(jsonData.lastUpdated), "yyyy-MM-dd hh:mm a")));
