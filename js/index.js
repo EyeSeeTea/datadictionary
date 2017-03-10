@@ -1298,6 +1298,63 @@ function DataManager() {
 		
 		return baseColumns.concat(getAttributeColumns(attributes));
 	}
+	
+
+	me.setupDimensions = function(listTag, dataList) {
+		// for each row..
+		listTag
+				.find('div[deid]')
+				.each(
+						function(i_div) {
+
+							var divDimension = $(this);
+
+							divDimension
+									.append('<div class="hidden" type="CAT" ></div>'
+											+ '<div class="hidden loading_CAT" ><img src="images/ui-anim_basic.gif"/></div>'
+											+ '<div class="hidden" type="COGS" ></div>'
+											+ '<div class="hidden loading_COGS" ><img src="images/ui-anim_basic.gif"/></div>'
+											+ '<div class="hidden" type="DEGS" ></div>'
+											+ '<div class="hidden loading_DEGS"><img src="images/ui-anim_basic.gif"/></div>');
+
+							var deid = divDimension
+									.attr('deid');
+							var processed = divDimension
+									.attr('processed');
+							var catid = divDimension
+									.attr('catid');
+							var degsids = divDimension
+									.attr('degsids');
+
+							// console.log( 'deid: ' + deid
+							// + '|' + processed );
+
+							if (processed === undefined) {
+								divDimension.attr(
+										'processed', 'Y');
+
+								me.populateDEGS(
+										divDimension, deid,
+										degsids, dataList);
+
+								me
+										.populateCAT(
+												divDimension,
+												deid,
+												catid,
+												dataList,
+												function(
+														categoryOptions) {
+													me
+															.populateCOGS(
+																	divDimension,
+																	deid,
+																	categoryOptions,
+																	dataList);
+												});
+							}
+						});
+	};
 		
 	me.setUp_DataTable_DataElement = function(type, listTag, dataList, attributes, forceRedraw) {
 		var oTable;
@@ -1352,6 +1409,9 @@ function DataManager() {
 								[ "All", 25, 50, 100 ] ],
 						"iDisplayLength" : -1,
 						"dom" : 'BT<"clear">lfrtip',
+						"fnDrawCallback": function() { 
+							_.defer(function() { me.setupDimensions(listTag, dataList); });
+						},
 						"fnInfoCallback" : function(oSettings, iStart, iEnd,
 								iMax, iTotal, sPre) {
 							// Each time paging or other things happen that
@@ -1367,60 +1427,6 @@ function DataManager() {
 							me
 									.setUpDivToggleAction(listTag
 											.find('div.limitedView,div.limitedView_Toggle'));
-
-							// for each row..
-							listTag
-									.find('div[deid]')
-									.each(
-											function(i_div) {
-
-												var divDimension = $(this);
-
-												divDimension
-														.append('<div class="hidden" type="CAT" ></div>'
-																+ '<div class="hidden loading_CAT" ><img src="images/ui-anim_basic.gif"/></div>'
-																+ '<div class="hidden" type="COGS" ></div>'
-																+ '<div class="hidden loading_COGS" ><img src="images/ui-anim_basic.gif"/></div>'
-																+ '<div class="hidden" type="DEGS" ></div>'
-																+ '<div class="hidden loading_DEGS"><img src="images/ui-anim_basic.gif"/></div>');
-
-												var deid = divDimension
-														.attr('deid');
-												var processed = divDimension
-														.attr('processed');
-												var catid = divDimension
-														.attr('catid');
-												var degsids = divDimension
-														.attr('degsids');
-
-												// console.log( 'deid: ' + deid
-												// + '|' + processed );
-
-												if (processed === undefined) {
-													divDimension.attr(
-															'processed', 'Y');
-
-													me.populateDEGS(
-															divDimension, deid,
-															degsids, dataList);
-
-													me
-															.populateCAT(
-																	divDimension,
-																	deid,
-																	catid,
-																	dataList,
-																	function(
-																			categoryOptions) {
-																		me
-																				.populateCOGS(
-																						divDimension,
-																						deid,
-																						categoryOptions,
-																						dataList);
-																	});
-												}
-											});
 
 							return iStart + " to " + iEnd;
 						}
