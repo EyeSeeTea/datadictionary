@@ -129,15 +129,6 @@ function DataManager() {
 	me.queryURL_DataElementListGet = apiPath + "dataElements.json?paging=false";
 	me.queryURL_DataSetListGet = apiPath + "dataSets.json?paging=false";
 	me.queryURL_DataSetDetailGet = apiPath + "dataSets/";
-	me.queryURL_DataElementAttributes = apiPath + "attributes.json?" + 
-		"paging=false&filter=dataElementAttribute:eq:true&fields=id,name";
-	me.queryURL_IndicatorAttributes = apiPath + "attributes.json?" + 
-		"paging=false&filter=indicatorAttribute:eq:true&fields=id,name";
-	me.queryUrl_AttributesByType = {
-		"DE": me.queryURL_DataElementAttributes,
-		"DE_DS": me.queryURL_DataElementAttributes,
-		"IND": me.queryURL_IndicatorAttributes
-	};
 
 	me.queryURL_analyticsSQLView = apiPath + "sqlViews/";
 	me.queryURL_analytics = apiPath + "dashboards/";
@@ -305,8 +296,33 @@ function DataManager() {
 
 		 
 		$.each(json_listData, function(i_data, item_data) {
-			deferredArrActions_getData.push(RESTUtil.getAsynchData(queryURL
-					+ item_data.id + ".json?fields=indicatorGroups[id,name],numeratorDescription,denominatorDescription,dataElementGroups[id,name],name,id,valueType,description,categoryCombo[id,displayName],attributeValues[value,attribute[id,name]]", function(json_dataDetail) {
+			var url = queryURL	+ item_data.id + ".json?fields=" + [
+				"indicatorGroups[id,name]",
+				"numerator",
+				"denominator",
+				"numeratorDescription",
+				"denominatorDescription",
+				"dataElementGroups[id,name]",
+				"name",
+				"id",
+				"valueType",
+				"description",
+				"categoryCombo[id,displayName]",
+				"attributeValues[value,attribute[id,name]]",
+				"code",
+				"created",
+				"user[id,displayName]",
+				"displayName",
+				"annualized",
+				"indicatorType[id,name]",
+				"dataSets[id,name]",
+				"displayShortName",
+				"zeroIsSignificant",
+				"aggregationType",
+				"lastUpdated"
+			].join(",");
+			
+			deferredArrActions_getData.push(RESTUtil.getAsynchData(url, function(json_dataDetail) {
 				me.dataListWithDetail.push(json_dataDetail);
 			}, function() {
 			}, function() {
@@ -317,14 +333,12 @@ function DataManager() {
 
 		});
 		
-		var attributes = undefined;
-		var getAttributesRequest = RESTUtil.getAsynchData(
-			me.queryUrl_AttributesByType[type], 
-			function(data) { attributes = data.attributes; }, 
-			function() {}, 
-			function() { QuickLoading.dialogShowAdd(loadingTagName); }, 
-			function() { QuickLoading.dialogShowRemove(loadingTagName); }
-		);
+		var attributes;
+		var attributesType = type === "IND" ? "indicatorAttribute" : "dataElementAttribute";
+		var getAttributesRequest = DhisUtils.getAttributes(apiPath, attributesType)
+			.then(function(attributeList) {
+				attributes = attributeList;
+			});
 			
 		deferredArrActions_getData.push(getAttributesRequest);			
 
@@ -1189,12 +1203,20 @@ function DataManager() {
 				}
 			},
 			{
+				data : 'displayShortName',
+				"title" : "Short Name"
+			},
+			{
 				data : 'id',
 				"title" : "UID",
 				"render" : function(data, type, full) {
 					return '<span class="tdSmall">' + data
 							+ '</span>';
 				}
+			},
+			{
+				data : 'code',
+				"title" : "Code"
 			},
 			{
 				data : 'categoryCombo.displayName',
@@ -1244,6 +1266,33 @@ function DataManager() {
 							+ data.replace(/[\n\r\t]/g, "")
 							+ '</div></div>';
 				}
+			},
+			{
+				data : 'zeroIsSignificant',
+				"title" : "Store Zero",
+				"render" : Util.getDataTableRenderer("boolean")
+			},
+			{
+				data : 'aggregationType',
+				"title" : "Aggregation Type"
+			},
+			{
+				data : 'dataElementGroups[,].name',
+				"title" : "DE Groups"
+			},
+			{
+				data : 'user.displayName',
+				"title" : "Created by"
+			},
+			{
+				data : 'created',
+				"title" : "Created on",
+				"render" : Util.getDataTableRenderer("date")
+			},
+			{
+				data : 'lastUpdated',
+				"title" : "Updated on",
+				"render" : Util.getDataTableRenderer("date")
 			}
 		];
 		
@@ -1728,6 +1777,14 @@ function DataManager() {
 				}
 			},
 			{
+				data : 'displayShortName',
+				"title" : "Short Name"
+			},
+			{
+				data : 'displayName',
+				"title" : "Display Name"
+			},
+			{
 				data : 'id',
 				"title" : "UID",
 				"render" : function(data, type, full) {
@@ -1737,11 +1794,32 @@ function DataManager() {
 			},
 			{
 				data : 'numeratorDescription',
-				"title" : "Numberator Description"
+				"title" : "Numerator Description"
 			},
 			{
 				data : 'denominatorDescription',
 				"title" : "Denominator Description"
+			},
+			{
+				data : 'numerator',
+				"title" : "Numerator"
+			},
+			{
+				data : 'denominator',
+				"title" : "Denominator"
+			},
+			{
+				data : 'annualized',
+				"title" : "Annualized",
+				"render" : Util.getDataTableRenderer("boolean")
+			},
+			{
+				data : 'indicatorType.name',
+				"title" : "Indicator Type"
+			},
+			{
+				data : 'dataSets[,].name',
+				"title" : "DataSets"
 			},
 			{
 				data : 'description',
@@ -1751,7 +1829,21 @@ function DataManager() {
 							+ data
 							+ '</div><div class="limitedView_Toggle">...... More ......</div>';
 				}
-			} 
+			},
+			{
+				data : 'user.displayName',
+				"title" : "Created by"
+			},
+			{
+				data : 'created',
+				"title" : "Created on",
+				"render" : Util.getDataTableRenderer("date")
+			},
+			{
+				data : 'lastUpdated',
+				"title" : "Updated on",
+				"render" : Util.getDataTableRenderer("date")
+			}
 		];
 			
 		return baseColumns.concat(getAttributeColumns(attributes));

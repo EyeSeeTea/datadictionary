@@ -22,7 +22,6 @@ function DataElementPopup() {
 	var me = this;
 
 	me.queryURL_DataElements = apiPath + "dataElements";
-	me.queryURL_Attributes = apiPath + "attributes.json?paging=false&filter=dataElementAttribute:eq:true&fields=id,name";
 
 	me.dialogFormTag = $("#dataElementPopupForm");
 	me.tableTag = $('#dataElementDetailTable');
@@ -71,14 +70,6 @@ function DataElementPopup() {
 				});
 	}
 
-	me.loadAttributeData = function(execFunc) {
-		RESTUtil.getAsynchData(me.queryURL_Attributes, function(data) {
-			execFunc(data.attributes);
-		}, function(msg) {
-			console.log('Attributes retrieval was unsuccessful.');
-		});
-	}
-
 	me.populateTable = function(jsonData, afterFun) {
 		var table = me.tableTag;
 		table.hide();
@@ -96,28 +87,13 @@ function DataElementPopup() {
 		table.append(me.getRowFormated("Value Type", me.formatValueType(me
 				.formatJsonData(jsonData.valueType))));
 		table.append(me.getRowFormated("Store Zero Data Value",
-				me.formatBooleanVal(me
+				Util.formatBoolean(me
 						.formatJsonData(jsonData.zeroIsSignificant))));
 		table.append(me.getRowFormated("Aggregation Type", me
 				.formatJsonData(jsonData.aggregationType)));
 		table.append(me.getRowFormated("Disaggregation (Cat Combos)",
 				jsonData.categoryCombo.name));
-		// empty is not selected
-		// table.append( me.getRowFormated( "Option set", getObjectName(
-		// jsonData.optionSet ) ) );
 
-		me.loadAttributeData(function(attributeList) {
-			$.each(attributeList || [], function(i, item) {
-				table.append(
-					me.getRowFormated(item.name, me.getAttributeValue(item.id, jsonData.attributeValues),
-					"background-color: #eee;")
-				);
-			});
-			afterFun();
-		});
-
-		// table.append( me.getRowFormated( "Attributes", formatAttributes(
-		// jsonData.attributes ) ) );
 		table.append(me.getRowFormated("Data Element Groups", me
 				.formatGroups(jsonData.dataElementGroups)));
 
@@ -129,6 +105,16 @@ function DataElementPopup() {
 
 		table.append(me.getRowFormated("Last Updated On", $.format.date(
 				new Date(jsonData.lastUpdated), "yyyy-MM-dd hh:mm a")));
+
+		DhisUtils.getAttributes(apiPath, "dataElementAttribute").then(function(attributeList) {
+			$.each(attributeList || [], function(i, item) {
+				table.append(
+					me.getRowFormated(item.name, me.getAttributeValue(item.id, jsonData.attributeValues),
+					"background-color: #eee;")
+				);
+			});
+			afterFun();
+		});
 
 		var dateNow = new Date("2014-05-21T01:50:39.385+0000");
 
@@ -163,18 +149,6 @@ function DataElementPopup() {
 			value = "User Name";
 
 		return value;
-	}
-
-	me.formatBooleanVal = function(value) {
-		var returnVal = "";
-
-		if (value) {
-			returnVal = "Yes";
-		} else {
-			returnVal = "No";
-		}
-
-		return returnVal;
 	}
 
 	me.formatAggregation = function(valueObj) {
@@ -283,7 +257,6 @@ function IndicatorPopup() {
 	var me = this;
 
 	me.queryURL_Indicators = apiPath + "indicators";
-	me.queryURL_Attributes = apiPath + "attributes.json?paging=false&filter=indicatorAttribute:eq:true&fields=id,name";
 
 	me.dialogFormTag = $("#indicatorPopupForm");
 	me.tableTag = $('#indicatorDetailTable');
@@ -324,21 +297,13 @@ function IndicatorPopup() {
 	}
 
 	me.load_Data = function(id, execFunc) {
-		RESTUtil.getAsynchData(me.queryURL_Indicators + '/' + id + '.json?fields=id,code,displayName,displayShortName,description,annualized,numerator,denominator,numeratorDescription,denominatorDescription,categoryCombo[id,name],lastUpdated,indicatorGroups[id,name],indicatorType[id,name],dataSets[id,name],attributeValues[value,attribute[id,name]],created,user[id,displayName]',
+		RESTUtil.getAsynchData(me.queryURL_Indicators + '/' + id + '.json?fields=id,code,name,displayName,displayShortName,description,annualized,numerator,denominator,numeratorDescription,denominatorDescription,categoryCombo[id,name],lastUpdated,indicatorGroups[id,name],indicatorType[id,name],dataSets[id,name],attributeValues[value,attribute[id,name]],created,user[id,displayName]',
 				function(data) {
 					execFunc(data);
 				}, function(msg) {
 					console.log('Indicator retrieval was unsuccessful.');
 				});
 	}
-
-	me.loadAttributeData = function(execFunc) {
-		RESTUtil.getAsynchData(me.queryURL_Attributes, function(data) {
-			execFunc(data.attributes);
-		}, function(msg) {
-			console.log('Attributes retrieval was unsuccessful.');
-		});
-	};
 
 	me.populateTable = function(jsonData, afterFun) {
 
@@ -367,7 +332,7 @@ function IndicatorPopup() {
 		table.append(me.getRowFormated("Numerator", me
 				.formatJsonData(jsonData.numerator)));
 
-		table.append(me.getRowFormated("Annualized", me.formatBooleanVal(me
+		table.append(me.getRowFormated("Annualized", Util.formatBoolean(me
 				.formatJsonData(jsonData.annualized))));
 
 		table.append(me.getRowFormated("Indicator Type", me
@@ -394,10 +359,11 @@ function IndicatorPopup() {
 		me.dialogFormTag.find('#msgInfo').text(
 				$.format.date(dateNow, "yyyy-MM-dd "));
 
-		me.loadAttributeData(function(attributeList) {
+		DhisUtils.getAttributes(apiPath, "indicatorAttribute").then(function(attributeList) {
 			$.each(attributeList || [], function(i, item) {
 				table.append(
-					me.getRowFormated(item.name, me.getAttributeValue(item.id, jsonData.attributeValues),
+					me.getRowFormated(item.name, 
+					  me.getAttributeValue(item.id, jsonData.attributeValues),
 					"background-color: #eee;")
 				);
 			});
@@ -431,18 +397,6 @@ function IndicatorPopup() {
 			value = "User Name";
 
 		return value;
-	}
-
-	me.formatBooleanVal = function(value) {
-		var returnVal = "";
-
-		if (value) {
-			returnVal = "Yes";
-		} else {
-			returnVal = "No";
-		}
-
-		return returnVal;
 	}
 
 	me.formatAnchor = function(url) {
