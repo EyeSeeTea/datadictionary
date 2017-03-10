@@ -76,7 +76,8 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable, onSet
 			$("#tables-config-key").dialog({
 				title: "Visualization settings", 
 				modal: true, 
-				autoOpen: true
+				autoOpen: true,
+				minHeight: "100px"
 			 });
 			$(document.body).off("change", "#tables-config-key .keys input");
 			$(document.body).on("change", "#tables-config-key .keys input",
