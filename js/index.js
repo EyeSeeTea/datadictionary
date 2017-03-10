@@ -1340,6 +1340,7 @@ function DataManager() {
 						"data" : dataList,
 						"columns" : me.getDataElementColumns(attributes),
 						"order" : [ [ 0, "asc" ], [ 1, "asc" ] ],
+						"buttons" : Util.getExportButtons(),
 						"colReorder": {
 							"realtime": false,
 							"fnReorderCallback": _.bind(tableSettings.fnReorderCallback, tableSettings)
@@ -1350,7 +1351,7 @@ function DataManager() {
 						"aLengthMenu" : [ [ -1, 25, 50, 100 ],
 								[ "All", 25, 50, 100 ] ],
 						"iDisplayLength" : -1,
-						"dom" : 'T<"clear">lfrtip',
+						"dom" : 'BT<"clear">lfrtip',
 						"fnInfoCallback" : function(oSettings, iStart, iEnd,
 								iMax, iTotal, sPre) {
 							// Each time paging or other things happen that
@@ -1422,14 +1423,6 @@ function DataManager() {
 											});
 
 							return iStart + " to " + iEnd;
-						},
-						"tableTools" : {
-							"sSwfPath" : "js/jquery/swf/copy_csv_xls_pdf.swf",
-							"aButtons" : [ "copy", "csv", {
-								"sExtends" : "xls",
-								"sButtonText" : "Excel",
-								"sFileName" : "*.xls"
-							}, "pdf", "print" ]
 						}
 					});
 
@@ -1868,6 +1861,7 @@ function DataManager() {
 						"data" : dataList,
 						"columns" : me.getIndicatorColumns(attributes),
 						"order" : [ [ 0, "asc" ], [ 1, "asc" ] ],
+						"buttons" : Util.getExportButtons(),
 						"colReorder": {
 							"realtime": false,
 							"fnReorderCallback": _.bind(tableSettings.fnReorderCallback, tableSettings)
@@ -1878,7 +1872,7 @@ function DataManager() {
 						"aLengthMenu" : [ [ 25, 50, 100, -1 ],
 								[ 25, 50, 100, "All" ] ],
 						"iDisplayLength" : 25,
-						"dom" : 'T<"clear">lfrtip',
+						"dom" : 'BT<"clear">lfrtip',
 						"fnInfoCallback" : function(oSettings, iStart, iEnd,
 								iMax, iTotal, sPre) {
 
@@ -1890,16 +1884,6 @@ function DataManager() {
 											.find('div.limitedView,div.limitedView_Toggle'));
 
 							return iStart + " to " + iEnd;
-						},
-						"tableTools" : {
-							"sSwfPath" : "js/jquery/swf/copy_csv_xls_pdf.swf",
-							"aButtons" : [ "copy", "csv", {
-								"sExtends" : "xls",
-								"sButtonText" : "Excel",
-								"sFileName" : "*.xls"
-							}, "pdf", "print"
-
-							]
 						}
 					});
 

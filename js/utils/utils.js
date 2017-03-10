@@ -208,6 +208,20 @@ Util.formatBoolean = function(value) {
 
 /* DataTables helpers */
 
+Util.getExportButtons = function() {
+  var onlyVisibleColumns = {columns: ':visible'};
+  
+  return [
+    {extend: "copy", exportOptions: onlyVisibleColumns},
+    {extend: "csv", exportOptions: onlyVisibleColumns},
+    {extend: "excel", exportOptions: onlyVisibleColumns},
+    {extend: "pdf", exportOptions: onlyVisibleColumns, customize: function(doc) {
+      doc.defaultStyle.fontSize = 8; 
+    }},
+    {extend: "print", exportOptions: onlyVisibleColumns}
+  ];
+}
+						
 Util.getDataTableRenderer = function(rendererName) {
   var renderFun = Util.dataTableRenderers[rendererName || "string"];
    
