@@ -16,9 +16,15 @@ DHIS2, a flexible, web-based open source information system to collect and analy
 
 Every time the app starts, it will run this setup process:
 
-* Check if the user role _DataDictionary admin_ exists, otherwise it will be created. By default, this role includes the authority _Admin Data Dictionary_. Users with that authority are considered admins and can change some settings of the app (see below). Likewise, a user having the authority _ALL_ set is also considered an admin.
+* Check if the user role _DataDictionary admin_ exists, otherwise it will be created. By default, this role includes the authority _M_dhis-web-maintenance-appmanager_. Users with that authority are considered admins and can change some settings of the app (see below). 
 
-* Create the 2 SQL views required by the Dashboard tab. 
+* Create the 2 SQL views required by the Dashboard tab.
+
+## Authorization
+
+* To use the application, a user must have at least one of the following authorities: _ALL_, _M_dhis-web-maintenance-appmanager_, _See Data Dictionary_.
+
+* To admin the application, a user must have at least one of the following authorities: _ALL_, _M_dhis-web-maintenance-appmanager_. 
 
 ## Global settings
 

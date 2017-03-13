@@ -73,7 +73,7 @@ DhisUtils = {};
 	};
 	
   DhisUtils.idWebAppAdmin = function(user) {
-	  return _(user.authorities).contains("Admin Data Dictionary") ||
+	  return _(user.authorities).contains("M_dhis-web-maintenance-appmanager") ||
 	         _(user.authorities).contains("ALL");
   };
   

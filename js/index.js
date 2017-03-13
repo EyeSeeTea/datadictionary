@@ -121,7 +121,10 @@ function DataManager() {
 	me.adminRole = {
 		name: "DataDictionary admin",
 		description: "Can change global settings of the DataDictionary app",
-		authorities: ["Admin Data Dictionary"]
+		authorities: [
+			"See Data Dictionary", 
+			"M_dhis-web-maintenance-appmanager"
+		]
 	};
 
 	me.queryURL_DataElementGet = apiPath + "dataElements/";
@@ -1663,10 +1666,21 @@ function DataManager() {
 	}; 
 	
 	me.createUserRole = function(userRole) {
-		return RESTUtil.get(apiPath + "userRoles", {filter: "name:eq:" + userRole.name})
+		let qs = {
+			filter: "name:eq:" + userRole.name,
+			fields: "id,displayName,authorities"
+		};
+		return RESTUtil.get(apiPath + "userRoles", qs)
 			.then(function(data) {
+				var authorities = _.chain(data.userRoles).pluck("authorities").flatten().value();
+				var hasRequiredAuthorities = _.isEmpty(_.difference(userRole.authorities, authorities));
+				
 				if (_.isEmpty(data.userRoles)) {
 					return RESTUtil.post(apiPath + "userRoles", userRole)
+						.then(getObjectIdFromCreateRequest);
+				} else if (!hasRequiredAuthorities) {
+					var userRoleId = data.userRoles[0].id;
+					return RESTUtil.post(apiPath + "userRoles/" + userRoleId , userRole, {type: "PUT"})
 						.then(getObjectIdFromCreateRequest);
 				} else {
 					return data.userRoles[0].id;
