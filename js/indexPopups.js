@@ -48,7 +48,7 @@ function DataElementPopup() {
 		me.tableTag.find('tr').remove();
 
 		me.tableSettings = new TableSettings(user, "custom", section + "-popup", 
-		  me.tableTag.closest(".ui-dialog"), null);
+			me.tableTag.closest(".ui-dialog"), null);
 
 		// Load the Data Element Information
 		me.load_DEData(deId, function(json_Data) {
@@ -62,7 +62,7 @@ function DataElementPopup() {
 	}
 
 	me.load_DEData = function(id, execFunc) {
-		RESTUtil.getAsynchData(me.queryURL_DataElements + '/' + id + '.json?fields=id,code,displayName,displayShortName,description,valueType,zeroIsSignificant,aggregationType,categoryCombo[id,name],lastUpdated,dataElementGroups[id,name],attributeValues[value,attribute[id,name]],created,user[id,displayName]',
+		RESTUtil.getAsynchData(me.queryURL_DataElements + '/' + id + '.json?fields=id,code,displayName,displayShortName,description,valueType,zeroIsSignificant,aggregationType,categoryCombo[id,name,displayName],lastUpdated,dataElementGroups[id,name],attributeValues[value,attribute[id,name]],created,user[id,displayName]',
 				function(data) {
 					execFunc(data);
 				}, function(msg) {
@@ -84,6 +84,11 @@ function DataElementPopup() {
 		table.append(me.getRowFormated("Description", me
 				.formatJsonData(jsonData.description),
 				"height: 70px; vertical-align:top;"));
+				
+		table.append(me.getRowFormated("Dimensions", 
+			DhisDimensionUtils.dimensionsRenderer(null, null, jsonData)));
+		DhisDimensionUtils.setupDimensions(me.tableTag, [jsonData]);
+		
 		table.append(me.getRowFormated("Value Type", me.formatValueType(me
 				.formatJsonData(jsonData.valueType))));
 		table.append(me.getRowFormated("Store Zero Data Value",
@@ -363,8 +368,8 @@ function IndicatorPopup() {
 			$.each(attributeList || [], function(i, item) {
 				table.append(
 					me.getRowFormated(item.name, 
-					  me.getAttributeValue(item.id, jsonData.attributeValues),
-					"background-color: #eee;")
+						me.getAttributeValue(item.id, jsonData.attributeValues),
+						"background-color: #eee;")
 				);
 			});
 			afterFun();
