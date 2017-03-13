@@ -288,11 +288,13 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable, onSet
 // Table interfaces: datatables.js used in main page, custom tables used on popup details 
 
 DtTable = function(el) {
-	var dtable, api;
+	var dtable, api, fnDrawCallback;
 	
 	if ($.fn.dataTable.isDataTable(el)) {
 		dtable = el.dataTable();
 		api = dtable.DataTable();
+		var userCallback = dtable.fnSettings().aoDrawCallback.filter(dc => dc.sName == "user")[0];
+		fnDrawCallback = userCallback ? userCallback.fn : _.identity;
 	}
 
 	this.helpMessage = "You can now 1) toggle the visibility of columns, 2) change the sorting criteria of the columns and 3) reorder the columns by drag&drop on the column header. Remember to press [Save] to persist the changes or press [Cancel] to reload the saved state";	
@@ -315,8 +317,9 @@ DtTable = function(el) {
 	
 	this.isColumnVisible = function(idx) { return api.column(idx).visible(); };
 
-	this.setColumnVisible = function(idx, visibility) { 
-		return api.column(idx).visible(visibility);
+	this.setColumnVisible = function(idx, visibility) {
+		fnDrawCallback(); 
+		api.column(idx).visible(visibility);
 	};
 	
 	this.data = _.bind(el.data, el);
