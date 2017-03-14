@@ -105,11 +105,9 @@ function DataElementPopup() {
 		table.append(me.getRowFormated("Created By", 
 				me.formatJsonData(jsonData.user && jsonData.user.displayName)));
 
-		table.append(me.getRowFormated("Created On", $.format.date(
-				new Date(jsonData.created), "yyyy-MM-dd hh:mm a")));
+		table.append(me.getRowFormated("Created On", Util.formatDate(jsonData.created)));
 
-		table.append(me.getRowFormated("Last Updated On", $.format.date(
-				new Date(jsonData.lastUpdated), "yyyy-MM-dd hh:mm a")));
+		table.append(me.getRowFormated("Last Updated On", Util.formatDate(jsonData.created)));
 
 		DhisUtils.getAttributes(apiPath, "dataElementAttribute").then(function(attributeList) {
 			$.each(attributeList || [], function(i, item) {
@@ -352,11 +350,9 @@ function IndicatorPopup() {
 		table.append(me.getRowFormated("Created By", 
 				me.formatJsonData(jsonData.user && jsonData.user.displayName)));
 
-		table.append(me.getRowFormated("Created On", $.format.date(
-				new Date(jsonData.created), "yyyy-MM-dd hh:mm a")));
+		table.append(me.getRowFormated("Created On", Util.formatDate(jsonData.created)));
 
-		table.append(me.getRowFormated("Last Updated On", $.format.date(
-				new Date(jsonData.lastUpdated), "yyyy-MM-dd hh:mm a")));
+		table.append(me.getRowFormated("Last Updated On", Util.formatDate(jsonData.created)));
 
 		var dateNow = new Date("2014-05-21T01:50:39.385+0000");
 

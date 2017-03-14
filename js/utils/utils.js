@@ -206,6 +206,10 @@ Util.formatBoolean = function(value) {
   }
 };
 
+Util.formatDate = function(date) {
+  return $.format.date(date, "yyyy-MM-dd hh:mm a");
+};
+
 /* DataTables helpers */
 
 Util.getExportButtons = function() {
@@ -229,7 +233,7 @@ Util.getDataTableRenderer = function(rendererName) {
 	  return renderFun(data, type);
 	}
 };
-
+				
 Util.dataTableRenderers = {
   string: function(data, type) {
     return data === undefined || data === null ? "-" : data.toString();
@@ -238,6 +242,6 @@ Util.dataTableRenderers = {
     return Util.formatBoolean(data);
   },
   date: function(data, type) {
-    return $.format.date(data, "yyyy-MM-dd hh:mm a");  
+    return Util.formatDate(data);
   }
 };
