@@ -1248,6 +1248,10 @@ function DataManager() {
 				"title" : "DE Groups"
 			},
 			{
+				data : 'user.displayName',
+				"title" : "Created by"
+			},
+			{
 				data : 'created',
 				"title" : "Created on",
 				"render" : Util.getDataTableRenderer("date")
