@@ -15,7 +15,8 @@
     },
     "activities": {
         "dhis": {
-            "href": "../../../"
+            "href": "../../../",
+            "namespace": "datadictionary"
         }
     },
     "launch_path": "index.html",
