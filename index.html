@@ -48,6 +48,7 @@
 	<script src="js/utils/dialogLoading.js"></script>
 	<script src="js/utils/utils.js"></script>
 	<script src="js/utils/webUtils.js"></script>
+	<script src="js/utils/dhisUtils.js"></script>
 	
 	<script src="js/index.js"></script>
 	<script src="js/orgUnit.js"></script>
@@ -57,6 +58,7 @@
 	<script src="js/indexPopups.js"></script>
 	<script src="js/settingDataManager.js"></script>
 	<script src="js/dataHelpers.js"></script>	
+	<script src="js/tableSettings.js"></script>
  
  </head>
 
@@ -87,7 +89,7 @@
 				</td>
 				<td>
 					<select id="orgUnitList"></select>
-          <img style="max-width: 16px;cursor: pointer; cursor: hand;" title="Organisation Unit Level to select by default in in the &lt;Org Unit&gt; tab" src="images/help.png"/>				
+          <img style="max-width: 16px;cursor: pointer; cursor: hand;" title="Organization Unit Level to select by default in in the &lt;Org Unit&gt; tab" src="images/help.png"/>				
 				</td>
 				<td>
 					<div class='dataLoading' style='display:none;'><img src='images/ui-anim_basic.gif'/></div>
@@ -182,7 +184,7 @@ Events: Number of single event without registration programs activated on the or
 
 Tracker: Number of single/multiple events with registration programs activated on the org. units.
 
-Org. Unit Groups: Number of organisation unit groups used on at least one org. unit.
+Org. Unit Groups: Number of organization unit groups used on at least one org. unit.
 
 Users: Number of users having access to at least one org. unit." src="images/help.png"/></span></th>
 						</tr>
@@ -338,6 +340,8 @@ Users: Number of users having access to at least one org. unit." src="images/hel
 				</table>
 				</div>
 
+        <div class="table-settings"></div>
+        				
 				<div id="loadingMsgDiv" style="display:none;">			
 					<br><br><br>
 					
@@ -406,6 +410,8 @@ Users: Number of users having access to at least one org. unit." src="images/hel
 						<td>Data Element Groups: <select id="groupList" class="action_select"></select></td>
 					</tr>
 				</table>
+				
+				<div class="table-settings"></div>
 
 				<div id="dataListDE_byGroup" class="areaStyle" style="display:none;width:98%;margin-top:20px;">
 
@@ -428,6 +434,8 @@ Users: Number of users having access to at least one org. unit." src="images/hel
 					
 				</table>
 				
+				<div class="table-settings"></div>
+				
 				<div id="dataListIND_byGroup" class="areaStyle" style="display:none;width:98%;margin-top:20px;">
 					<div class="section" style="padding: 10px 20px;" >
 						<table id="tbDataListIND_byGroup" class="display listTable" cellspacing="0" width="100%">
@@ -442,6 +450,7 @@ Users: Number of users having access to at least one org. unit." src="images/hel
 
 	<div id="dataElementPopupForm" class="ui-widget" style="margin:0;padding:0;">
 		<div id="dataElementDetailDiv" class="gmap3">
+		  <div class="table-settings"></div>
 			<table id="dataElementDetailTable" class="listTable display" border="1" width="96%">
 			</table>
 		</div>
@@ -449,11 +458,63 @@ Users: Number of users having access to at least one org. unit." src="images/hel
 
 	<div id="indicatorPopupForm" class="ui-widget" style="margin:0;padding:0;">
 		<div id="indicatorDetailDiv" class="gmap3">
+		  <div class="table-settings"></div>
 			<table id="indicatorDetailTable" class="listTable display" border="1" width="96%">
 			</table>
 		</div>
 	</div>
 
+	<div id="table-settings" style="display:none">
+	  <div class="table-settings-links" style="display: none">
+	    <a href="#" class="table-settings-selector"></a>
+	    <a href="#" class="table-settings-edit"><img src='images/edit.png'/></a>
+	  </div>
+
+		<div id="dataElementList" class="areaStyle tables-config-columns" 
+		     style="display: none;width:98%;margin-top:20px;">
+			<div class="section" style="padding: 10px 20px;" >
+	      <div class="columns"></div>
+	      <div class="selection-actions">
+	        Select: 
+	        <a href="#" class="select-none">None</a>
+	        |
+	        <a href="#" class="select-all">All</a>
+	     </div>
+	     
+	      <span class="actions">
+	        <button class="tables-config-column-save">Save</button>
+	        <button class="tables-config-column-cancel">Cancel</button>
+	        <div class="spinner"></div>
+        </span>
+	       
+        <img style="max-width: 16px;cursor: pointer; cursor: hand;" src="images/help.png"
+             class="help" title=""/>
+      </div>
+	  </div>
+	</div>
+
+  <div id="tables-config-key" class="ui-widget" style="margin:0;padding:0;display:none">
+    <div class="keys">
+      <input type="hidden" id="tables-config-table-id"></input>
+      <label for="tables-config-key-default">
+        <input name="tables-config-key" id="tables-config-key-default" type="radio" value="default" />
+        <span>Default settings</span>
+       </label>
+      <br />
+      <label for="tables-config-key-user">
+        <input name="tables-config-key" id="tables-config-key-user" type="radio" value="user" />
+        <span id="user-settings-label">My settings</span>
+      </label>
+      <br />
+      <label for="tables-config-key-organization">
+        <input name="tables-config-key" id="tables-config-key-organization" type="radio" value="organization" />
+        <span>Organizational settings</span>
+      </label>
+      
+      <br />
+      <div class="spinner"></div>
+    </div>
+  </div>
 </div>
  </body>
 </html>

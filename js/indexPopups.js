@@ -44,20 +44,26 @@ function DataElementPopup() {
 		});
 	}
 
-	me.form_Open = function(deId) {
+	me.form_Open = function(deId, user, section) {
 
 		me.tableTag.find('tr').remove();
 
+		me.tableSettings = new TableSettings(user, "custom", section + "-popup", 
+		  me.tableTag.closest(".ui-dialog"), null);
+
 		// Load the Data Element Information
 		me.load_DEData(deId, function(json_Data) {
-			me.populateTable(json_Data);
+			me.populateTable(json_Data, function() {
+				me.tableSettings.setup();
+				me.tableSettings.loadState(null);
+			});
 		});
 
 		me.dialogFormTag.dialog("open");
 	}
 
 	me.load_DEData = function(id, execFunc) {
-		RESTUtil.getAsynchData(me.queryURL_DataElements + '/' + id + '.json?fields=id,code,displayName,displayShortName,description,valueType,zeroIsSignificant,aggregationType,categoryCombo[id,name],lastUpdated,dataElementGroups[id,name]',
+		RESTUtil.getAsynchData(me.queryURL_DataElements + '/' + id + '.json?fields=id,code,displayName,displayShortName,description,valueType,zeroIsSignificant,aggregationType,categoryCombo[id,name],lastUpdated,dataElementGroups[id,name],attributeValues[value,attribute[id,name]]',
 				function(data) {
 					execFunc(data);
 				}, function(msg) {
@@ -65,7 +71,7 @@ function DataElementPopup() {
 				});
 	}
 
-	me.loadAttributData = function(execFunc) {
+	me.loadAttributeData = function(execFunc) {
 		RESTUtil.getAsynchData(me.queryURL_Attributes, function(data) {
 			execFunc(data.attributes);
 		}, function(msg) {
@@ -73,8 +79,9 @@ function DataElementPopup() {
 		});
 	}
 
-	me.populateTable = function(jsonData) {
+	me.populateTable = function(jsonData, afterFun) {
 		var table = me.tableTag;
+		table.hide();
 
 		table.append(me.getRowFormated("UID", me.formatJsonData(jsonData.id)));
 		table.append(me
@@ -99,20 +106,14 @@ function DataElementPopup() {
 		// table.append( me.getRowFormated( "Option set", getObjectName(
 		// jsonData.optionSet ) ) );
 
-		me.loadAttributData(function(attributeList) {
-			if (attributeList !== undefined) {
-				$.each(attributeList, function(i, item) {
-
-					// if ( item.dataElementAttribute !== undefined &&
-					// item.dataElementAttribute )
-					table.append(me.getRowFormated(item.name, me
-							.getAttributeValue(item.id,
-									jsonData.attributeValues),
-							"background-color: #eee;"));
-
-				});
-			}
-
+		me.loadAttributeData(function(attributeList) {
+			$.each(attributeList || [], function(i, item) {
+				table.append(
+					me.getRowFormated(item.name, me.getAttributeValue(item.id, jsonData.attributeValues),
+					"background-color: #eee;")
+				);
+			});
+			afterFun();
 		});
 
 		// table.append( me.getRowFormated( "Attributes", formatAttributes(
@@ -276,6 +277,7 @@ function IndicatorPopup() {
 	var me = this;
 
 	me.queryURL_Indicators = apiPath + "indicators";
+	me.queryURL_Attributes = apiPath + "attributes.json?paging=false&filter=indicatorAttribute:eq:true&fields=id,name";
 
 	me.dialogFormTag = $("#indicatorPopupForm");
 	me.tableTag = $('#indicatorDetailTable');
@@ -297,20 +299,26 @@ function IndicatorPopup() {
 		});
 	}
 
-	me.form_Open = function(id) {
+	me.form_Open = function(id, user, section) {
 
 		me.tableTag.find('tr').remove();
 
+		me.tableSettings = new TableSettings(user, "custom", section + "-popup", 
+			me.tableTag.closest(".ui-dialog"), null);
+
 		// Load the Data Element Information
 		me.load_Data(id, function(json_Data) {
-			me.populateTable(json_Data);
+			me.populateTable(json_Data, function() {
+				me.tableSettings.setup();
+				me.tableSettings.loadState(null);
+			});
 		});
 
 		me.dialogFormTag.dialog("open");
 	}
 
 	me.load_Data = function(id, execFunc) {
-		RESTUtil.getAsynchData(me.queryURL_Indicators + '/' + id + '.json?fields=id,code,displayName,displayShortName,description,annualized,numerator,denominator,numeratorDescription,denominatorDescription,categoryCombo[id,name],lastUpdated,indicatorGroups[id,name],indicatorType[id,name],dataSets[id,name]',
+		RESTUtil.getAsynchData(me.queryURL_Indicators + '/' + id + '.json?fields=id,code,displayName,displayShortName,description,annualized,numerator,denominator,numeratorDescription,denominatorDescription,categoryCombo[id,name],lastUpdated,indicatorGroups[id,name],indicatorType[id,name],dataSets[id,name],attributeValues[value,attribute[id,name]]',
 				function(data) {
 					execFunc(data);
 				}, function(msg) {
@@ -318,9 +326,18 @@ function IndicatorPopup() {
 				});
 	}
 
-	me.populateTable = function(jsonData) {
+	me.loadAttributeData = function(execFunc) {
+		RESTUtil.getAsynchData(me.queryURL_Attributes, function(data) {
+			execFunc(data.attributes);
+		}, function(msg) {
+			console.log('Attributes retrieval was unsuccessful.');
+		});
+	};
+
+	me.populateTable = function(jsonData, afterFun) {
 
 		var table = me.tableTag;
+		table.hide();
 
 		table.append(me.getRowFormated("UID", me.formatJsonData(jsonData.id)));
 		// table.append( me.getRowFormated( "Code", me.formatJsonData(
@@ -364,6 +381,16 @@ function IndicatorPopup() {
 		// $( '#msgInfo' ).text( getFormattedDate2( dateNow ) );
 		me.dialogFormTag.find('#msgInfo').text(
 				$.format.date(dateNow, "yyyy-MM-dd "));
+
+		me.loadAttributeData(function(attributeList) {
+			$.each(attributeList || [], function(i, item) {
+				table.append(
+					me.getRowFormated(item.name, me.getAttributeValue(item.id, jsonData.attributeValues),
+					"background-color: #eee;")
+				);
+			});
+			afterFun();
+		});
 	}
 
 	me.getObjectName = function(valueObj) {
@@ -411,6 +438,21 @@ function IndicatorPopup() {
 
 		if (url.length > 0) {
 			returnVal = "<a href='" + url + "' target='_blank'>" + url + "</a>";
+		}
+
+		return returnVal;
+	}
+
+	me.getAttributeValue = function(attributeId, attributes) {
+		var returnVal = "";
+
+		if (attributes !== undefined) {
+			$.each(attributes, function(i, item) {
+
+				if (item.attribute.id == attributeId) {
+					returnVal = item.value;
+				}
+			});
 		}
 
 		return returnVal;

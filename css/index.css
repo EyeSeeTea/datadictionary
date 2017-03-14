@@ -15,6 +15,16 @@
  
    You should have received a copy of the GNU General Public License
    along with Data Dictionary.  If not, see <http://www.gnu.org/licenses/>.*/
+
+.spinner {
+	display: inline-block;
+	width: 16px;
+	height: 15px;
+}
+
+.spinner.active {
+	background: white url('../images/ui-anim_basic.gif') right center no-repeat;
+}
   
 .ui-autocomplete-loading {
 	background: white url('../images/ui-anim_basic.gif') right center no-repeat;
@@ -193,4 +203,51 @@ div.limitedView_Toggle {
 #settings {
   border-collapse: separate; 
   border-spacing: 10px;
+}
+
+.table-settings-links {
+  text-align: right;
+}
+
+.ui-widget .table-settings-links {
+  margin: 10px 10px;
+}
+ 
+.ui-tabs-panel .table-settings-links {
+  top: -35px;
+}
+
+.toggle-column-visibility.visible {
+  text-shadow: 1px 0px 0px;
+}
+
+.table-settings-edit.active {
+  color: red;
+}
+
+#tables-config-key .keys {
+  padding-top: 10px;
+}
+
+.tables-config-columns .actions {
+  margin-top: 5px;
+}
+
+.ui-widget .table-settings {
+  font-size: 0.8em;
+}
+
+.ui-widget .section {
+  box-shadow: none;
+  border-radius: 0px;
+  margin-left: 10px;
+  margin-right: 4px;
+}
+
+.tables-config-columns .help {
+  margin-top: 5px;
+}
+
+.ui-sortable-helper {
+  cursor: move;
 }
