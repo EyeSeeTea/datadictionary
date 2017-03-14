@@ -215,6 +215,7 @@ div.limitedView_Toggle {
  
 .ui-tabs-panel .table-settings-links {
   top: -35px;
+  margin-right: 25px;
 }
 
 .toggle-column-visibility.visible {
@@ -231,6 +232,10 @@ div.limitedView_Toggle {
 
 .tables-config-columns .actions {
   margin-top: 5px;
+}
+
+.tables-config-columns .selection-actions {
+  float: right;
 }
 
 .ui-widget .table-settings {
