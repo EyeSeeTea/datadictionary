@@ -18,12 +18,13 @@
 
 .spinner {
 	display: inline-block;
-	width: 16px;
+	width: 0px;
 	height: 15px;
 }
 
 .spinner.active {
 	background: white url('../images/ui-anim_basic.gif') right center no-repeat;
+	width: 16px;
 }
   
 .ui-autocomplete-loading {
