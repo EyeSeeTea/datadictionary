@@ -29,7 +29,7 @@ function SettingDataPopupForm(me, settings, afterSetup)
 
 	var width = 700;
 	var height = 200;
-	var isDDAdmin = DhisUtils.idWebAppAdmin(me.user);
+	var isDDAdmin = DhisUtils.isWebAppAdmin(me.user);
 	
 	var dataStoreSettingsKey = "datadictionary/settings"
 	

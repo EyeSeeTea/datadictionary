@@ -19,7 +19,7 @@
 
 TableSettings = function(user, tableType, schemaSection, box, redrawTable, onSettingsUpdate) {
 	var username = user.userCredentials.username;
-	var isDDAdmin = DhisUtils.idWebAppAdmin(user);
+	var isDDAdmin = DhisUtils.isWebAppAdmin(user);
 	
 	this.onSettingsUpdate = onSettingsUpdate || _.identity;
 	this.redraw = redrawTable;

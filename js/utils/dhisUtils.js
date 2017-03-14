@@ -72,7 +72,7 @@ DhisUtils = {};
 		}));
 	};
 	
-  DhisUtils.idWebAppAdmin = function(user) {
+  DhisUtils.isWebAppAdmin = function(user) {
 	  return _(user.authorities).contains("M_dhis-web-maintenance-appmanager") ||
 	         _(user.authorities).contains("ALL");
   };
