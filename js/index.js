@@ -1195,7 +1195,8 @@ function DataManager() {
 			},
 			{
 				data : 'displayShortName',
-				"title" : "Short Name"
+				"title" : "Short Name",
+				"render" : Util.getDataTableRenderer("string")
 			},
 			{
 				data : 'id',
@@ -1207,11 +1208,13 @@ function DataManager() {
 			},
 			{
 				data : 'code',
-				"title" : "Code"
+				"title" : "Code",
+				"render" : Util.getDataTableRenderer("string")
 			},
 			{
 				data : 'categoryCombo.displayName',
-				"title" : "Disaggregation (Cat Combo)"
+				"title" : "Disaggregation (Cat Combo)",
+				"render" : Util.getDataTableRenderer("string")
 			},
 			{
 				data : 'id',
@@ -1354,8 +1357,10 @@ function DataManager() {
 			});
 		} else {
 			oTable.fnClearTable();
-			oTable.fnAddData(dataList);
-			oTable.fnAdjustColumnSizing();
+			if (dataList.length > 0){
+				oTable.fnAddData(dataList);
+				oTable.fnAdjustColumnSizing();
+			}
 		}
 
 		if (type == "DE_DS") {
