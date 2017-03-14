@@ -121,7 +121,10 @@ function DataManager() {
 	me.adminRole = {
 		name: "DataDictionary admin",
 		description: "Can change global settings of the DataDictionary app",
-		authorities: ["Admin Data Dictionary"]
+		authorities: [
+			"See Data Dictionary", 
+			"M_dhis-web-maintenance-appmanager"
+		]
 	};
 
 	me.queryURL_DataElementGet = apiPath + "dataElements/";
@@ -129,15 +132,6 @@ function DataManager() {
 	me.queryURL_DataElementListGet = apiPath + "dataElements.json?paging=false";
 	me.queryURL_DataSetListGet = apiPath + "dataSets.json?paging=false";
 	me.queryURL_DataSetDetailGet = apiPath + "dataSets/";
-	me.queryURL_DataElementAttributes = apiPath + "attributes.json?" + 
-		"paging=false&filter=dataElementAttribute:eq:true&fields=id,name";
-	me.queryURL_IndicatorAttributes = apiPath + "attributes.json?" + 
-		"paging=false&filter=indicatorAttribute:eq:true&fields=id,name";
-	me.queryUrl_AttributesByType = {
-		"DE": me.queryURL_DataElementAttributes,
-		"DE_DS": me.queryURL_DataElementAttributes,
-		"IND": me.queryURL_IndicatorAttributes
-	};
 
 	me.queryURL_analyticsSQLView = apiPath + "sqlViews/";
 	me.queryURL_analytics = apiPath + "dashboards/";
@@ -305,8 +299,33 @@ function DataManager() {
 
 		 
 		$.each(json_listData, function(i_data, item_data) {
-			deferredArrActions_getData.push(RESTUtil.getAsynchData(queryURL
-					+ item_data.id + ".json?fields=indicatorGroups[id,name],numeratorDescription,denominatorDescription,dataElementGroups[id,name],name,id,valueType,description,categoryCombo[id,displayName],attributeValues[value,attribute[id,name]]", function(json_dataDetail) {
+			var url = queryURL	+ item_data.id + ".json?fields=" + [
+				"indicatorGroups[id,name]",
+				"numerator",
+				"denominator",
+				"numeratorDescription",
+				"denominatorDescription",
+				"dataElementGroups[id,name]",
+				"name",
+				"id",
+				"valueType",
+				"description",
+				"categoryCombo[id,displayName]",
+				"attributeValues[value,attribute[id,name]]",
+				"code",
+				"created",
+				"user[id,displayName]",
+				"displayName",
+				"annualized",
+				"indicatorType[id,name]",
+				"dataSets[id,name]",
+				"displayShortName",
+				"zeroIsSignificant",
+				"aggregationType",
+				"lastUpdated"
+			].join(",");
+			
+			deferredArrActions_getData.push(RESTUtil.getAsynchData(url, function(json_dataDetail) {
 				me.dataListWithDetail.push(json_dataDetail);
 			}, function() {
 			}, function() {
@@ -317,14 +336,12 @@ function DataManager() {
 
 		});
 		
-		var attributes = undefined;
-		var getAttributesRequest = RESTUtil.getAsynchData(
-			me.queryUrl_AttributesByType[type], 
-			function(data) { attributes = data.attributes; }, 
-			function() {}, 
-			function() { QuickLoading.dialogShowAdd(loadingTagName); }, 
-			function() { QuickLoading.dialogShowRemove(loadingTagName); }
-		);
+		var attributes;
+		var attributesType = type === "IND" ? "indicatorAttribute" : "dataElementAttribute";
+		var getAttributesRequest = DhisUtils.getAttributes(apiPath, attributesType)
+			.then(function(attributeList) {
+				attributes = attributeList;
+			});
 			
 		deferredArrActions_getData.push(getAttributesRequest);			
 
@@ -336,9 +353,9 @@ function DataManager() {
 									me.dataListWithDetail, "displayName");
 							
 							// Convert dataList[].attributeValues :: 
-							//   [{attribute: {id: String, name: String}, value: String}]} 
+							//	 [{attribute: {id: String, name: String}, value: String}]} 
 							// into an indexable object dataList[].attributes :: 
-							//   {id: value}
+							//	 {id: value}
 							_.each(me.dataListWithDetail, function(object) {
 								object.attributes = _.object(_.map(object.attributeValues, function(attrVal) {
 									return [attrVal.attribute.id, attrVal.value];
@@ -1143,22 +1160,6 @@ function DataManager() {
 		});
 	}
 
-	me.getGroupIdStr = function(list) {
-		var groupIds = "";
-
-		if (list !== undefined) {
-			$.each(list, function(i_group, item_group) {
-				groupIds += item_group.id + ';';
-			});
-		}
-
-		return groupIds;
-	}
-
-	var redrawTable = function(tableEl) {
-		tableEl.fnDestroy();
-	} 
-
 	// attributes = [{id: String, name: String}]
 	var getAttributeColumns = function(attributes) {
 		return _.map(attributes, function(attribute) {
@@ -1183,7 +1184,7 @@ function DataManager() {
 				}
 			},
 			{
-				data : 'name',
+				data : 'displayName',
 				"title" : "DE Name",
 				"render" : function(data, type, full) {
 					return "<a href='' class='datapopup' dataid='"
@@ -1191,6 +1192,10 @@ function DataManager() {
 							+ "' onclick='return false;'>"
 							+ data + "</a>";
 				}
+			},
+			{
+				data : 'displayShortName',
+				"title" : "Short Name"
 			},
 			{
 				data : 'id',
@@ -1201,37 +1206,17 @@ function DataManager() {
 				}
 			},
 			{
+				data : 'code',
+				"title" : "Code"
+			},
+			{
 				data : 'categoryCombo.displayName',
 				"title" : "Disaggregation (Cat Combo)"
 			},
 			{
 				data : 'id',
 				"title" : "Dimensions",
-				"render" : function(data, type, full) {
-
-					var catId = (full.categoryCombo.displayName != ""
-							&& full.categoryCombo.displayName != "default" && full.categoryCombo.id != "") ? full.categoryCombo.id
-							: "";
-
-					// For 'default', set the catcombo.
-					if (full.categoryCombo.displayName == "default")
-						me.setCatComboData(
-								full.categoryComboId,
-								_catComboData);
-
-					var degsids = me
-							.getGroupIdStr(full.dataElementGroups);
-
-					// full.dimensions = "test";
-					var dimensions = me
-							.formatDimensions(full.dimensions);
-
-					// Have a div tag with deid and data??
-					return '<div deid="' + full.id
-							+ '" catid="' + catId
-							+ '" degsids="' + degsids
-							+ '" >' + dimensions + '</div>';
-				}
+				"render" : DhisDimensionUtils.dimensionsRenderer,
 			},
 			{
 				data : 'valueType',
@@ -1248,6 +1233,33 @@ function DataManager() {
 							+ data.replace(/[\n\r\t]/g, "")
 							+ '</div></div>';
 				}
+			},
+			{
+				data : 'zeroIsSignificant',
+				"title" : "Store Zero",
+				"render" : Util.getDataTableRenderer("boolean")
+			},
+			{
+				data : 'aggregationType',
+				"title" : "Aggregation Type"
+			},
+			{
+				data : 'dataElementGroups[,].name',
+				"title" : "DE Groups"
+			},
+			{
+				data : 'user.displayName',
+				"title" : "Created by"
+			},
+			{
+				data : 'created',
+				"title" : "Created on",
+				"render" : Util.getDataTableRenderer("date")
+			},
+			{
+				data : 'lastUpdated',
+				"title" : "Updated on",
+				"render" : Util.getDataTableRenderer("date")
 			}
 		];
 		
@@ -1267,11 +1279,21 @@ function DataManager() {
 		var schemaSection = "datasets";
 		var tableSettings;
 		if (!me[objName]) {
-			tableSettings = new TableSettings(me.user, "datatables", schemaSection, 
-					listTag.closest(".content"), _.bind(function() {
-				redrawTable(oTable);
+			var redrawTable = function() {
+				oTable.fnDestroy();
 				me.setUp_DataTable_DataElement(type, listTag, dataList, attributes, true);
-			}, me));
+			};
+			
+			var onSettingsUpdate = function() {
+				var relatedObjName = "tableSettings-" + (type == "DE_DS" ? "DE" : "DE_DS");
+				var relatedTableSettings = me[relatedObjName];
+				if (relatedTableSettings) {
+					relatedTableSettings.redraw();
+				} 
+			};
+			tableSettings = new TableSettings(me.user, "datatables", schemaSection, 
+					listTag.closest(".content"), redrawTable, onSettingsUpdate);
+			
 			tableSettings.setup();
 			me[objName] = tableSettings;
 		} else {
@@ -1285,6 +1307,7 @@ function DataManager() {
 						"data" : dataList,
 						"columns" : me.getDataElementColumns(attributes),
 						"order" : [ [ 0, "asc" ], [ 1, "asc" ] ],
+						"buttons" : Util.getExportButtons(),
 						"colReorder": {
 							"realtime": false,
 							"fnReorderCallback": _.bind(tableSettings.fnReorderCallback, tableSettings)
@@ -1295,7 +1318,12 @@ function DataManager() {
 						"aLengthMenu" : [ [ -1, 25, 50, 100 ],
 								[ "All", 25, 50, 100 ] ],
 						"iDisplayLength" : -1,
-						"dom" : 'T<"clear">lfrtip',
+						"dom" : 'BT<"clear">lfrtip',
+						"fnDrawCallback": function() {
+							_.defer(function() {
+								DhisDimensionUtils.setupDimensions(listTag, dataList); 
+							 });
+						},
 						"fnInfoCallback" : function(oSettings, iStart, iEnd,
 								iMax, iTotal, sPre) {
 							// Each time paging or other things happen that
@@ -1312,69 +1340,7 @@ function DataManager() {
 									.setUpDivToggleAction(listTag
 											.find('div.limitedView,div.limitedView_Toggle'));
 
-							// for each row..
-							listTag
-									.find('div[deid]')
-									.each(
-											function(i_div) {
-
-												var divDimension = $(this);
-
-												divDimension
-														.append('<div class="hidden" type="CAT" ></div>'
-																+ '<div class="hidden loading_CAT" ><img src="images/ui-anim_basic.gif"/></div>'
-																+ '<div class="hidden" type="COGS" ></div>'
-																+ '<div class="hidden loading_COGS" ><img src="images/ui-anim_basic.gif"/></div>'
-																+ '<div class="hidden" type="DEGS" ></div>'
-																+ '<div class="hidden loading_DEGS"><img src="images/ui-anim_basic.gif"/></div>');
-
-												var deid = divDimension
-														.attr('deid');
-												var processed = divDimension
-														.attr('processed');
-												var catid = divDimension
-														.attr('catid');
-												var degsids = divDimension
-														.attr('degsids');
-
-												// console.log( 'deid: ' + deid
-												// + '|' + processed );
-
-												if (processed === undefined) {
-													divDimension.attr(
-															'processed', 'Y');
-
-													me.populateDEGS(
-															divDimension, deid,
-															degsids, dataList);
-
-													me
-															.populateCAT(
-																	divDimension,
-																	deid,
-																	catid,
-																	dataList,
-																	function(
-																			categoryOptions) {
-																		me
-																				.populateCOGS(
-																						divDimension,
-																						deid,
-																						categoryOptions,
-																						dataList);
-																	});
-												}
-											});
-
 							return iStart + " to " + iEnd;
-						},
-						"tableTools" : {
-							"sSwfPath" : "js/jquery/swf/copy_csv_xls_pdf.swf",
-							"aButtons" : [ "copy", "csv", {
-								"sExtends" : "xls",
-								"sButtonText" : "Excel",
-								"sFileName" : "*.xls"
-							}, "pdf", "print" ]
 						}
 					});
 
@@ -1437,269 +1403,6 @@ function DataManager() {
 		return typeName;
 	}
 
-	me.formatDimensions = function(dimensions) {
-		var returnVal = "";
-
-		if (dimensions !== undefined) {
-			if (dimensions.DEGS !== undefined) {
-				returnVal += dimensions.DEGS;
-			}
-
-			if (dimensions.CAT !== undefined) {
-				returnVal += dimensions.CAT;
-			}
-
-			if (dimensions.COGS !== undefined) {
-				returnVal += dimensions.COGS;
-			}
-		}
-
-		return returnVal;
-	}
-
-	me.setData_DataList = function(deid, type, data, dataList) {
-		$.each(dataList, function(i, item) {
-			if (item.id == deid) {
-				if (item.dimensions === undefined)
-					item.dimensions = {};
-
-				item.dimensions[type] = data;
-
-				return false;
-			}
-		});
-	}
-
-	me.populateDEGS = function(divDimension, deid, degsids, dataList) {
-		var retrieveCount = 0;
-		var resultStr = "";
-
-		var divTarget = divDimension.find('div[type="DEGS"]');
-		var loadingTag = divDimension.find('.loading_DEGS');
-
-		var idsArr = degsids.split(';');
-
-		$
-				.each(
-						idsArr,
-						function(i_deg, item_deg) {
-							if (item_deg != "") {
-								RESTUtil
-										.getAsynchData(
-												apiPath + 'dataElementGroups/'
-														+ item_deg
-														+ '.json?fields=id,name,dataElementGroupSet[id,name,dataDimension]',
-												function(json_dataDetail) {
-													if (json_dataDetail.dataElementGroupSet !== undefined
-															&& json_dataDetail.dataElementGroupSet.dataDimension) {
-														if (resultStr != "")
-															resultStr += "<br>";
-
-														resultStr += json_dataDetail.dataElementGroupSet.name
-																+ '[DEGS] ';
-													}
-												}, function() {
-												}, function() {
-													if (retrieveCount == 0)
-														loadingTag.show();
-
-													retrieveCount++;
-												}, function() {
-													retrieveCount--;
-													if (retrieveCount == 0) {
-														loadingTag.hide();
-														divTarget.show().html(
-																resultStr);
-
-														me.setData_DataList(
-																deid, "DEGS",
-																resultStr,
-																dataList);
-
-														// Set to
-														// me.dataList[].dimension
-													}
-												});
-							}
-						});
-	}
-
-	me.populateCAT = function(divDimension, deid, catid, dataList, runFunc) {
-		var retrieveCount = 0;
-		var resultStr = "";
-		var categoryOptions = [];
-		var catComboData;
-
-		var divTarget = divDimension.find('div[type="CAT"]');
-		var loadingTag = divDimension.find('.loading_CAT');
-
-		// var idStr = Util.getNotEmpty( divTarget.attr( 'id' ) );
-
-		// Category Combo <-- Add to the ///
-
-		if (catid != "") {
-			// For Transposed Excel data, make list of unique catCombo List that
-			// holds categoryOptionCombos:
-			me.setCatComboData(catid, _catComboData);
-
-			RESTUtil
-					.getAsynchData(
-							apiPath + 'categoryCombos/'
-									+ catid
-									+ '.json?fields=id,name,categories[id,name,categoryOptions[id,name]]' // ,categoryOptionCombos[id,name]'
-							, function(json_dataDetail) {
-								// catComboData = { id: catid, name:
-								// json_dataDetail.name, catOptionCombos:
-								// json_dataDetail.categoryOptionCombos };
-
-								$.each(json_dataDetail.categories, function(
-										i_cat, item_cat) {
-									var catOptionNames = "";
-
-									$.each(item_cat.categoryOptions, function(
-											i_co, item_co) {
-										categoryOptions.push({
-											id : item_co.id,
-											name : item_co.name
-										});
-
-										if (catOptionNames != "")
-											catOptionNames += ", ";
-										catOptionNames += item_co.name;
-									});
-
-									if (resultStr != "")
-										resultStr += "<br>";
-
-									resultStr += '<span title="'
-											+ catOptionNames + '">'
-											+ item_cat.name + '[CAT]</span> ';
-
-								});
-							}, function() {
-							}, function() {
-								if (retrieveCount == 0)
-									loadingTag.show();
-
-								retrieveCount++;
-							}, function() {
-								retrieveCount--;
-								if (retrieveCount == 0) {
-									loadingTag.hide();
-									divTarget.show().html(resultStr);
-
-									me.setData_DataList(deid, "CAT", resultStr,
-											dataList);
-
-									// Also, save category Combo Data for later
-									// use.
-									// me.setData_DataList( deid,
-									// "catComboData", catComboData, dataList );
-
-									runFunc(categoryOptions);
-								}
-							});
-
-		}
-	}
-
-	// Create unique categoryCombo Data with categoryOptionCombos
-	// - Used by Transpose Excel creation.
-	me.setCatComboData = function(catid, catComboData) {
-		if (catComboData[catid] === undefined) {
-			// Set it as not 'undefined' since the request is made once (below)
-			catComboData[catid] = {};
-
-			RESTUtil
-					.getAsynchData(
-							apiPath + 'categoryCombos/'
-									+ catid
-									+ '.json?fields=id,name,categoryOptionCombos[id,name]',
-							function(json_dataDetail) {
-								catComboData[catid] = {
-									id : catid,
-									name : json_dataDetail.name,
-									categoryOptionCombos : json_dataDetail.categoryOptionCombos
-								};
-							});
-		}
-	}
-
-	me.populateCOGS = function(divDimension, deid, categoryOptions, dataList) {
-		var retrieveCount = 0;
-		var resultStr = "";
-
-		var divTarget = divDimension.find('div[type="COGS"]');
-		var loadingTag = divDimension.find('.loading_COGS');
-
-		// Get cateogry option group set with '[COGS]'
-		RESTUtil
-				.getAsynchData(
-						apiPath + 'categoryOptionGroups.json?paging=false&fields=id,name,categoryOptions[id,name],categoryOptionGroupSet[id,name,dataDimension]',
-						function(json_dataDetail) {
-							if (json_dataDetail.categoryOptionGroups !== undefined) {
-								$
-										.each(
-												json_dataDetail.categoryOptionGroups,
-												function(i_cos, item_cos) {
-													// Check if the category has
-													// option that matches..
-													var matchFound = false;
-
-													$
-															.each(
-																	item_cos.categoryOptions,
-																	function(
-																			i_co,
-																			item_co) {
-																		$
-																				.each(
-																						categoryOptions,
-																						function(
-																								i_co_src,
-																								item_co_src) {
-																							if (item_co_src.id == item_co.id) {
-																								matchFound = true;
-																								return false;
-																							}
-																						});
-
-																		if (matchFound)
-																			return false;
-																	});
-
-													if (matchFound
-															&& item_cos.categoryOptionGroupSet !== undefined
-															&& item_cos.categoryOptionGroupSet.dataDimension) {
-														// Set category Option
-														// Group Set
-														if (resultStr != "")
-															resultStr += "<br> ";
-
-														resultStr += item_cos.categoryOptionGroupSet.name
-																+ '[COGS] ';
-													}
-
-												});
-							}
-						}, function() {
-						}, function() {
-							if (retrieveCount == 0)
-								loadingTag.show();
-
-							retrieveCount++;
-						}, function() {
-							retrieveCount--;
-							if (retrieveCount == 0) {
-								loadingTag.hide();
-								divTarget.show().html(resultStr);
-
-								me.setData_DataList(deid, "COGS", resultStr,
-										dataList);
-							}
-						});
-	}
-
 	me.getIndicatorColumns = function(attributes) {
 		var baseColumns = [
 			{
@@ -1711,7 +1414,7 @@ function DataManager() {
 				}
 			},
 			{
-				data : 'name',
+				data : 'displayName',
 				"title" : "IND Name",
 				"render" : function(data, type, full) {
 					return "<a href='' class='datapopup' dataid='"
@@ -1720,6 +1423,10 @@ function DataManager() {
 							+ data
 							+ "</a>";
 				}
+			},
+			{
+				data : 'displayShortName',
+				"title" : "Short Name"
 			},
 			{
 				data : 'id',
@@ -1731,11 +1438,32 @@ function DataManager() {
 			},
 			{
 				data : 'numeratorDescription',
-				"title" : "Numberator Description"
+				"title" : "Numerator Description"
 			},
 			{
 				data : 'denominatorDescription',
 				"title" : "Denominator Description"
+			},
+			{
+				data : 'numerator',
+				"title" : "Numerator"
+			},
+			{
+				data : 'denominator',
+				"title" : "Denominator"
+			},
+			{
+				data : 'annualized',
+				"title" : "Annualized",
+				"render" : Util.getDataTableRenderer("boolean")
+			},
+			{
+				data : 'indicatorType.name',
+				"title" : "Indicator Type"
+			},
+			{
+				data : 'dataSets[,].name',
+				"title" : "DataSets"
 			},
 			{
 				data : 'description',
@@ -1745,7 +1473,21 @@ function DataManager() {
 							+ data
 							+ '</div><div class="limitedView_Toggle">...... More ......</div>';
 				}
-			} 
+			},
+			{
+				data : 'user.displayName',
+				"title" : "Created by"
+			},
+			{
+				data : 'created',
+				"title" : "Created on",
+				"render" : Util.getDataTableRenderer("date")
+			},
+			{
+				data : 'lastUpdated',
+				"title" : "Updated on",
+				"render" : Util.getDataTableRenderer("date")
+			}
 		];
 			
 		return baseColumns.concat(getAttributeColumns(attributes));
@@ -1756,7 +1498,7 @@ function DataManager() {
 		var tableSettings = me[objName] = me[objName] || _.bind(function() {
 			var ts = new TableSettings(me.user, "datatables", "indicators", 
 					listTag.closest(".content"), _.bind(function() {
-				redrawTable(me.oTable_IND_ByGroup);
+				me.oTable_IND_ByGroup.fnDestroy();
 				me.setUp_DataTable_Indicator(type, listTag, dataList, attributes, true);
 			}, this));
 			ts.setup();
@@ -1770,6 +1512,7 @@ function DataManager() {
 						"data" : dataList,
 						"columns" : me.getIndicatorColumns(attributes),
 						"order" : [ [ 0, "asc" ], [ 1, "asc" ] ],
+						"buttons" : Util.getExportButtons(),
 						"colReorder": {
 							"realtime": false,
 							"fnReorderCallback": _.bind(tableSettings.fnReorderCallback, tableSettings)
@@ -1780,7 +1523,7 @@ function DataManager() {
 						"aLengthMenu" : [ [ 25, 50, 100, -1 ],
 								[ 25, 50, 100, "All" ] ],
 						"iDisplayLength" : 25,
-						"dom" : 'T<"clear">lfrtip',
+						"dom" : 'BT<"clear">lfrtip',
 						"fnInfoCallback" : function(oSettings, iStart, iEnd,
 								iMax, iTotal, sPre) {
 
@@ -1792,16 +1535,6 @@ function DataManager() {
 											.find('div.limitedView,div.limitedView_Toggle'));
 
 							return iStart + " to " + iEnd;
-						},
-						"tableTools" : {
-							"sSwfPath" : "js/jquery/swf/copy_csv_xls_pdf.swf",
-							"aButtons" : [ "copy", "csv", {
-								"sExtends" : "xls",
-								"sButtonText" : "Excel",
-								"sFileName" : "*.xls"
-							}, "pdf", "print"
-
-							]
 						}
 					});
 
@@ -1929,10 +1662,21 @@ function DataManager() {
 	}; 
 	
 	me.createUserRole = function(userRole) {
-		return RESTUtil.get(apiPath + "userRoles", {filter: "name:eq:" + userRole.name})
+		let qs = {
+			filter: "name:eq:" + userRole.name,
+			fields: "id,displayName,authorities"
+		};
+		return RESTUtil.get(apiPath + "userRoles", qs)
 			.then(function(data) {
+				var authorities = _.chain(data.userRoles).pluck("authorities").flatten().value();
+				var hasRequiredAuthorities = _.isEmpty(_.difference(userRole.authorities, authorities));
+				
 				if (_.isEmpty(data.userRoles)) {
 					return RESTUtil.post(apiPath + "userRoles", userRole)
+						.then(getObjectIdFromCreateRequest);
+				} else if (!hasRequiredAuthorities) {
+					var userRoleId = data.userRoles[0].id;
+					return RESTUtil.post(apiPath + "userRoles/" + userRoleId , userRole, {type: "PUT"})
 						.then(getObjectIdFromCreateRequest);
 				} else {
 					return data.userRoles[0].id;
@@ -2020,12 +1764,18 @@ getServerInfo = function(rootPath, onSuccess) {
 }
 
 // Return the newest version path of the API known to work. Return null if server unsupported.
-getApiVersionPath = function(serverVersion) {
-	var versionDigits = Util.splitVersionString(serverVersion || "", 2);
-	if (versionDigits[0] >= 2 && versionDigits[1] >= 25) {
-		return "25";
-	} else { 
+getApiVersionPath = function(version) {
+	var parts = _.map(version.split(".").slice(0, 2), function(s) { return parseInt(s); });
+	var majorVersion = parts[0], minorVersion = parts[1];
+
+	if (parts.length < 2 || majorVersion !== 2) {
 		return null;
+	} else if (minorVersion < 25) {
+		return null;
+	} else if (minorVersion <= 26) {
+		return minorVersion;
+	} else {
+		return "26";
 	}
 };
 
@@ -2039,7 +1789,7 @@ jQuery.fn.dataTable.Api.register( 'state.load()', function (callback) {
 								hidden_cols.push(i);
 						}
 				});
-				api.columns().visible(true);            
+				api.columns().visible(true);
 				api.columns(hidden_cols).visible(false);
 		});
 });

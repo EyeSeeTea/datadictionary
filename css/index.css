@@ -251,3 +251,16 @@ div.limitedView_Toggle {
 .ui-sortable-helper {
   cursor: move;
 }
+
+.ui-sortable {
+    cursor: pointer;
+}
+
+.ui-sortable-helper {
+    cursor: move;
+}
+
+#tabs .dt-buttons {
+  float: right;
+  margin-bottom: 5px;
+}

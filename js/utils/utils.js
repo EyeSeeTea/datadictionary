@@ -193,10 +193,55 @@ Util.checkDataExists = function(obj) {
   return (obj != null && typeof obj[Symbol.iterator] === 'function');
 }
 
-Util.splitVersionString = function(version, nparts) {
-  return _.map(version.split("."), function(s) { return parseInt(s) }).slice(0, nparts);
-}
-
-
 // -- Utility Class/Methods
 // -------------------------------------------
+
+Util.formatBoolean = function(value) {
+  if (value === true) {
+    return "Yes";
+  } else if (value === false) {
+    return "No";
+  } else {
+    return "-";
+  }
+};
+
+Util.formatDate = function(date) {
+  return $.format.date(date, "yyyy-MM-dd hh:mm a");
+};
+
+/* DataTables helpers */
+
+Util.getExportButtons = function() {
+  var onlyVisibleColumns = {columns: ':visible'};
+  
+  return [
+    {extend: "copy", exportOptions: onlyVisibleColumns},
+    {extend: "csv", exportOptions: onlyVisibleColumns},
+    {extend: "excel", exportOptions: onlyVisibleColumns},
+    {extend: "pdf", exportOptions: onlyVisibleColumns, customize: function(doc) {
+      doc.defaultStyle.fontSize = 8; 
+    }},
+    {extend: "print", exportOptions: onlyVisibleColumns}
+  ];
+}
+						
+Util.getDataTableRenderer = function(rendererName) {
+  var renderFun = Util.dataTableRenderers[rendererName || "string"];
+   
+	return function(data, type, full) {
+	  return renderFun(data, type);
+	}
+};
+				
+Util.dataTableRenderers = {
+  string: function(data, type) {
+    return data === undefined || data === null ? "-" : data.toString();
+  },
+  boolean: function(data, type) {
+    return Util.formatBoolean(data);
+  },
+  date: function(data, type) {
+    return Util.formatDate(data);
+  }
+};

@@ -22,17 +22,16 @@
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 	<meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
 
-	<link rel="stylesheet" type="text/css" href="css/jquery/jquery.dataTables.css">
-	<link rel="stylesheet" type="text/css" href="css/jquery/dataTables.tableTools.css">
+	<link rel="stylesheet" type="text/css" href="css/jquery/datatables.min.css">
 	<link rel="stylesheet" type="text/css" href="css/demo.css">
 	<link rel="stylesheet" type="text/css" href="css/collapsibleTree.css">
 	<link rel="stylesheet" type="text/css" href="css/index.css">
 	<link rel="stylesheet" href="css/jquery/jquery-ui.css" />
 	<link rel="stylesheet" type="text/css" href="css/jquery/jquery.countdown.css"> 
+	
 
 	<script src="js/jquery/jquery-1.9.1.min.js"></script>
-	<script src="js/jquery/jquery.dataTables.js"></script>
-	<script src="js/jquery/dataTables.tableTools.js"></script>
+	<script src="js/jquery/datatables.min.js"></script>
 	<script src="js/jquery/jquery-ui.min.js"></script>
 	<script src="js/jquery/jquery.plugin.min.js"></script> 
 	<script src="js/jquery/jquery.countdown.min.js"></script>
@@ -49,6 +48,7 @@
 	<script src="js/utils/utils.js"></script>
 	<script src="js/utils/webUtils.js"></script>
 	<script src="js/utils/dhisUtils.js"></script>
+	<script src="js/utils/dhisDimensionUtils.js"></script>
 	
 	<script src="js/index.js"></script>
 	<script src="js/orgUnit.js"></script>
@@ -474,13 +474,18 @@ Users: Number of users having access to at least one org. unit." src="images/hel
 		     style="display: none;width:98%;margin-top:20px;">
 			<div class="section" style="padding: 10px 20px;" >
 	      <div class="columns"></div>
+	      
 	      <div class="selection-actions">
 	        Select: 
 	        <a href="#" class="select-none">None</a>
 	        |
 	        <a href="#" class="select-all">All</a>
-	     </div>
-	     
+	      </div>
+	      
+	      <div class="actions">
+	        <a href="#" class="reset-to-default">Reset to default settings</a>
+	      </div>
+        
 	      <span class="actions">
 	        <button class="tables-config-column-save">Save</button>
 	        <button class="tables-config-column-cancel">Cancel</button>
@@ -495,12 +500,6 @@ Users: Number of users having access to at least one org. unit." src="images/hel
 
   <div id="tables-config-key" class="ui-widget" style="margin:0;padding:0;display:none">
     <div class="keys">
-      <input type="hidden" id="tables-config-table-id"></input>
-      <label for="tables-config-key-default">
-        <input name="tables-config-key" id="tables-config-key-default" type="radio" value="default" />
-        <span>Default settings</span>
-       </label>
-      <br />
       <label for="tables-config-key-user">
         <input name="tables-config-key" id="tables-config-key-user" type="radio" value="user" />
         <span id="user-settings-label">My settings</span>

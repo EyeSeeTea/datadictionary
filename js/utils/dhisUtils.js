@@ -71,4 +71,22 @@ DhisUtils = {};
 			success: onsuccess
 		}));
 	};
+	
+  DhisUtils.isWebAppAdmin = function(user) {
+	  return _(user.authorities).contains("M_dhis-web-maintenance-appmanager") ||
+	         _(user.authorities).contains("ALL");
+  };
+  
+  DhisUtils.getAttributes = function(apiPath, type) {
+  	var url = apiPath + "attributes.json";
+  	var qs = {paging: false, filter: type + ":eq:true", fields: "id,name"};
+  	
+		return RESTUtil.get(url, qs)
+		  .fail(function(xhr) { 
+		    throw 'Attributes retrieval was unsuccessful: ' + xhr.statusText; 
+		  })
+		  .then(function(data) {
+		    return data.attributes;
+		  });
+  }
 })();

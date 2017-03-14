@@ -17,9 +17,12 @@
  *  along with Data Dictionary.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
+TableSettings = function(user, tableType, schemaSection, box, redrawTable, onSettingsUpdate) {
 	var username = user.userCredentials.username;
-	var IsDDAdmin = _(user.authorities).contains("Admin Data Dictionary");
+	var isDDAdmin = DhisUtils.isWebAppAdmin(user);
+	
+	this.onSettingsUpdate = onSettingsUpdate || _.identity;
+	this.redraw = redrawTable;
 	
 	this._bindCallbacks = function(callbacks) {
 		_.each(callbacks, _.bind(function(cb) {
@@ -37,13 +40,21 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 			["click", ".select-none", this.onSelectNone],
 			["click", ".tables-config-column-save", this.onSaveClick],
 			["click", ".tables-config-column-cancel", this.onCancelClick],
-			["click", ".table-settings-selector", this.onSelectSettingsKeyClick]
+			["click", ".table-settings-selector", this.onSelectSettingsKeyClick],
+			["click", ".reset-to-default", this.onResetToDefaultClick]
 		]);
 
 		var table = this.getTable();
 		box.find(".table-settings").html($("#table-settings").get(0).innerHTML);
 		box.find(".help").attr("title", table.helpMessage);
 		table.setup();
+	};
+	
+	this.onResetToDefaultClick = function(ev) {
+		ev.preventDefault();
+		var table = this.getTable();
+		table.data("reset-to-default", true);
+		this.restoreState();
 	};
 	
 	this.onSelectAll = function(ev) {
@@ -65,7 +76,8 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 			$("#tables-config-key").dialog({
 				title: "Visualization settings", 
 				modal: true, 
-				autoOpen: true
+				autoOpen: true,
+				minHeight: "100px"
 			 });
 			$(document.body).off("change", "#tables-config-key .keys input");
 			$(document.body).on("change", "#tables-config-key .keys input",
@@ -81,8 +93,8 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 	this.onSelectSettingsKeyChange = function(ev) {
 		ev.preventDefault();
 		var newKey = $(ev.target).val()
-		this.saveSettings(getSettingsConfigKey(schemaSection), 
-			newKey, _.bind(this.restoreState, this));
+		this.saveSettings(getSettingsConfigKey(), newKey, _.bind(this.restoreState, this));
+		this.onSettingsUpdate();
 	};
 	
 	this.onEditClick = function(ev) {
@@ -93,7 +105,6 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 	this.toggleTableConfig = function() {
 		var table = this.getTable();
 		var configColumnsBox = box.find(".tables-config-columns");
-		var editButton = $(".table-settings-edit");
 		var editStarted = !configColumnsBox.is(":visible");
 		
 		if (editStarted) {
@@ -159,9 +170,9 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 		var state = table.state();
 		var key = table.data("state-key");
 		var info = getStateInfo(key, username);
-		var editButton = box.find(".table-settings-edit");
 		this.saveSettings(info.configKey, state, 
 			_.bind(function() { this.toggleTableConfig(table); }, this));
+		this.onSettingsUpdate();
 	};
 
 	this.saveSettings = function(key, value, onsuccess) {
@@ -197,17 +208,14 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 		this.restoreState();
 	};
 	
-	this.loadTableState = function(key, callback) {
+	this.loadTableState = function(dbkey, callback) {
+		var key = _.contains(["user", "organization"], dbkey) ? dbkey : "organization";
 		var table = this.getTable();
 		var info = getStateInfo(key, username);
 		var link = box.find(".table-settings-selector");
 		var stateResponse = undefined;
 
-		var deferred = (key === "default") ? 
-			$.Deferred().resolve(null) :
-			DhisUtils.loadSettings(apiPath, "datadictionary", info.configKey, {async: false});
-		
-		deferred
+		DhisUtils.loadSettings(apiPath, "datadictionary", info.configKey, {async: false})
 			.done(function(state) {
 				table.data("state-key", key);
 				link.text(info.linkText);
@@ -228,6 +236,9 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 		_.defer(_.bind(function() {
 			box.find(".table-settings-links").show();
 			box.find(".table-settings-edit").toggle(info.canEdit);
+			if (!info.canEdit) {
+				$(".tables-config-columns").slideUp();
+			 }
 			this.renderConfigColumns();
 		}, this));
 			
@@ -235,33 +246,32 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 	};
 
 	var getStateInfo = function(key, username) {
-		if (key === "default") {
-			return {
-				configKey: null, 
-				linkText: "Default settings", 
-				canEdit: false
-			};
-		} else if (key === "organization") {
-			return {
-				configKey: "tables-" + schemaSection + "-state-organization", 
-				linkText: "Organizational settings", 
-				canEdit: IsDDAdmin
-			};
-		} else if (key === "user") {
+		if (key === "user") {
 			return {
 				configKey: "tables-" + schemaSection + "-state-user-" + username, 
 				linkText: "My settings", 
 				canEdit: true
 			};
-		} else {
-			throw "[tableSettings:getStateInfo] Unknown key: " + key;
+		} else { // organization
+			return {
+				configKey: "tables-" + schemaSection + "-state-organization", 
+				linkText: "Organizational settings", 
+				canEdit: isDDAdmin
+			};
 		}
 	}
 	
 	// There is an issue in the state loading when using the async callback. For now
 	// use sync loading with an instance variable.
 	this.stateLoadCallback = function(settings, callback) {
-		return this.loadState(callback);
+		var table = this.getTable();
+		if (table.data("reset-to-default")) {
+			table.data("reset-to-default", false);
+			_.defer(_.bind(this.renderConfigColumns, this));
+			return null;
+		} else {
+			return this.loadState(callback);
+		}
 	}
 
 	this.loadState = function(callback) {
@@ -269,7 +279,7 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 		var state = undefined;
 		
 		DhisUtils.loadSettings(apiPath, "datadictionary", getSettingsConfigKey(), {async: false})
-			.then(null, function() { return $.Deferred().resolve("default"); })
+			.then(null, function() { return $.Deferred().resolve("organization"); })
 			.done(_.bind(function(key) { state = this.loadTableState(key, callback || _.identity); }, this));
 		return state;
 	}
@@ -278,11 +288,13 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable) {
 // Table interfaces: datatables.js used in main page, custom tables used on popup details 
 
 DtTable = function(el) {
-	var dtable, api;
+	var dtable, api, fnDrawCallback;
 	
 	if ($.fn.dataTable.isDataTable(el)) {
 		dtable = el.dataTable();
 		api = dtable.DataTable();
+		var userCallback = dtable.fnSettings().aoDrawCallback.filter(dc => dc.sName == "user")[0];
+		fnDrawCallback = userCallback ? userCallback.fn : _.identity;
 	}
 
 	this.helpMessage = "You can now 1) toggle the visibility of columns, 2) change the sorting criteria of the columns and 3) reorder the columns by drag&drop on the column header. Remember to press [Save] to persist the changes or press [Cancel] to reload the saved state";	
@@ -305,8 +317,9 @@ DtTable = function(el) {
 	
 	this.isColumnVisible = function(idx) { return api.column(idx).visible(); };
 
-	this.setColumnVisible = function(idx, visibility) { 
-		return api.column(idx).visible(visibility);
+	this.setColumnVisible = function(idx, visibility) {
+		fnDrawCallback(); 
+		api.column(idx).visible(visibility);
 	};
 	
 	this.data = _.bind(el.data, el);
@@ -325,7 +338,7 @@ CustomTable = function(el) {
 	};
 	
 	this.setup = function() {
-		// Save original positions of rows to use on default settings
+		// Save original positions of rows to use as initial settings
 		el.find("tr").each(function(idx, tr) { $(tr).attr(columnIndexAttr, idx); });
 	};
 
