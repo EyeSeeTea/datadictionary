@@ -1184,7 +1184,7 @@ function DataManager() {
 				}
 			},
 			{
-				data : 'name',
+				data : 'displayName',
 				"title" : "DE Name",
 				"render" : function(data, type, full) {
 					return "<a href='' class='datapopup' dataid='"
@@ -1246,10 +1246,6 @@ function DataManager() {
 			{
 				data : 'dataElementGroups[,].name',
 				"title" : "DE Groups"
-			},
-			{
-				data : 'user.displayName',
-				"title" : "Created by"
 			},
 			{
 				data : 'created',
@@ -1414,7 +1410,7 @@ function DataManager() {
 				}
 			},
 			{
-				data : 'name',
+				data : 'displayName',
 				"title" : "IND Name",
 				"render" : function(data, type, full) {
 					return "<a href='' class='datapopup' dataid='"
@@ -1427,10 +1423,6 @@ function DataManager() {
 			{
 				data : 'displayShortName',
 				"title" : "Short Name"
-			},
-			{
-				data : 'displayName',
-				"title" : "Display Name"
 			},
 			{
 				data : 'id',

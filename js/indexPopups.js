@@ -316,12 +316,10 @@ function IndicatorPopup() {
 		table.append(me.getRowFormated("UID", me.formatJsonData(jsonData.id)));
 		// table.append( me.getRowFormated( "Code", me.formatJsonData(
 		// jsonData.code ) ) );
-		table.append(me
-				.getRowFormated("Name", me.formatJsonData(jsonData.name)));
-		table.append(me.getRowFormated("Short name", me
-				.formatJsonData(jsonData.displayShortName)));
 		table.append(me.getRowFormated("Display name", me
 				.formatJsonData(jsonData.displayName)));
+		table.append(me.getRowFormated("Short name", me
+				.formatJsonData(jsonData.displayShortName)));
 		table.append(me.getRowFormated("Description", me
 				.formatJsonData(jsonData.description),
 				"height: 70px; vertical-align:top;"));
