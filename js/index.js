@@ -84,6 +84,10 @@ function setLayout(layout){
 		$('#headerText').text('PSI MIS');
 		$('#header').css({'background-color':'#467e4a'})
 	}
+	else if (layout == 'eyeseetea') {
+		$('#headerText').text('EYESEETEA');
+		$('#header').css({'background-color':'#49772a'})
+	}
 	$('#versionText').attr("href", "https://docs.google.com/document/d/1kas42KhcTIIL0cE9_PVwcEJw97wunVaAafwKuM0JaBc");
 	$('#versionText').attr("target","_blank");
 }
