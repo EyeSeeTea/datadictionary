@@ -18,7 +18,6 @@
  */
 var dhisPath ="";
 var apiPath = "";
-var layout = "";
 
 var _queryURL_getOrgUnit = apiPath + "organisationUnits";
 
@@ -35,28 +34,37 @@ var typeMap = ['','','','','','','DE','IND'];
 $(document).ready(function() {
 
 	$.getJSON( "manifest.webapp", function( json ) {
-		// Read layout, dhis and api path from manifest.webapp 
-		layout = json.layout;
-		dhisPath = json.activities.dhis.href;
-		apiPath = dhisPath + "api/";
 
-		// Configure dhis and api path components
-		configureDhisPathComponents();
-		
-		// Set Layout
-		setLayout();
+		getServerInfo(dhisPath, function(info) {
+			var apiVersionPath = getApiVersionPath(info.version);
 
-		// Change url when a new tab is selected
-		$("#tabs").tabs({disabled: [3,4,5], activate: function(event ,ui){
-			refreshURL(tabsMap[ui.newTab.index()], typeMap[ui.newTab.index()], $("#tabs div.ui-tabs-panel:visible").find('.action_select').val());
-        }});
-		
-		// Change url when dropdownlist is selected
-		$('.action_select').on('click change', function(){
-			refreshURL(tabsMap[$("#tabs").tabs('option', 'selected')], typeMap[$("#tabs").tabs('option', 'selected')], $(this).val())
+			if (!apiVersionPath) {
+				$(document.body).empty();
+				alert("Unsupported DHIS2 version: " + info.version);
+			} else {
+				// Read dhis and api path from manifest.webapp 
+				dhisPath = json.activities.dhis.href;
+				apiPath = dhisPath + "api/" + apiVersionPath + "/";
+
+				// Configure dhis and api path components
+				configureDhisPathComponents();
+	
+				// Set Layout define on manifest.webapp
+				setLayout(json.layout);
+
+				// Change url when a new tab is selected
+				$("#tabs").tabs({disabled: [3,4,5], activate: function(event ,ui){
+					refreshURL(tabsMap[ui.newTab.index()], typeMap[ui.newTab.index()], $("#tabs div.ui-tabs-panel:visible").find('.action_select').val());
+				}});
+
+				// Change url when dropdownlist is selected
+				$('.action_select').on('click change', function(){
+					refreshURL(tabsMap[$("#tabs").tabs('option', 'selected')], typeMap[$("#tabs").tabs('option', 'selected')], $(this).val())
+				});
+
+				_dataManager = new DataManager();
+			}
 		});
-		
-		_dataManager = new DataManager();
 	} );
 
 });
@@ -67,7 +75,7 @@ function configureDhisPathComponents(){
 	$('#closeButton').attr("onclick", "window.location.href=\"" + dhisPath + "dhis-web-dashboard-integration/index.action\"");
 }
 
-function setLayout(){
+function setLayout(layout){
 	if (layout == 'jhpiego'){
 		$('#headerText').text('JADE Dev');
 		$('#header').css({'background-color':'#305B75'});
@@ -75,10 +83,9 @@ function setLayout(){
 	else if (layout == 'psi') {
 		$('#headerText').text('PSI MIS');
 		$('#header').css({'background-color':'#467e4a'})
-		$('#versionText').attr("href", "https://docs.google.com/document/d/1kas42KhcTIIL0cE9_PVwcEJw97wunVaAafwKuM0JaBc");
-		$('#versionText').attr("target","_blank");
 	}
-	
+	$('#versionText').attr("href", "https://docs.google.com/document/d/1kas42KhcTIIL0cE9_PVwcEJw97wunVaAafwKuM0JaBc");
+	$('#versionText').attr("target","_blank");
 }
 
 //Change url without reloading page
@@ -95,6 +102,30 @@ function refreshURL(selectedTab, selectedType, selectedValue){
 
 function DataManager() {
 	var me = this;
+
+	me.sqlViews = {
+		dashboard_list: {
+			name: "DataDictionary - Dashboard List",
+			type: "VIEW",
+			cacheStrategy: "RESPECT_SYSTEM_SETTING",
+			sqlQuery: "SELECT * FROM dashboard;"
+		},
+		dashboard_join: {
+			name: "DataDictionary - Dashboard Join",
+			type: "VIEW",
+			cacheStrategy: "RESPECT_SYSTEM_SETTING",
+			sqlQuery: "SELECT usergroupid, uid, name, userid FROM usergroup;"
+		}
+	};
+
+	me.adminRole = {
+		name: "DataDictionary admin",
+		description: "Can change global settings of the DataDictionary app",
+		authorities: [
+			"See Data Dictionary", 
+			"M_dhis-web-maintenance-appmanager"
+		]
+	};
 
 	me.queryURL_DataElementGet = apiPath + "dataElements/";
 	me.queryURL_IndicatorGet = apiPath + "indicators/";
@@ -210,7 +241,7 @@ function DataManager() {
 		// me.queryURL_DataSetDetailGet = apiPath + "dataSets/";
 
 		RESTUtil.getAsynchData(queryStr, function(data) {
-			runFunc(data.dataElements);
+			runFunc(DataHelpers.getDataElements(data));
 		}, function() {
 			alert('Failed to retrieve dataElement list.');
 		}, function() {
@@ -250,7 +281,7 @@ function DataManager() {
 			runFunc(dataSetList);
 		});
 	}
-
+	
 	me.retrieveAndPopulateData = function(type, json_listData, loadingTagName,
 			tbListTag, listDivTag) {
 
@@ -266,9 +297,35 @@ function DataManager() {
 
 		var deferredArrActions_getData = [];
 
+		 
 		$.each(json_listData, function(i_data, item_data) {
-			deferredArrActions_getData.push(RESTUtil.getAsynchData(queryURL
-					+ item_data.id + ".json?fields=indicatorGroups[id,name],numeratorDescription,denominatorDescription,dataElementGroups[id,name],name,id,valueType,description,categoryCombo[id,displayName]", function(json_dataDetail) {
+			var url = queryURL	+ item_data.id + ".json?fields=" + [
+				"indicatorGroups[id,name]",
+				"numerator",
+				"denominator",
+				"numeratorDescription",
+				"denominatorDescription",
+				"dataElementGroups[id,name]",
+				"name",
+				"id",
+				"valueType",
+				"description",
+				"categoryCombo[id,displayName]",
+				"attributeValues[value,attribute[id,name]]",
+				"code",
+				"created",
+				"user[id,displayName]",
+				"displayName",
+				"annualized",
+				"indicatorType[id,name]",
+				"dataSets[id,name]",
+				"displayShortName",
+				"zeroIsSignificant",
+				"aggregationType",
+				"lastUpdated"
+			].join(",");
+			
+			deferredArrActions_getData.push(RESTUtil.getAsynchData(url, function(json_dataDetail) {
 				me.dataListWithDetail.push(json_dataDetail);
 			}, function() {
 			}, function() {
@@ -278,14 +335,32 @@ function DataManager() {
 			}));
 
 		});
+		
+		var attributes;
+		var attributesType = type === "IND" ? "indicatorAttribute" : "dataElementAttribute";
+		var getAttributesRequest = DhisUtils.getAttributes(apiPath, attributesType)
+			.then(function(attributeList) {
+				attributes = attributeList;
+			});
+			
+		deferredArrActions_getData.push(getAttributesRequest);			
 
 		// Step 3a. Sort the person by name
 		$.when.apply($, deferredArrActions_getData)
 				.then(
 						function() {
-
 							me.dataListWithDetail = Util.sortByKey(
 									me.dataListWithDetail, "displayName");
+							
+							// Convert dataList[].attributeValues :: 
+							//	 [{attribute: {id: String, name: String}, value: String}]} 
+							// into an indexable object dataList[].attributes :: 
+							//	 {id: value}
+							_.each(me.dataListWithDetail, function(object) {
+								object.attributes = _.object(_.map(object.attributeValues, function(attrVal) {
+									return [attrVal.attribute.id, attrVal.value];
+								}));
+							});
 
 							if (type == "DE_DS" || type == "DE") {
 								me.dataElementDataModify(
@@ -293,7 +368,7 @@ function DataManager() {
 												loadingTagName,
 												function() {
 
-													me.setUp_DataTable_DataElement(type, tbListTag, me.dataListWithDetail);
+													me.setUp_DataTable_DataElement(type, tbListTag, me.dataListWithDetail, attributes);
 
 													// Display the section.
 													listDivTag.show();
@@ -312,7 +387,7 @@ function DataManager() {
 								me.indicatorDataModify(me.dataListWithDetail);
 
 								me.setUp_DataTable_Indicator(type, tbListTag,
-										me.dataListWithDetail);
+										me.dataListWithDetail, attributes);
 
 								// Display the section.
 								listDivTag.show();
@@ -1033,12 +1108,12 @@ function DataManager() {
 						$.each(me.dataSetList_Saved, function(i_dataSet,
 								item_dataSet) {
 
-							if (item_dataSet.name.search(new RegExp(
+							if (item_dataSet.displayName.search(new RegExp(
 									request.term, 'i')) == 0) {
 								dstsSetListFound.push({
 									"id" : item_dataSet.id,
-									"label" : item_dataSet.name,
-									"value" : item_dataSet.name,
+									"label" : item_dataSet.displayName,
+									"value" : item_dataSet.displayName,
 									"dataSet" : item_dataSet
 								});
 							}
@@ -1085,117 +1160,176 @@ function DataManager() {
 		});
 	}
 
-	me.getGroupIdStr = function(list) {
-		var groupIds = "";
+	// attributes = [{id: String, name: String}]
+	var getAttributeColumns = function(attributes) {
+		return _.map(attributes, function(attribute) {
+			return {
+				data: 'attributes.' + attribute.id,
+				title: attribute.name,
+				defaultContent: ""
+			};
+		});
+	}; 
 
-		if (list !== undefined) {
-			$.each(list, function(i_group, item_group) {
-				groupIds += item_group.id + ';';
-			});
-		}
-
-		return groupIds;
+	me.getDataElementColumns = function(attributes) { 
+		var baseColumns = [
+			{
+				data : 'dataElementGroupNames',
+				"title" : "DE Group",
+				"render" : function(data, type, full) {
+					return (Util.checkValue(data)) ? data
+							: '&lt;not assigned&gt;';
+					// return data + '-' + JSON.stringify(
+					// full ) ;
+				}
+			},
+			{
+				data : 'displayName',
+				"title" : "DE Name",
+				"render" : function(data, type, full) {
+					return "<a href='' class='datapopup' dataid='"
+							+ full.id
+							+ "' onclick='return false;'>"
+							+ data + "</a>";
+				}
+			},
+			{
+				data : 'displayShortName',
+				"title" : "Short Name",
+				"render" : Util.getDataTableRenderer("string")
+			},
+			{
+				data : 'id',
+				"title" : "UID",
+				"render" : function(data, type, full) {
+					return '<span class="tdSmall">' + data
+							+ '</span>';
+				}
+			},
+			{
+				data : 'code',
+				"title" : "Code",
+				"render" : Util.getDataTableRenderer("string")
+			},
+			{
+				data : 'categoryCombo.displayName',
+				"title" : "Disaggregation (Cat Combo)",
+				"render" : Util.getDataTableRenderer("string")
+			},
+			{
+				data : 'id',
+				"title" : "Dimensions",
+				"render" : DhisDimensionUtils.dimensionsRenderer,
+			},
+			{
+				data : 'valueType',
+				"title" : "Value Type",
+				"render" : function(data, type, full) {
+					return me.getValueDataTypeName(data);
+				}
+			},
+			{
+				data : 'description',
+				"title" : "DE Description",
+				"render" : function(data, type, full) {
+					return '<div class="limitedView_Container"><div class="limitedView">'
+							+ data.replace(/[\n\r\t]/g, "")
+							+ '</div></div>';
+				}
+			},
+			{
+				data : 'zeroIsSignificant',
+				"title" : "Store Zero",
+				"render" : Util.getDataTableRenderer("boolean")
+			},
+			{
+				data : 'aggregationType',
+				"title" : "Aggregation Type",
+				"render" : Util.getDataTableRenderer("string")
+			},
+			{
+				data : 'dataElementGroups[,].name',
+				"title" : "DE Groups",
+				"render" : Util.getDataTableRenderer("string")
+			},
+			{
+				data : 'user.displayName',
+				"title" : "Created by",
+				"render" : Util.getDataTableRenderer("string")
+			},
+			{
+				data : 'created',
+				"title" : "Created on",
+				"render" : Util.getDataTableRenderer("date")
+			},
+			{
+				data : 'lastUpdated',
+				"title" : "Updated on",
+				"render" : Util.getDataTableRenderer("date")
+			}
+		];
+		
+		return baseColumns.concat(getAttributeColumns(attributes));
 	}
-
-	me.setUp_DataTable_DataElement = function(type, listTag, dataList) {
+		
+	me.setUp_DataTable_DataElement = function(type, listTag, dataList, attributes, forceRedraw) {
 		var oTable;
 
 		if (type == "DE_DS") {
 			oTable = me.oTable_DE_ByDataSet;
 		} else if (type == "DE") {
 			oTable = me.oTable_DE_ByGroup;
-			;
 		}
-
-		if (oTable === undefined) {
+		
+		var objName = "tableSettings-" + type;
+		var schemaSection = "datasets";
+		var tableSettings;
+		if (!me[objName]) {
+			var redrawTable = function() {
+				oTable.fnDestroy();
+				me.setUp_DataTable_DataElement(type, listTag, dataList, attributes, true);
+			};
+			
+			var onSettingsUpdate = function() {
+				var relatedObjName = "tableSettings-" + (type == "DE_DS" ? "DE" : "DE_DS");
+				var relatedTableSettings = me[relatedObjName];
+				if (relatedTableSettings) {
+					relatedTableSettings.redraw();
+				} 
+			};
+			tableSettings = new TableSettings(me.user, "datatables", schemaSection, 
+					listTag.closest(".content"), redrawTable, onSettingsUpdate);
+			
+			tableSettings.setup();
+			me[objName] = tableSettings;
+		} else {
+			tableSettings = me[objName];
+		}
+		
+		if (oTable === undefined || forceRedraw) {
 			oTable = listTag
+					.empty()
 					.dataTable({
 						"data" : dataList,
-						"columns" : [
-								{
-									data : 'dataElementGroupNames',
-									"title" : "DE Group",
-									"render" : function(data, type, full) {
-										return (Util.checkValue(data)) ? data
-												: '&lt;not assigned&gt;';
-										// return data + '-' + JSON.stringify(
-										// full ) ;
-									}
-								},
-								{
-									data : 'name',
-									"title" : "DE Name",
-									"render" : function(data, type, full) {
-										return "<a href='' class='datapopup' dataid='"
-												+ full.id
-												+ "' onclick='return false;'>"
-												+ data + "</a>";
-									}
-								},
-								{
-									data : 'id',
-									"title" : "UID",
-									"render" : function(data, type, full) {
-										return '<span class="tdSmall">' + data
-												+ '</span>';
-									}
-								},
-								{
-									data : 'categoryCombo.displayName',
-									"title" : "Disaggregation (Cat Combo)"
-								},
-								{
-									data : 'id',
-									"title" : "Dimensions",
-									"render" : function(data, type, full) {
-
-										var catId = (full.categoryCombo.displayName != ""
-												&& full.categoryCombo.displayName != "default" && full.categoryCombo.id != "") ? full.categoryCombo.id
-												: "";
-
-										// For 'default', set the catcombo.
-										if (full.categoryCombo.displayName == "default")
-											me.setCatComboData(
-													full.categoryComboId,
-													_catComboData);
-
-										var degsids = me
-												.getGroupIdStr(full.dataElementGroups);
-
-										// full.dimensions = "test";
-										var dimensions = me
-												.formatDimensions(full.dimensions);
-
-										// Have a div tag with deid and data??
-										return '<div deid="' + full.id
-												+ '" catid="' + catId
-												+ '" degsids="' + degsids
-												+ '" >' + dimensions + '</div>';
-									}
-								},
-								{
-									data : 'valueType',
-									"title" : "Value Type",
-									"render" : function(data, type, full) {
-										return me.getValueDataTypeName(data);
-									}
-								},
-								{
-									data : 'description',
-									"title" : "DE Description",
-									"render" : function(data, type, full) {
-										return '<div class="limitedView_Container"><div class="limitedView">'
-												+ data.replace(/[\n\r\t]/g, "")
-												+ '</div></div>';
-									}
-								}
-
-						],
+						"columns" : me.getDataElementColumns(attributes),
 						"order" : [ [ 0, "asc" ], [ 1, "asc" ] ],
+						"buttons" : Util.getExportButtons(),
+						"colReorder": {
+							"realtime": false,
+							"fnReorderCallback": _.bind(tableSettings.fnReorderCallback, tableSettings)
+						},
+						"stateSave": true,
+						"stateDuration": 1e100,
+						"stateLoadCallback": _.bind(tableSettings.stateLoadCallback, tableSettings),
 						"aLengthMenu" : [ [ -1, 25, 50, 100 ],
 								[ "All", 25, 50, 100 ] ],
 						"iDisplayLength" : -1,
-						"dom" : 'T<"clear">lfrtip',
+						"dom" : 'BT<"clear">lfrtip',
+						"fnDrawCallback": function() {
+							_.defer(function() {
+								DhisDimensionUtils.setupDimensions(listTag, dataList); 
+							 });
+						},
 						"fnInfoCallback" : function(oSettings, iStart, iEnd,
 								iMax, iTotal, sPre) {
 							// Each time paging or other things happen that
@@ -1212,85 +1346,24 @@ function DataManager() {
 									.setUpDivToggleAction(listTag
 											.find('div.limitedView,div.limitedView_Toggle'));
 
-							// for each row..
-							listTag
-									.find('div[deid]')
-									.each(
-											function(i_div) {
-
-												var divDimension = $(this);
-
-												divDimension
-														.append('<div class="hidden" type="CAT" ></div>'
-																+ '<div class="hidden loading_CAT" ><img src="images/ui-anim_basic.gif"/></div>'
-																+ '<div class="hidden" type="COGS" ></div>'
-																+ '<div class="hidden loading_COGS" ><img src="images/ui-anim_basic.gif"/></div>'
-																+ '<div class="hidden" type="DEGS" ></div>'
-																+ '<div class="hidden loading_DEGS"><img src="images/ui-anim_basic.gif"/></div>');
-
-												var deid = divDimension
-														.attr('deid');
-												var processed = divDimension
-														.attr('processed');
-												var catid = divDimension
-														.attr('catid');
-												var degsids = divDimension
-														.attr('degsids');
-
-												// console.log( 'deid: ' + deid
-												// + '|' + processed );
-
-												if (processed === undefined) {
-													divDimension.attr(
-															'processed', 'Y');
-
-													me.populateDEGS(
-															divDimension, deid,
-															degsids, dataList);
-
-													me
-															.populateCAT(
-																	divDimension,
-																	deid,
-																	catid,
-																	dataList,
-																	function(
-																			categoryOptions) {
-																		me
-																				.populateCOGS(
-																						divDimension,
-																						deid,
-																						categoryOptions,
-																						dataList);
-																	});
-												}
-											});
-
 							return iStart + " to " + iEnd;
-						},
-						"tableTools" : {
-							"sSwfPath" : "js/jquery/swf/copy_csv_xls_pdf.swf",
-							"aButtons" : [ "copy", "csv", {
-								"sExtends" : "xls",
-								"sButtonText" : "Excel",
-								"sFileName" : "*.xls"
-							}, "pdf", "print" ]
 						}
 					});
 
-			listTag.on('click', 'td', function() {
-
+			listTag.off("click", "td").on('click', 'td', function(ev) {
+				ev.preventDefault();
 				var anchorTag = $(this).find('a.datapopup');
 
 				if (anchorTag.length == 1) {
-					me.dataElementPopup.form_Open(anchorTag.attr('dataid'));
+					me.dataElementPopup.form_Open(anchorTag.attr('dataid'), me.user, schemaSection);
 				}
 			});
-
 		} else {
 			oTable.fnClearTable();
-			oTable.fnAddData(dataList);
-			oTable.fnAdjustColumnSizing();
+			if (dataList.length > 0) {
+				oTable.fnAddData(dataList);
+				oTable.fnAdjustColumnSizing();
+			}
 		}
 
 		if (type == "DE_DS") {
@@ -1298,6 +1371,7 @@ function DataManager() {
 		} else if (type == "DE") {
 			me.oTable_DE_ByGroup = oTable;
 		}
+		return oTable;
 	}
 
 	me.getValueDataTypeName = function(data, deData) {
@@ -1337,326 +1411,135 @@ function DataManager() {
 		return typeName;
 	}
 
-	me.formatDimensions = function(dimensions) {
-		var returnVal = "";
-
-		if (dimensions !== undefined) {
-			if (dimensions.DEGS !== undefined) {
-				returnVal += dimensions.DEGS;
+	me.getIndicatorColumns = function(attributes) {
+		var baseColumns = [
+			{
+				data : 'indicatorGroupNames',
+				"title" : "IND Group",
+				"render" : function(data, type, full) {
+					return (Util.checkValue(data)) ? data
+							: '&lt;not assigned&gt;';
+				}
+			},
+			{
+				data : 'displayName',
+				"title" : "IND Name",
+				"render" : function(data, type, full) {
+					return "<a href='' class='datapopup' dataid='"
+							+ full.id
+							+ "'>"
+							+ data
+							+ "</a>";
+				}
+			},
+			{
+				data : 'displayShortName',
+				"title" : "Short Name",
+				"render" : Util.getDataTableRenderer("string")
+			},
+			{
+				data : 'id',
+				"title" : "UID",
+				"render" : function(data, type, full) {
+					return '<span class="tdSmall">' + data
+							+ '</span>';
+				}
+			},
+			{
+				data : 'numeratorDescription',
+				"title" : "Numerator Description",
+				"render" : Util.getDataTableRenderer("string")
+			},
+			{
+				data : 'denominatorDescription',
+				"title" : "Denominator Description",
+				"render" : Util.getDataTableRenderer("string")
+			},
+			{
+				data : 'numerator',
+				"title" : "Numerator",
+				"render" : Util.getDataTableRenderer("string")
+			},
+			{
+				data : 'denominator',
+				"title" : "Denominator",
+				"render" : Util.getDataTableRenderer("string")
+			},
+			{
+				data : 'annualized',
+				"title" : "Annualized",
+				"render" : Util.getDataTableRenderer("boolean")
+			},
+			{
+				data : 'indicatorType.name',
+				"title" : "Indicator Type",
+				"render" : Util.getDataTableRenderer("string")
+			},
+			{
+				data : 'dataSets[,].name',
+				"title" : "DataSets",
+				"render" : Util.getDataTableRenderer("string")
+			},
+			{
+				data : 'description',
+				"title" : "DE Description",
+				"render" : function(data, type, full) {
+					return '<div class="limitedView">'
+							+ data
+							+ '</div><div class="limitedView_Toggle">...... More ......</div>';
+				}
+			},
+			{
+				data : 'user.displayName',
+				"title" : "Created by",
+				"render" : Util.getDataTableRenderer("string")
+			},
+			{
+				data : 'created',
+				"title" : "Created on",
+				"render" : Util.getDataTableRenderer("date")
+			},
+			{
+				data : 'lastUpdated',
+				"title" : "Updated on",
+				"render" : Util.getDataTableRenderer("date")
 			}
+		];
+			
+		return baseColumns.concat(getAttributeColumns(attributes));
+	};
+	
+	me.setUp_DataTable_Indicator = function(type, listTag, dataList, attributes, forceRedraw) {
+		var objName = "tableSettings-indicator";
+		var tableSettings = me[objName] = me[objName] || _.bind(function() {
+			var ts = new TableSettings(me.user, "datatables", "indicators", 
+					listTag.closest(".content"), _.bind(function() {
+				me.oTable_IND_ByGroup.fnDestroy();
+				me.setUp_DataTable_Indicator(type, listTag, dataList, attributes, true);
+			}, this));
+			ts.setup();
+			return ts;
+		}, me)();
 
-			if (dimensions.CAT !== undefined) {
-				returnVal += dimensions.CAT;
-			}
-
-			if (dimensions.COGS !== undefined) {
-				returnVal += dimensions.COGS;
-			}
-		}
-
-		return returnVal;
-	}
-
-	me.setData_DataList = function(deid, type, data, dataList) {
-		$.each(dataList, function(i, item) {
-			if (item.id == deid) {
-				if (item.dimensions === undefined)
-					item.dimensions = {};
-
-				item.dimensions[type] = data;
-
-				return false;
-			}
-		});
-	}
-
-	me.populateDEGS = function(divDimension, deid, degsids, dataList) {
-		var retrieveCount = 0;
-		var resultStr = "";
-
-		var divTarget = divDimension.find('div[type="DEGS"]');
-		var loadingTag = divDimension.find('.loading_DEGS');
-
-		var idsArr = degsids.split(';');
-
-		$
-				.each(
-						idsArr,
-						function(i_deg, item_deg) {
-							if (item_deg != "") {
-								RESTUtil
-										.getAsynchData(
-												apiPath + 'dataElementGroups/'
-														+ item_deg
-														+ '.json?fields=id,name,dataElementGroupSet[id,name,dataDimension]',
-												function(json_dataDetail) {
-													if (json_dataDetail.dataElementGroupSet !== undefined
-															&& json_dataDetail.dataElementGroupSet.dataDimension) {
-														if (resultStr != "")
-															resultStr += "<br>";
-
-														resultStr += json_dataDetail.dataElementGroupSet.name
-																+ '[DEGS] ';
-													}
-												}, function() {
-												}, function() {
-													if (retrieveCount == 0)
-														loadingTag.show();
-
-													retrieveCount++;
-												}, function() {
-													retrieveCount--;
-													if (retrieveCount == 0) {
-														loadingTag.hide();
-														divTarget.show().html(
-																resultStr);
-
-														me.setData_DataList(
-																deid, "DEGS",
-																resultStr,
-																dataList);
-
-														// Set to
-														// me.dataList[].dimension
-													}
-												});
-							}
-						});
-	}
-
-	me.populateCAT = function(divDimension, deid, catid, dataList, runFunc) {
-		var retrieveCount = 0;
-		var resultStr = "";
-		var categoryOptions = [];
-		var catComboData;
-
-		var divTarget = divDimension.find('div[type="CAT"]');
-		var loadingTag = divDimension.find('.loading_CAT');
-
-		// var idStr = Util.getNotEmpty( divTarget.attr( 'id' ) );
-
-		// Category Combo <-- Add to the ///
-
-		if (catid != "") {
-			// For Transposed Excel data, make list of unique catCombo List that
-			// holds categoryOptionCombos:
-			me.setCatComboData(catid, _catComboData);
-
-			RESTUtil
-					.getAsynchData(
-							apiPath + 'categoryCombos/'
-									+ catid
-									+ '.json?fields=id,name,categories[id,name,categoryOptions[id,name]]' // ,categoryOptionCombos[id,name]'
-							, function(json_dataDetail) {
-								// catComboData = { id: catid, name:
-								// json_dataDetail.name, catOptionCombos:
-								// json_dataDetail.categoryOptionCombos };
-
-								$.each(json_dataDetail.categories, function(
-										i_cat, item_cat) {
-									var catOptionNames = "";
-
-									$.each(item_cat.categoryOptions, function(
-											i_co, item_co) {
-										categoryOptions.push({
-											id : item_co.id,
-											name : item_co.name
-										});
-
-										if (catOptionNames != "")
-											catOptionNames += ", ";
-										catOptionNames += item_co.name;
-									});
-
-									if (resultStr != "")
-										resultStr += "<br>";
-
-									resultStr += '<span title="'
-											+ catOptionNames + '">'
-											+ item_cat.name + '[CAT]</span> ';
-
-								});
-							}, function() {
-							}, function() {
-								if (retrieveCount == 0)
-									loadingTag.show();
-
-								retrieveCount++;
-							}, function() {
-								retrieveCount--;
-								if (retrieveCount == 0) {
-									loadingTag.hide();
-									divTarget.show().html(resultStr);
-
-									me.setData_DataList(deid, "CAT", resultStr,
-											dataList);
-
-									// Also, save category Combo Data for later
-									// use.
-									// me.setData_DataList( deid,
-									// "catComboData", catComboData, dataList );
-
-									runFunc(categoryOptions);
-								}
-							});
-
-		}
-	}
-
-	// Create unique categoryCombo Data with categoryOptionCombos
-	// - Used by Transpose Excel creation.
-	me.setCatComboData = function(catid, catComboData) {
-		if (catComboData[catid] === undefined) {
-			// Set it as not 'undefined' since the request is made once (below)
-			catComboData[catid] = {};
-
-			RESTUtil
-					.getAsynchData(
-							apiPath + 'categoryCombos/'
-									+ catid
-									+ '.json?fields=id,name,categoryOptionCombos[id,name]',
-							function(json_dataDetail) {
-								catComboData[catid] = {
-									id : catid,
-									name : json_dataDetail.name,
-									categoryOptionCombos : json_dataDetail.categoryOptionCombos
-								};
-							});
-		}
-	}
-
-	me.populateCOGS = function(divDimension, deid, categoryOptions, dataList) {
-		var retrieveCount = 0;
-		var resultStr = "";
-
-		var divTarget = divDimension.find('div[type="COGS"]');
-		var loadingTag = divDimension.find('.loading_COGS');
-
-		// Get cateogry option group set with '[COGS]'
-		RESTUtil
-				.getAsynchData(
-						apiPath + 'categoryOptionGroups.json?paging=false&fields=id,name,categoryOptions[id,name],categoryOptionGroupSet[id,name,dataDimension]',
-						function(json_dataDetail) {
-							if (json_dataDetail.categoryOptionGroups !== undefined) {
-								$
-										.each(
-												json_dataDetail.categoryOptionGroups,
-												function(i_cos, item_cos) {
-													// Check if the category has
-													// option that matches..
-													var matchFound = false;
-
-													$
-															.each(
-																	item_cos.categoryOptions,
-																	function(
-																			i_co,
-																			item_co) {
-																		$
-																				.each(
-																						categoryOptions,
-																						function(
-																								i_co_src,
-																								item_co_src) {
-																							if (item_co_src.id == item_co.id) {
-																								matchFound = true;
-																								return false;
-																							}
-																						});
-
-																		if (matchFound)
-																			return false;
-																	});
-
-													if (matchFound
-															&& item_cos.categoryOptionGroupSet !== undefined
-															&& item_cos.categoryOptionGroupSet.dataDimension) {
-														// Set category Option
-														// Group Set
-														if (resultStr != "")
-															resultStr += "<br> ";
-
-														resultStr += item_cos.categoryOptionGroupSet.name
-																+ '[COGS] ';
-													}
-
-												});
-							}
-						}, function() {
-						}, function() {
-							if (retrieveCount == 0)
-								loadingTag.show();
-
-							retrieveCount++;
-						}, function() {
-							retrieveCount--;
-							if (retrieveCount == 0) {
-								loadingTag.hide();
-								divTarget.show().html(resultStr);
-
-								me.setData_DataList(deid, "COGS", resultStr,
-										dataList);
-							}
-						});
-	}
-
-	me.setUp_DataTable_Indicator = function(type, listTag, dataList) {
-
-		if (me.oTable_IND_ByGroup === undefined) {
+		if (me.oTable_IND_ByGroup === undefined || forceRedraw) {
 			me.oTable_IND_ByGroup = listTag
+					.empty()
 					.dataTable({
 						"data" : dataList,
-						"columns" : [
-								{
-									data : 'indicatorGroupNames',
-									"title" : "IND Group",
-									"render" : function(data, type, full) {
-										return (Util.checkValue(data)) ? data
-												: '&lt;not assigned&gt;';
-									}
-								},
-								{
-									data : 'name',
-									"title" : "IND Name",
-									"render" : function(data, type, full) {
-										return "<a href='' class='datapopup' dataid='"
-												+ full.id
-												+ "'>"
-												+ data
-												+ "</a>";
-									}
-								},
-								{
-									data : 'id',
-									"title" : "UID",
-									"render" : function(data, type, full) {
-										return '<span class="tdSmall">' + data
-												+ '</span>';
-									}
-								},
-								{
-									data : 'numeratorDescription',
-									"title" : "Numberator Description"
-								},
-								{
-									data : 'denominatorDescription',
-									"title" : "Denominator Description"
-								},
-								{
-									data : 'description',
-									"title" : "DE Description",
-									"render" : function(data, type, full) {
-										return '<div class="limitedView">'
-												+ data
-												+ '</div><div class="limitedView_Toggle">...... More ......</div>';
-									}
-
-								} ],
+						"columns" : me.getIndicatorColumns(attributes),
 						"order" : [ [ 0, "asc" ], [ 1, "asc" ] ],
+						"buttons" : Util.getExportButtons(),
+						"colReorder": {
+							"realtime": false,
+							"fnReorderCallback": _.bind(tableSettings.fnReorderCallback, tableSettings)
+						},
+						"stateSave": true,
+						"stateDuration": 1e100,
+						"stateLoadCallback": _.bind(tableSettings.stateLoadCallback, tableSettings),
 						"aLengthMenu" : [ [ 25, 50, 100, -1 ],
 								[ 25, 50, 100, "All" ] ],
 						"iDisplayLength" : 25,
-						"dom" : 'T<"clear">lfrtip',
+						"dom" : 'BT<"clear">lfrtip',
 						"fnInfoCallback" : function(oSettings, iStart, iEnd,
 								iMax, iTotal, sPre) {
 
@@ -1668,32 +1551,22 @@ function DataManager() {
 											.find('div.limitedView,div.limitedView_Toggle'));
 
 							return iStart + " to " + iEnd;
-						},
-						"tableTools" : {
-							"sSwfPath" : "js/jquery/swf/copy_csv_xls_pdf.swf",
-							"aButtons" : [ "copy", "csv", {
-								"sExtends" : "xls",
-								"sButtonText" : "Excel",
-								"sFileName" : "*.xls"
-							}, "pdf", "print"
-
-							]
 						}
 					});
 
+			listTag.off("click", "td").on('click', 'td', function(ev) {
+				ev.preventDefault();
+				var anchorTag = $(this).find('a.datapopup');
+
+				if (anchorTag.length == 1) {
+					me.indicatorPopup.form_Open(anchorTag.attr('dataid'), me.user, "indicators");
+				}
+			});
 		} else {
 			me.oTable_IND_ByGroup.fnClearTable();
 			me.oTable_IND_ByGroup.fnAddData(dataList);
 			me.oTable_IND_ByGroup.fnAdjustColumnSizing();
 		}
-
-		listTag.find("a.datapopup").click(function() {
-			me.indicatorPopup.form_Open($(this).attr('dataid'));
-
-			return false;
-		});
-
-		// return oTable;
 	}
 
 	me.setUp_RunClick_DataSetDataElement = function(btnTag) {
@@ -1780,11 +1653,78 @@ function DataManager() {
 		}
 
 	}
+	
+	var getObjectIdFromCreateRequest = function(data, statusText, xhr) { 
+		return data.response ? data.response.uid : null;
+	}
+	
+	var executeSqlView = function(sqlViewId) {
+		return RESTUtil
+			.post(apiPath + "sqlViews/" + sqlViewId + "/execute")
+			.then(function(data, statusText, xhr) { return sqlViewId; })
+	}
+	
+	me.createSqlView = function(sqlView) {
+		return RESTUtil.get(apiPath + "sqlViews", {filter: "displayName:eq:" + sqlView.name})
+			.then(function(data) {
+				if (_.isEmpty(data.sqlViews)) {
+					return RESTUtil.post(apiPath + "sqlViews", sqlView)
+						.then(getObjectIdFromCreateRequest)
+						.then(executeSqlView);
+				} else {
+					return data.sqlViews[0].id;
+				}
+			});
+	}; 
+	
+	me.createUserRole = function(userRole) {
+		let qs = {
+			filter: "name:eq:" + userRole.name,
+			fields: "id,displayName,authorities"
+		};
+		return RESTUtil.get(apiPath + "userRoles", qs)
+			.then(function(data) {
+				var authorities = _.chain(data.userRoles).pluck("authorities").flatten().value();
+				var hasRequiredAuthorities = _.isEmpty(_.difference(userRole.authorities, authorities));
+				
+				if (_.isEmpty(data.userRoles)) {
+					return RESTUtil.post(apiPath + "userRoles", userRole)
+						.then(getObjectIdFromCreateRequest);
+				} else if (!hasRequiredAuthorities) {
+					var userRoleId = data.userRoles[0].id;
+					return RESTUtil.post(apiPath + "userRoles/" + userRoleId , userRole, {type: "PUT"})
+						.then(getObjectIdFromCreateRequest);
+				} else {
+					return data.userRoles[0].id;
+				}
+			});
+	};
+	
+	me.setup = function(afterFunc) {
+		$.when(
+			DhisUtils.getRequestData(DhisUtils.getUserInfo(apiPath)),
+			me.createSqlView(me.sqlViews.dashboard_list),
+			me.createSqlView(me.sqlViews.dashboard_join),
+			me.createUserRole(me.adminRole)
+		).then(
+			function(user, dashboardListId, dashboardJoinId, adminRoleId) {
+				var defaultSettings = _.pick({
+					"dashboardList": dashboardListId,
+					"dashboardJoin": dashboardJoinId
+				}, _.identity);
+				afterFunc(user, defaultSettings);
+			},
+			function() {
+				alert("Error on app setup");
+			}
+		);
+	};
 
 	// ---------------------------------------
 	// -- Initial Run
 
-	me.initialRun = function() {
+	me.initialRun = function(user, defaultSettings) {
+		me.user = user;
 		
 		// Parameter Get and Set Tab.
 		me.getParameters();
@@ -1792,54 +1732,80 @@ function DataManager() {
 
 		// Organization Unit TAb 
 		setup_SearchByOrgUnit(me);
-
+		
 		// Dataset & Programs Tab
 		me.setup_SearchByDataSet(function() {
 			if (me.paramTab == 'DataSet')
 				me.setParameterAction(me.paramTab);
 		});
-		
-		// Analytics Tab (as it is quite demanding in terms of js processing it is loaded on tab click)
+
 		$('a[href="#tabs-3"]').click(function(){
 			if (!$('#infoList_Analytics').is(":visible")){
-				
 				$('#infoList_Analytics').show();
-				
 				setup_Analytics(me, function() {});	
 			}
 		});
-		if (me.paramTab == 'Dashboard')
-			$('a[href="#tabs-3"]').trigger( "click" );
 		
-		// Data Elements Groups Tab
-		setup_SearchByGroup(me, "DE", $('#tabs-7'), function() {
-			if (me.paramTab == 'Group' && me.paramSearchType == 'DE')
-				me.setParameterAction(me.paramTab);
-		});
+		me.settingDataPopupForm = new SettingDataPopupForm(me, defaultSettings, function() {
+			// Analytics Tab (as it is quite demanding in terms of js processing it is loaded on tab click)
+			if (me.paramTab == 'Dashboard')
+				$('a[href="#tabs-3"]').trigger( "click" );
 		
-		// Indicator Groups Tab
-		setup_SearchByGroup(me, "IND", $('#tabs-8'), function() {
-			if (me.paramTab == 'Group' && me.paramSearchType == 'IND')
-				me.setParameterAction(me.paramTab);
+			// Data Elements Groups Tab
+			setup_SearchByGroup(me, "DE", $('#tabs-7'), function() {
+				if (me.paramTab == 'Group' && me.paramSearchType == 'DE')
+					me.setParameterAction(me.paramTab);
+			});
+		
+			// Indicator Groups Tab
+			setup_SearchByGroup(me, "IND", $('#tabs-8'), function() {
+				if (me.paramTab == 'Group' && me.paramSearchType == 'IND')
+					me.setParameterAction(me.paramTab);
+			});
+
+			me.setupTopSection();
 		});
-
-		me.setupTopSection();		
-		me.settingDataPopupForm = new SettingDataPopupForm(me);
-
 	}
-
+		
 	// -- Initial Run
 	// ---------------------------------------
-
-	// Methods
-	// --------------------------
-
-	// Initial Run Call
-	me.initialRun();
-
+	
+	me.setup(me.initialRun);
 }
 
-// -- Data Element Manager Class
-// -------------------------------------------
+// Return server info. 
+// See https://docs.dhis2.org/master/en/developer/html/webapi_system_resource.html
+getServerInfo = function(rootPath, onSuccess) {
+	RESTUtil.getAsynchData(rootPath + "/api/system/info", onSuccess);
+}
 
+// Return the newest version path of the API known to work. Return null if server unsupported.
+getApiVersionPath = function(version) {
+	var parts = _.map(version.split(".").slice(0, 2), function(s) { return parseInt(s); });
+	var majorVersion = parts[0], minorVersion = parts[1];
 
+	if (parts.length < 2 || majorVersion !== 2) {
+		return null;
+	} else if (minorVersion < 25) {
+		return null;
+	} else if (minorVersion <= 26) {
+		return minorVersion;
+	} else {
+		return "26";
+	}
+};
+
+jQuery.fn.dataTable.Api.register( 'state.load()', function (callback) {
+		return this.iterator( 'table', function ( s ) {
+				var api = s.oInstance.DataTable();
+				s.oApi._fnLoadState(s, s.oInit, function() { api.draw(); callback(); });
+				var hidden_cols = [];
+				jQuery.each(s.oLoadedState.columns, function(i, column) {
+						if (!column.visible) {
+								hidden_cols.push(i);
+						}
+				});
+				api.columns().visible(true);
+				api.columns(hidden_cols).visible(false);
+		});
+});

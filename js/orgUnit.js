@@ -136,7 +136,7 @@ function setup_SearchByOrgUnit(me) {
 														function(i_ds,item_ds) {
 															var requestUrl_dataSetDetail = apiPath + 'dataSets/'
 																	+ item_ds.id
-																	+ '.json?fields=id,shortName,name,description,dataSetType,dataElements[id,name,valueType,aggregationType,lastUpdated],organisationUnits[id,level]';
+																	+ '.json?fields=id,shortName,name,description,dataSetType,dataSetElements[dataElement[id,name,valueType,aggregationType,lastUpdated]],organisationUnits[id,level]';
 
 															RESTUtil.getAsynchData(requestUrl_dataSetDetail,
 																	function(json_dataSet) {
@@ -144,7 +144,7 @@ function setup_SearchByOrgUnit(me) {
 
 																			var foundCount = 0;
 																			var foundOrgUnits = {};
-																			
+																			var dataElements = DataHelpers.getDataElements(json_dataSet);
 
 																			$.each(json_dataSet.organisationUnits,
 																					function(i_dsOU, item_dsOU) {
@@ -184,7 +184,8 @@ function setup_SearchByOrgUnit(me) {
 																						//FIXME: We can use a js lib (underscore) to deal with this in a better way
 																						// Transform data element ids in a array of ids
 																						var dataElementsIds = [];
-																						$.each(json_dataSet.dataElements, function(i_dataElement, item_dataElement) {
+																						
+																						$.each(dataElements, function(i_dataElement, item_dataElement) {
 																							if (item_dataElement.valueType != "DATE"){
 																								dataElementsIds.push(item_dataElement.id);
 																								if (orgUnitDataElements.indexOf(item_dataElement.id) == -1){
@@ -202,7 +203,7 @@ function setup_SearchByOrgUnit(me) {
 																								
 																								//FIXME: We need to check why it is not a number
 																								if (!isNaN(currentDataElementDataValues)){
-																									$.each(json_dataSet.dataElements, function(i_de, item_de) {
+																									$.each(dataElements, function(i_de, item_de) {
 																										if (item_de.id == item_row[0]){
 																											// Add number of data values to data element
 																											item_de["numberDataValues"] = currentDataElementDataValues;
@@ -228,7 +229,7 @@ function setup_SearchByOrgUnit(me) {
 																									}
 																								}
 																							});
-																							orgUnitStructure._children.push({"id": json_dataSet.id, "shortName":json_dataSet.shortName, "name":json_dataSet.name, "_children":json_dataSet.dataElements, "type": "Dataset", "numberDataElements": json_dataSet.dataElements.length, "numberDataValues":datasetDataValues});
+																							orgUnitStructure._children.push({"id": json_dataSet.id, "shortName":json_dataSet.shortName, "name":json_dataSet.name, "_children":dataElements, "type": "Dataset", "numberDataElements": dataElements.length, "numberDataValues":datasetDataValues});
 																						});
 																						
 																						// Preparing data for graph mode
@@ -282,7 +283,7 @@ function setup_SearchByOrgUnit(me) {
 																							me.infoList_DataSet_DataTable.row.add([
 																							  '<a href="" class="dataSetLink" dsid="'+ json_dataSet.id + '">' + '<b>' + json_dataSet.name + '</b></br>' + Util.getNotEmpty(json_dataSet.description) + '</a>',
 																							  organizationUnitByLevel,
-																							  json_dataSet.dataElements.length,
+																							  dataElements.length,
 																							  isCustomDataset,
 																							  '<span title="' + formattedTooltip + '">' + datasetCompleted + "</span>"
 																							]).draw();
@@ -433,7 +434,6 @@ function setup_SearchByOrgUnit(me) {
 																				//Count number of instance
 																				var programInstancesURL = apiPath + 'analytics/events/aggregate/' + item_program.id +'.json?stage=' + item_ps.id + '&dimension=pe:LAST_12_MONTHS&filter=ou:' +  me.countryListTag.val() + '&outputType=EVENT&displayProperty=SHORTNAME';
 																				RESTUtil.getAsynchData(programInstancesURL, function(programInstanceList) {
-																					console.log(programInstanceList);
 																					var subtotalInstances = 0;
 																					$.each(programInstanceList.rows, function(i_pi, item_pi) {
 //																						tooltip[item_pi[0]] = item_pi[1];
