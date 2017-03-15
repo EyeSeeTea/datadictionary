@@ -1199,7 +1199,8 @@ function DataManager() {
 			},
 			{
 				data : 'displayShortName',
-				"title" : "Short Name"
+				"title" : "Short Name",
+				"render" : Util.getDataTableRenderer("string")
 			},
 			{
 				data : 'id',
@@ -1211,11 +1212,13 @@ function DataManager() {
 			},
 			{
 				data : 'code',
-				"title" : "Code"
+				"title" : "Code",
+				"render" : Util.getDataTableRenderer("string")
 			},
 			{
 				data : 'categoryCombo.displayName',
-				"title" : "Disaggregation (Cat Combo)"
+				"title" : "Disaggregation (Cat Combo)",
+				"render" : Util.getDataTableRenderer("string")
 			},
 			{
 				data : 'id',
@@ -1245,15 +1248,18 @@ function DataManager() {
 			},
 			{
 				data : 'aggregationType',
-				"title" : "Aggregation Type"
+				"title" : "Aggregation Type",
+				"render" : Util.getDataTableRenderer("string")
 			},
 			{
 				data : 'dataElementGroups[,].name',
-				"title" : "DE Groups"
+				"title" : "DE Groups",
+				"render" : Util.getDataTableRenderer("string")
 			},
 			{
 				data : 'user.displayName',
-				"title" : "Created by"
+				"title" : "Created by",
+				"render" : Util.getDataTableRenderer("string")
 			},
 			{
 				data : 'created',
@@ -1358,8 +1364,10 @@ function DataManager() {
 			});
 		} else {
 			oTable.fnClearTable();
-			oTable.fnAddData(dataList);
-			oTable.fnAdjustColumnSizing();
+			if (dataList.length > 0) {
+				oTable.fnAddData(dataList);
+				oTable.fnAdjustColumnSizing();
+			}
 		}
 
 		if (type == "DE_DS") {
@@ -1430,7 +1438,8 @@ function DataManager() {
 			},
 			{
 				data : 'displayShortName',
-				"title" : "Short Name"
+				"title" : "Short Name",
+				"render" : Util.getDataTableRenderer("string")
 			},
 			{
 				data : 'id',
@@ -1442,19 +1451,23 @@ function DataManager() {
 			},
 			{
 				data : 'numeratorDescription',
-				"title" : "Numerator Description"
+				"title" : "Numerator Description",
+				"render" : Util.getDataTableRenderer("string")
 			},
 			{
 				data : 'denominatorDescription',
-				"title" : "Denominator Description"
+				"title" : "Denominator Description",
+				"render" : Util.getDataTableRenderer("string")
 			},
 			{
 				data : 'numerator',
-				"title" : "Numerator"
+				"title" : "Numerator",
+				"render" : Util.getDataTableRenderer("string")
 			},
 			{
 				data : 'denominator',
-				"title" : "Denominator"
+				"title" : "Denominator",
+				"render" : Util.getDataTableRenderer("string")
 			},
 			{
 				data : 'annualized',
@@ -1463,11 +1476,13 @@ function DataManager() {
 			},
 			{
 				data : 'indicatorType.name',
-				"title" : "Indicator Type"
+				"title" : "Indicator Type",
+				"render" : Util.getDataTableRenderer("string")
 			},
 			{
 				data : 'dataSets[,].name',
-				"title" : "DataSets"
+				"title" : "DataSets",
+				"render" : Util.getDataTableRenderer("string")
 			},
 			{
 				data : 'description',
@@ -1480,7 +1495,8 @@ function DataManager() {
 			},
 			{
 				data : 'user.displayName',
-				"title" : "Created by"
+				"title" : "Created by",
+				"render" : Util.getDataTableRenderer("string")
 			},
 			{
 				data : 'created',

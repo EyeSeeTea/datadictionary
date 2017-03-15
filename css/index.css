@@ -18,12 +18,13 @@
 
 .spinner {
 	display: inline-block;
-	width: 16px;
+	width: 0px;
 	height: 15px;
 }
 
 .spinner.active {
 	background: white url('../images/ui-anim_basic.gif') right center no-repeat;
+	width: 16px;
 }
   
 .ui-autocomplete-loading {
@@ -215,6 +216,7 @@ div.limitedView_Toggle {
  
 .ui-tabs-panel .table-settings-links {
   top: -35px;
+  margin-right: 25px;
 }
 
 .toggle-column-visibility.visible {
@@ -231,6 +233,10 @@ div.limitedView_Toggle {
 
 .tables-config-columns .actions {
   margin-top: 5px;
+}
+
+.tables-config-columns .selection-actions {
+  float: right;
 }
 
 .ui-widget .table-settings {
