@@ -18,6 +18,7 @@
  */
 var dhisPath ="";
 var apiPath = "";
+var baseWebPath ="";
 
 var _queryURL_getOrgUnit = apiPath + "organisationUnits";
 
@@ -34,8 +35,8 @@ var typeMap = ['','','','','','','DE','IND'];
 $(document).ready(function() {
 
 	$.getJSON( "manifest.webapp", function( json ) {
-
-		getServerInfo(dhisPath, function(info) {
+                baseWebApp = json.launchUrl.substring(0,json.launchUrl.indexOf("/api/"));
+                getServerInfo(baseWebApp, function(info) {
 			var apiVersionPath = getApiVersionPath(info.version);
 
 			if (!apiVersionPath) {
