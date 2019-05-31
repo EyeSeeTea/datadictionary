@@ -18,7 +18,6 @@
  */
 var dhisPath ="";
 var apiPath = "";
-var baseWebPath ="";
 
 var _queryURL_getOrgUnit = apiPath + "organisationUnits";
 
@@ -35,8 +34,8 @@ var typeMap = ['','','','','','','DE','IND'];
 $(document).ready(function() {
 
 	$.getJSON( "manifest.webapp", function( json ) {
-                baseWebApp = json.launchUrl.substring(0,json.launchUrl.indexOf("/api/"));
-                getServerInfo(baseWebApp, function(info) {
+		dhisPath = json.activities.dhis.href;
+		getServerInfo(dhisPath, function(info) {
 			var apiVersionPath = getApiVersionPath(info.version);
 
 			if (!apiVersionPath) {
@@ -44,8 +43,7 @@ $(document).ready(function() {
 				alert("Unsupported DHIS2 version: " + info.version);
 			} else {
 				// Read dhis and api path from manifest.webapp 
-				dhisPath = json.activities.dhis.href;
-				apiPath = dhisPath + "api/" + apiVersionPath + "/";
+				apiPath = dhisPath + "/api/" + apiVersionPath + "/";
 
 				// Configure dhis and api path components
 				configureDhisPathComponents();
