@@ -1736,7 +1736,7 @@ function DataManager() {
 		// Organization Unit TAb 
 		setup_SearchByOrgUnit(me);
 		
-		// Dataset & Programs Tab
+		// DataSets Tab
 		me.setup_SearchByDataSet(function() {
 			if (me.paramTab == 'DataSet')
 				me.setParameterAction(me.paramTab);
