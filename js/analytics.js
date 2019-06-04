@@ -75,7 +75,7 @@ function setup_Analytics(me, afterFunc) {
 											if (!belongsToGroup){
 												$.each(getRows(editSQLView), function(i_editLink, item_editLink) {
 													if (item_editLink[2] == json_UserGroups_details.name){
-														editLink = dhisPath + "dhis-web-maintenance-user/editUserGroupForm.action?userGroupId=" + item_editLink[0];
+														editLink = getUserGroupEditUrl(item_editLink[0], item_editLink[1]);
 														return false;
 													}
 												});
@@ -180,3 +180,11 @@ function addRowToTable(me, json_Data_owner, item_dashboard, json_Data_details, g
 	
 }
 
+// Globals: dhisInfo, dhisPath
+function getUserGroupEditUrl(userGroupId, userGroupUId) {
+    if (dhisInfo.version < "2.30") {
+        return dhisPath + "dhis-web-maintenance-user/editUserGroupForm.action?userGroupId=" + userGroupId;
+    } else {
+        return dhisPath + "dhis-web-user/index.action#/user-groups/edit/" + userGroupUId;
+    }
+}

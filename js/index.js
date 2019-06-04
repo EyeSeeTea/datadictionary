@@ -17,6 +17,7 @@
  *  along with Data Dictionary.  If not, see <http://www.gnu.org/licenses/>.
  */
 var dhisPath ="";
+var dhisInfo = "";
 var apiPath = "";
 
 var _queryURL_getOrgUnit = apiPath + "organisationUnits";
@@ -36,6 +37,7 @@ $(document).ready(function() {
 	$.getJSON( "manifest.webapp", function( json ) {
 		dhisPath = (json.activities.dhis.href + "/").replace(/\/+$/, '/');
 		getServerInfo(dhisPath, function(info) {
+			dhisInfo = info;
 			var apiVersionPath = getApiVersionPath(info.version);
 
 			if (!apiVersionPath) {
