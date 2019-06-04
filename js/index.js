@@ -34,7 +34,7 @@ var typeMap = ['','','','','','','DE','IND'];
 $(document).ready(function() {
 
 	$.getJSON( "manifest.webapp", function( json ) {
-		dhisPath = json.activities.dhis.href;
+		dhisPath = (json.activities.dhis.href + "/").replace(/\/+$/, '/');
 		getServerInfo(dhisPath, function(info) {
 			var apiVersionPath = getApiVersionPath(info.version);
 
@@ -43,7 +43,7 @@ $(document).ready(function() {
 				alert("Unsupported DHIS2 version: " + info.version);
 			} else {
 				// Read dhis and api path from manifest.webapp 
-				apiPath = dhisPath + "/api/" + apiVersionPath + "/";
+				apiPath = dhisPath + "api/" + apiVersionPath + "/";
 
 				// Configure dhis and api path components
 				configureDhisPathComponents();
@@ -1779,7 +1779,7 @@ function DataManager() {
 // Return server info. 
 // See https://docs.dhis2.org/master/en/developer/html/webapi_system_resource.html
 getServerInfo = function(rootPath, onSuccess) {
-	RESTUtil.getAsynchData(rootPath + "/api/system/info", onSuccess);
+	RESTUtil.getAsynchData(rootPath + "api/system/info", onSuccess);
 }
 
 // Return the newest version path of the API known to work. Return null if server unsupported.
