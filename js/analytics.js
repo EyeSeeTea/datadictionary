@@ -25,14 +25,14 @@ function setup_Analytics(me, afterFunc) {
 			"pageLength": 50});
 	}
 
-	var requestUrl_AnalyticsEditSQLView = me.queryURL_analyticsSQLView + 
-		$("#sqlViewEditSettings").val() + "/data";
+	var requestUrl_AnalyticsEditSQLView = me.queryURL_analyticsSQLView +
+		$("#sqlViewEditSettings").val() + "/data?paging=false";
 	
 	RESTUtil.getAsynchData(requestUrl_AnalyticsEditSQLView, function (editSQLView){
 		
 		var loadingTagName = 'dataLoading';
-		var requestUrl_AnalyticsSQLView = me.queryURL_analyticsSQLView + 
-			$("#sqlViewSettings").val() + "/data";
+		var requestUrl_AnalyticsSQLView = me.queryURL_analyticsSQLView +
+			$("#sqlViewSettings").val() + "/data?paging=false";
 		var userGrouspNameDict = {};
 		var userId;
 		
@@ -42,7 +42,7 @@ function setup_Analytics(me, afterFunc) {
 			
 			RESTUtil.getAsynchData(me.queryURL_analytics_ownDashboard, function(json_Data_owner) {
 				RESTUtil.getAsynchData(requestUrl_AnalyticsSQLView, function(json_Data) {
-					$.each(json_Data.rows, function(i_dashboard, item_dashboard) {
+					$.each(getRows(json_Data), function(i_dashboard, item_dashboard) {
 						var requestUrl_analytics = me.queryURL_analytics
 						+ item_dashboard[1]
 						+ '.json?fields=itemCount,user[name],userGroupAccesses';
@@ -73,7 +73,7 @@ function setup_Analytics(me, afterFunc) {
 											});
 											var joinEditLinks = "";
 											if (!belongsToGroup){
-												$.each(editSQLView.rows, function(i_editLink, item_editLink) {
+												$.each(getRows(editSQLView), function(i_editLink, item_editLink) {
 													if (item_editLink[2] == json_UserGroups_details.name){
 														editLink = dhisPath + "dhis-web-maintenance-user/editUserGroupForm.action?userGroupId=" + item_editLink[0];
 														return false;
@@ -123,6 +123,16 @@ function setup_Analytics(me, afterFunc) {
 	});
 	
 	afterFunc();
+}
+
+function getRows(data) {
+    if (data && data.rows) {
+        return data.rows;
+    } else if (data && data.listGrid && data.listGrid.rows) {
+        return data.listGrid.rows;
+    } else {
+        throw new Error("Cannot get rows from data");
+    }
 }
 
 function submitData_URL( el, url, successFunc, failFunc )
