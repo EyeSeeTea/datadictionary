@@ -144,10 +144,10 @@ function submitData_URL( el, url, successFunc, failFunc )
 	  contentType: "text/plain; charset=utf-8",
 	  success: function( msg ) {
 		  $(this).closest('tr').css("background-color", 'whitesmoke');
-		  successFunc();
+		  if (successFunc) successFunc();
 		},
 	  error: function( msg ) {
-		  failFunc();
+		  if (failFunc) failFunc();
 		}			   
 	});
 }
