@@ -240,7 +240,7 @@ function setup_SearchByOrgUnit(me) {
 																						var currentDatasetPercentage = -1;
 																						//var tooltip = "";
 																						var tooltip = {};
-																						var completedAnalyticsUrl = apiPath + 'analytics.json?dimension=dx:' + json_dataSet.id + '&filter=ou:' + me.countryListTag.val() + '&dimension=pe:LAST_12_MONTHS&displayProperty=SHORTNAME';
+																						var completedAnalyticsUrl = apiPath + 'analytics.json?dimension=dx:' + json_dataSet.id + '.REPORTING_RATE' + '&filter=ou:' + me.countryListTag.val() + '&dimension=pe:LAST_12_MONTHS&displayProperty=SHORTNAME';
 																						RESTUtil.getAsynchData(completedAnalyticsUrl, function(completedAnalyticsList) {
 																							$.each(completedAnalyticsList.rows, function(i_row, item_row) {
 																								//tooltip += item_row[1].substring(4,6) + "-" + item_row[1].substring(0,4) + " => " + item_row[2] + "%\n";
