@@ -1,5 +1,5 @@
 {
-    "version": "1.5",
+    "version": "1.6",
     "name": "Data Dictionary",
     "description": "Data Dictionary",
     "icons": {
@@ -15,7 +15,7 @@
     },
     "activities": {
         "dhis": {
-            "href": "../../../",
+            "href": "*",
             "namespace": "datadictionary"
         }
     },
