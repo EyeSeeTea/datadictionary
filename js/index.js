@@ -302,7 +302,7 @@ function DataManager() {
 
 		var deferredArrActions_getData = [];
 
-		 
+		
 		$.each(json_listData, function(i_data, item_data) {
 			var url = queryURL	+ item_data.id + ".json?fields=" + [
 				"indicatorGroups[id,name]",
@@ -1569,8 +1569,10 @@ function DataManager() {
 			});
 		} else {
 			me.oTable_IND_ByGroup.fnClearTable();
-			me.oTable_IND_ByGroup.fnAddData(dataList);
-			me.oTable_IND_ByGroup.fnAdjustColumnSizing();
+			if (dataList.length > 0) {
+				me.oTable_IND_ByGroup.fnAddData(dataList);
+				me.oTable_IND_ByGroup.fnAdjustColumnSizing();
+			}
 		}
 	}
 

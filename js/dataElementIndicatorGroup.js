@@ -152,6 +152,7 @@ function getGroupTypeData(me, typeId, dataType, data) {
 function getDataList_byGroup(me, groupType, groupId, loadingTagName, runFunc) {
 	var url;
 	if (groupId == '' || groupId == null) {
+		runFunc([]);
 		return;
 	} else if (groupId == 'NONE') {
 		url = apiPath + 'metadata.json?'
