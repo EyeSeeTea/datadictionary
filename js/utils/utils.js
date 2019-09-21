@@ -245,3 +245,74 @@ Util.dataTableRenderers = {
     return Util.formatDate(data);
   }
 };
+
+Util.getChangeGroupRenderer = function (me, groupType) {
+	var groupName = (groupType == "IND") ? "indicatorGroups" : "dataElementGroups";
+
+	return function (id, type, full) {
+		var container = $('<div>');
+		var select = $('<select multiple>');
+		$(me[groupName]).each(function () {
+			var groupId = this.id;
+			select
+				.attr("id", "select-" + id)
+				.append($("<option>")
+					.attr("value", groupId)
+					.attr("selected", full[groupName].find(function (element) {
+						return element.id == groupId;
+					})
+				)
+				.text(this.displayName));
+		});
+		var button = $('<button>')
+			.attr("onclick", "Util.updateGroups('" + groupType + "', '" + id + "')")
+			.text("Update groups");
+		return container.append(select, button).html();
+	}
+};
+
+Util.updateGroups = function (groupType, id) {
+	var groupName = (groupType == "IND") ? "indicatorGroups" : "dataElementGroups";
+	var plural = (groupType == "IND") ? "indicators" : "dataElements";
+	
+	var options = $("#select-" + id + " > option");
+	var selectedOptions = [];
+	var groupsToUpdate = $.map(options, function (option) {
+		if (option.selected) selectedOptions.push(option.value);
+		return option.value;
+	});
+
+	$.ajax({
+		type: "GET",
+		dataType: "json",
+		url: apiPath + "metadata.json?fields=:owner&filter=id:in:[" + groupsToUpdate.toString() + "]",
+		async: true,
+		success: function (data) {
+			var metadata = {};
+			metadata[groupName] = data[groupName].map(function (group) {
+				group[plural] = group[plural].filter(function (element) {
+					return element.id != id;
+				});
+				if (selectedOptions.includes(group.id)) group[plural].push({ id: id })
+				return group;
+			});
+
+			$.ajax({
+				type: "POST",
+				contentType: "application/json",
+				url: apiPath + "metadata",
+				data: JSON.stringify(metadata),
+				async: true,
+				success: function () {
+					location.reload();
+				},
+				error: function () {
+					alert("Error updating groups")
+				}
+			});
+		},
+		error: function () {
+			alert("Error updating groups")
+		}
+	});
+}
