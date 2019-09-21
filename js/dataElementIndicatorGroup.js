@@ -139,7 +139,7 @@ function getGroupTypeData(me, typeId, dataType, data) {
 		if (dataType == "groupProperty") {
 			return "indicatorGroups"
 		} else if (dataType == "data") {
-			return data.indicators;
+			return data.indicators != undefined ? data.indicators : [];
 		} else if (dataType == "name") {
 			return "indicator";
 		} else if (dataType == "plural") {
