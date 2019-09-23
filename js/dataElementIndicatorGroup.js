@@ -42,8 +42,12 @@ function populateGroupList(me, groupType, listTag, loadingTag, execFunc) {
 								: json_Data.dataElementGroups;
 
 						var json_DataOrdered = Util.sortByKey(json_DataList, "displayName");
+						var options = [{
+							id: "NONE",
+							displayName: "Not assigned to any group",
+						}].concat(json_DataOrdered);
 
-						Util.populateSelect(listTag, groupTypeName	+ " Group", json_DataOrdered);
+						Util.populateSelect(listTag, groupTypeName + " Group", options);
 
 						if (groupType == me.paramSearchType)
 							execFunc();
@@ -121,41 +125,55 @@ function setup_SearchByGroup(me, groupType, tabTag, afterFunc) {
 
 function getGroupTypeData(me, typeId, dataType, data) {
 	if (typeId == "DE") {
-		if (dataType == "queryUrl") {
+		if (dataType == "groupProperty") {
 			return "dataElementGroups"
 		} else if (dataType == "data") {
 			return data.dataElements;
 		} else if (dataType == "name") {
 			return "dataElement";
+		} else if (dataType == "plural") {
+			return "dataElements";
 		}
 
 	} else if (typeId == "IND") {
-		if (dataType == "queryUrl") {
+		if (dataType == "groupProperty") {
 			return "indicatorGroups"
 		} else if (dataType == "data") {
-			return data.indicators;
+			return data.indicators != undefined ? data.indicators : [];
 		} else if (dataType == "name") {
 			return "indicator";
+		} else if (dataType == "plural") {
+			return "indicators";
 		}
 
 	}
 }
 
 function getDataList_byGroup(me, groupType, groupId, loadingTagName, runFunc) {
-	if (groupId != ''){
-		RESTUtil.getAsynchData(apiPath
-				+ getGroupTypeData(me, groupType, "queryUrl") + '/' + groupId
-				+ '.json', function(data) {
-			runFunc(getGroupTypeData(me, groupType, "data", data));
-		}, function() {
-			alert('Failed to retrieve '
-					+ getGroupTypeData(me, groupType, "name") + ' list.');
-		}, function() {
-			QuickLoading.dialogShowAdd(loadingTagName);
-		}, function() {
-			QuickLoading.dialogShowRemove(loadingTagName);
-		});
+	var url;
+	if (groupId == '' || groupId == null) {
+		runFunc([]);
+		return;
+	} else if (groupId == 'NONE') {
+		url = apiPath + 'metadata.json?'
+			+ getGroupTypeData(me, groupType, "plural") + ':filter='
+			+ getGroupTypeData(me, groupType, "groupProperty") + ':empty&fields=id';
+	} else {
+		url = apiPath
+			+ getGroupTypeData(me, groupType, "groupProperty") + '/' + groupId
+			+ '.json';
 	}
+	
+	RESTUtil.getAsynchData(url, function(data) {
+		runFunc(getGroupTypeData(me, groupType, "data", data));
+	}, function() {
+		alert('Failed to retrieve '
+				+ getGroupTypeData(me, groupType, "name") + ' list.');
+	}, function() {
+		QuickLoading.dialogShowAdd(loadingTagName);
+	}, function() {
+		QuickLoading.dialogShowRemove(loadingTagName);
+	});
 }
 
 // -- 'Search by Group' related

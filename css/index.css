@@ -56,12 +56,13 @@ div#loadingMsgDiv {
 }
 
 .listTable {
-	/*font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;*/
+	font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
 	font-size: 12px;
 	background: #fff;
 	margin: 10px;
 	border-collapse: collapse;
 	text-align: left;
+	padding: 10px;
 }
 .listTable th {
 	font-size: 13px;
