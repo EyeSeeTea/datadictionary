@@ -17,6 +17,7 @@
  *  along with Data Dictionary.  If not, see <http://www.gnu.org/licenses/>.
  */
 var dhisPath ="";
+var dhisInfo = "";
 var apiPath = "";
 
 var _queryURL_getOrgUnit = apiPath + "organisationUnits";
@@ -34,8 +35,9 @@ var typeMap = ['','','','','','','DE','IND'];
 $(document).ready(function() {
 
 	$.getJSON( "manifest.webapp", function( json ) {
-
+		dhisPath = (json.activities.dhis.href + "/").replace(/\/+$/, '/');
 		getServerInfo(dhisPath, function(info) {
+			dhisInfo = info;
 			var apiVersionPath = getApiVersionPath(info.version);
 
 			if (!apiVersionPath) {
@@ -43,7 +45,6 @@ $(document).ready(function() {
 				alert("Unsupported DHIS2 version: " + info.version);
 			} else {
 				// Read dhis and api path from manifest.webapp 
-				dhisPath = json.activities.dhis.href;
 				apiPath = dhisPath + "api/" + apiVersionPath + "/";
 
 				// Configure dhis and api path components
@@ -1737,7 +1738,7 @@ function DataManager() {
 		// Organization Unit TAb 
 		setup_SearchByOrgUnit(me);
 		
-		// Dataset & Programs Tab
+		// DataSets Tab
 		me.setup_SearchByDataSet(function() {
 			if (me.paramTab == 'DataSet')
 				me.setParameterAction(me.paramTab);
@@ -1780,7 +1781,7 @@ function DataManager() {
 // Return server info. 
 // See https://docs.dhis2.org/master/en/developer/html/webapi_system_resource.html
 getServerInfo = function(rootPath, onSuccess) {
-	RESTUtil.getAsynchData(rootPath + "/api/system/info", onSuccess);
+	RESTUtil.getAsynchData(rootPath + "api/system/info", onSuccess);
 }
 
 // Return the newest version path of the API known to work. Return null if server unsupported.
