@@ -302,7 +302,7 @@ function DataManager() {
 
 		var deferredArrActions_getData = [];
 
-		 
+		
 		$.each(json_listData, function(i_data, item_data) {
 			var url = queryURL	+ item_data.id + ".json?fields=" + [
 				"indicatorGroups[id,name]",
@@ -1271,6 +1271,11 @@ function DataManager() {
 				data : 'lastUpdated',
 				"title" : "Updated on",
 				"render" : Util.getDataTableRenderer("date")
+			},
+			{
+				data: 'id',
+				title: 'Change data element groups',
+				render: Util.getChangeGroupRenderer(me, "DE")
 			}
 		];
 		
@@ -1508,9 +1513,14 @@ function DataManager() {
 				data : 'lastUpdated',
 				"title" : "Updated on",
 				"render" : Util.getDataTableRenderer("date")
+			},
+			{
+				data: 'id',
+				title: 'Change indicator groups',
+				render: Util.getChangeGroupRenderer(me, "IND")
 			}
 		];
-			
+
 		return baseColumns.concat(getAttributeColumns(attributes));
 	};
 	
@@ -1569,8 +1579,10 @@ function DataManager() {
 			});
 		} else {
 			me.oTable_IND_ByGroup.fnClearTable();
-			me.oTable_IND_ByGroup.fnAddData(dataList);
-			me.oTable_IND_ByGroup.fnAdjustColumnSizing();
+			if (dataList.length > 0) {
+				me.oTable_IND_ByGroup.fnAddData(dataList);
+				me.oTable_IND_ByGroup.fnAdjustColumnSizing();
+			}
 		}
 	}
 
@@ -1710,14 +1722,16 @@ function DataManager() {
 			DhisUtils.getRequestData(DhisUtils.getUserInfo(apiPath)),
 			me.createSqlView(me.sqlViews.dashboard_list),
 			me.createSqlView(me.sqlViews.dashboard_join),
-			me.createUserRole(me.adminRole)
+			me.createUserRole(me.adminRole),
+			DhisUtils.getRequestData(RESTUtil.get(apiPath + 'indicatorGroups.json?fields=id,displayName,indicators&paging=false')),
+			DhisUtils.getRequestData(RESTUtil.get(apiPath + 'dataElementGroups.json?fields=id,displayName,dataElements&paging=false')),
 		).then(
-			function(user, dashboardListId, dashboardJoinId, adminRoleId) {
+			function(user, dashboardListId, dashboardJoinId, adminRoleId, queryIndicators, queryDataElements) {
 				var defaultSettings = _.pick({
 					"dashboardList": dashboardListId,
 					"dashboardJoin": dashboardJoinId
 				}, _.identity);
-				afterFunc(user, defaultSettings);
+				afterFunc(user, defaultSettings, queryIndicators.indicatorGroups, queryDataElements.dataElementGroups);
 			},
 			function() {
 				alert("Error on app setup");
@@ -1728,8 +1742,12 @@ function DataManager() {
 	// ---------------------------------------
 	// -- Initial Run
 
-	me.initialRun = function(user, defaultSettings) {
+	me.initialRun = function(user, defaultSettings, indicatorGroups, dataElementGroups) {
 		me.user = user;
+
+		me.indicatorGroups = Util.sortByKey(indicatorGroups, "displayName");
+
+		me.dataElementGroups = Util.sortByKey(dataElementGroups, "displayName");
 		
 		// Parameter Get and Set Tab.
 		me.getParameters();
