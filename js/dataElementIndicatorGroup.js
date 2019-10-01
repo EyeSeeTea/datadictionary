@@ -26,14 +26,32 @@ function populateGroupList(me, groupType, listTag, loadingTag, execFunc) {
 
 	var groupTypeName = "";
 	var urlName = "";
+	var table;
+	var groupChangeList;
+	var groupChangeAction;
 
 	if (groupType == "DE") {
 		groupTypeName = "DataElement";
 		urlName = "dataElementGroups";
+		table = me.tbDataListDE_byGroupTag;
+		groupChangeList = me.dataElementGroupChangeList;
+		groupChangeAction = me.dataElementGroupChangeAction;
 	} else if (groupType == "IND") {
 		groupTypeName = "Indicator";
 		urlName = "indicatorGroups";
+		table = me.tbDataListIND_byGroupTag;
+		groupChangeList = me.indicatorGroupChangeList;
+		groupChangeAction = me.indicatorGroupChangeAction;
 	}
+
+	groupChangeAction.on('click', function () {
+		var selected = Array.from(table.DataTable().column(0).checkboxes.selected());
+		if (selected.length == 0) {
+			alert("You have not selected any row!");
+		} else {
+			Util.updateGroups(groupType, selected, "#" + groupChangeList.attr('id'));
+		}
+	});
 
 	RESTUtil.getAsynchData(
 					apiPath + urlName	+ '.json?paging=false&fields=id,displayName',
@@ -42,6 +60,9 @@ function populateGroupList(me, groupType, listTag, loadingTag, execFunc) {
 								: json_Data.dataElementGroups;
 
 						var json_DataOrdered = Util.sortByKey(json_DataList, "displayName");
+
+						Util.populateSelect(groupChangeList, null, json_DataOrdered);
+
 						var options = [{
 							id: "NONE",
 							displayName: "Not assigned to any group",
@@ -49,8 +70,9 @@ function populateGroupList(me, groupType, listTag, loadingTag, execFunc) {
 
 						Util.populateSelect(listTag, groupTypeName + " Group", options);
 
-						if (groupType == me.paramSearchType)
+						if (groupType == me.paramSearchType) {
 							execFunc();
+						}
 					}, function() {
 						alert('Failed to load ' + groupTypeName
 								+ ' group list.');

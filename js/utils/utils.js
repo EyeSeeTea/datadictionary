@@ -24,10 +24,12 @@ function Util() {}
 
 Util.populateSelect = function( selectObj, selectName, json_Data )
 {
-	selectObj.append( '<option value="">Select ' + selectName + '</option>' );
+	if (selectName !== undefined && selectName !== null) {
+		selectObj.append( '<option value="">Select ' + selectName + '</option>' );
+	}
+
 
 	$.each( json_Data, function( i, item ) {
-
 		selectObj.append( $( '<option></option>' ).attr( "value", item.id ).text( item.displayName ) );
 	});
 }
@@ -264,18 +266,18 @@ Util.getChangeGroupRenderer = function (me, groupType) {
 				)
 				.text(this.displayName));
 		});
-		var button = $('<button>')
-			.attr("onclick", "Util.updateGroups('" + groupType + "', '" + id + "')")
+		var button = $('<button>') 
+			.attr("onclick", "Util.updateGroups('" + groupType + "', ['" + id + "'], '" + "#select-" + id + "')")
 			.text("Update groups");
 		return container.append(select, button).html();
 	}
 };
 
-Util.updateGroups = function (groupType, id) {
+Util.updateGroups = function (groupType, ids, selector) {
 	var groupName = (groupType == "IND") ? "indicatorGroups" : "dataElementGroups";
 	var plural = (groupType == "IND") ? "indicators" : "dataElements";
 	
-	var options = $("#select-" + id + " > option");
+	var options = $(selector + " > option");
 	var selectedOptions = [];
 	var groupsToUpdate = $.map(options, function (option) {
 		if (option.selected) selectedOptions.push(option.value);
@@ -290,10 +292,12 @@ Util.updateGroups = function (groupType, id) {
 		success: function (data) {
 			var metadata = {};
 			metadata[groupName] = data[groupName].map(function (group) {
-				group[plural] = group[plural].filter(function (element) {
-					return element.id != id;
+				ids.forEach(function (id) {
+					group[plural] = group[plural].filter(function (element) {
+						return element.id != id;
+					});
+					if (selectedOptions.includes(group.id)) group[plural].push({ id: id })
 				});
-				if (selectedOptions.includes(group.id)) group[plural].push({ id: id })
 				return group;
 			});
 

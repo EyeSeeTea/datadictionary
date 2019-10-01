@@ -181,6 +181,11 @@ function DataManager() {
 	me.groupListTag = $('#groupList');
 	me.indicatorListTag = $('#indicatorList');
 
+	me.dataElementGroupChangeList = $('#dataElementGroupChangeList');
+	me.dataElementGroupChangeAction = $('#dataElementGroupChangeAction');
+	me.indicatorGroupChangeList = $('#indicatorGroupChangeList');
+	me.indicatorGroupChangeAction = $('#indicatorGroupChangeAction');
+
 	me.paramTab = '';
 	me.paramSearchValue = '';
 	me.paramSearchType = '';
@@ -1179,6 +1184,13 @@ function DataManager() {
 	me.getDataElementColumns = function(attributes) { 
 		var baseColumns = [
 			{
+				data: 'id',
+				targets: 0,
+				checkboxes: {
+					selectRow: true
+				}
+			},
+			{
 				data : 'dataElementGroupNames',
 				"title" : "DE Group",
 				"render" : function(data, type, full) {
@@ -1322,7 +1334,10 @@ function DataManager() {
 					.dataTable({
 						"data" : dataList,
 						"columns" : me.getDataElementColumns(attributes),
-						"order" : [ [ 0, "asc" ], [ 1, "asc" ] ],
+						'select': {
+							'style': 'multi'
+						},
+						"order" : [ [ 1, "asc" ], [ 2, "asc" ] ],
 						"buttons" : Util.getExportButtons(),
 						"colReorder": {
 							"realtime": false,
@@ -1423,6 +1438,13 @@ function DataManager() {
 
 	me.getIndicatorColumns = function(attributes) {
 		var baseColumns = [
+			{
+				data: 'id',
+				targets: 0,
+				checkboxes: {
+					selectRow: true
+				}
+			},
 			{
 				data : 'indicatorGroupNames',
 				"title" : "IND Group",
@@ -1542,7 +1564,10 @@ function DataManager() {
 					.dataTable({
 						"data" : dataList,
 						"columns" : me.getIndicatorColumns(attributes),
-						"order" : [ [ 0, "asc" ], [ 1, "asc" ] ],
+						'select': {
+							'style': 'multi'
+						},
+						"order" : [ [ 1, "asc" ], [ 2, "asc" ] ],
 						"buttons" : Util.getExportButtons(),
 						"colReorder": {
 							"realtime": false,

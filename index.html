@@ -23,6 +23,7 @@
 	<meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
 
 	<link rel="stylesheet" type="text/css" href="css/jquery/datatables.min.css">
+	<link rel="stylesheet" type="text/css" href="css/jquery/dataTables.checkboxes.css">
 	<link rel="stylesheet" type="text/css" href="css/demo.css">
 	<link rel="stylesheet" type="text/css" href="css/collapsibleTree.css">
 	<link rel="stylesheet" type="text/css" href="css/index.css">
@@ -32,11 +33,12 @@
 
 	<script src="js/jquery/jquery-1.9.1.min.js"></script>
 	<script src="js/jquery/datatables.min.js"></script>
+	<script src="js/jquery/dataTables.checkboxes.min.js"></script>
 	<script src="js/jquery/jquery-ui.min.js"></script>
 	<script src="js/jquery/jquery.plugin.min.js"></script> 
 	<script src="js/jquery/jquery.countdown.min.js"></script>
 	<script src="js/jquery/jquery.dateFormat-1.0.js"></script>
-	
+
 	<script src="js/d3/d3.v3.min.js"></script>
 	<script src="js/d3/d3Utils.js"></script>
 	<script src="js/d3/d3.tip.v0.6.3.js"></script>
@@ -405,9 +407,13 @@ Users: Number of users having access to at least one org. unit." src="images/hel
 		<!-- Dataelements Groups Tab -->
 		<div id="tabs-7" style="display:none;">
 			<div class="content">
-				<table>
+				<table style="border-spacing: 20px; text-align: center; white-space: nowrap">
 					<tr style="font-weight: bold">
-						<td>Data Element Groups: <select id="groupList" class="action_select"></select></td>
+						<td>Data Element Groups:</td>
+						<td><select id="groupList" class="action_select"></select></td>
+						<td style="width:99%"></td>
+						<td>Change data element groups in selected items:<br><br><button id="dataElementGroupChangeAction">Apply group changes</button></td>
+						<td><select id="dataElementGroupChangeList" multiple></select></td>
 					</tr>
 				</table>
 				
@@ -427,9 +433,13 @@ Users: Number of users having access to at least one org. unit." src="images/hel
 		<!-- Indicator Tab -->
 		<div id="tabs-8" style="display:none;">
 			<div class="content">
-				<table>
+				<table style="border-spacing: 20px; text-align: center; white-space: nowrap">
 					<tr style="font-weight: bold">
-						<td>Indicator Groups: <select id="indicatorList" class="action_select"></select></td>
+						<td>Indicator Groups:</td>
+						<td><select id="indicatorList" class="action_select"></select></td>
+						<td style="width:99%"></td>
+						<td>Change indicator groups in selected items:<br><br><button id="indicatorGroupChangeAction">Apply group changes</button></td>
+						<td><select id="indicatorGroupChangeList" multiple></select></td>
 					</tr>
 					
 				</table>
