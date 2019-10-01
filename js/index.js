@@ -1187,7 +1187,9 @@ function DataManager() {
 				data: 'id',
 				targets: 0,
 				checkboxes: {
-					selectRow: true
+					selectRow: true,
+					selectAll: false,
+					selectAllPages: false,
 				}
 			},
 			{
@@ -1437,7 +1439,9 @@ function DataManager() {
 				data: 'id',
 				targets: 0,
 				checkboxes: {
-					selectRow: true
+					selectRow: true,
+					selectAll: false,
+					selectAllPages: false,
 				}
 			},
 			{
