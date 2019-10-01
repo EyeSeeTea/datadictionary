@@ -248,38 +248,12 @@ Util.dataTableRenderers = {
   }
 };
 
-Util.getChangeGroupRenderer = function (me, groupType) {
-	var groupName = (groupType == "IND") ? "indicatorGroups" : "dataElementGroups";
-
-	return function (id, type, full) {
-		var container = $('<div>');
-		var select = $('<select multiple>');
-		$(me[groupName]).each(function () {
-			var groupId = this.id;
-			select
-				.attr("id", "select-" + id)
-				.append($("<option>")
-					.attr("value", groupId)
-					.attr("selected", full[groupName].find(function (element) {
-						return element.id == groupId;
-					})
-				)
-				.text(this.displayName));
-		});
-		var button = $('<button>') 
-			.attr("onclick", "Util.updateGroups('" + groupType + "', ['" + id + "'], '" + "#select-" + id + "')")
-			.text("Update groups");
-		return container.append(select, button).html();
-	}
-};
-
 Util.updateGroups = function (groupType, ids, selector) {
 	var groupName = (groupType == "IND") ? "indicatorGroups" : "dataElementGroups";
 	var plural = (groupType == "IND") ? "indicators" : "dataElements";
 	
-	var options = $(selector + " > option");
 	var selectedOptions = [];
-	var groupsToUpdate = $.map(options, function (option) {
+	var groupsToUpdate = $.map($(selector + " > option"), function (option) {
 		if (option.selected) selectedOptions.push(option.value);
 		return option.value;
 	});

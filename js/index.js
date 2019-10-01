@@ -1283,11 +1283,6 @@ function DataManager() {
 				data : 'lastUpdated',
 				"title" : "Updated on",
 				"render" : Util.getDataTableRenderer("date")
-			},
-			{
-				data: 'id',
-				title: 'Change data element groups',
-				render: Util.getChangeGroupRenderer(me, "DE")
 			}
 		];
 		
@@ -1535,11 +1530,6 @@ function DataManager() {
 				data : 'lastUpdated',
 				"title" : "Updated on",
 				"render" : Util.getDataTableRenderer("date")
-			},
-			{
-				data: 'id',
-				title: 'Change indicator groups',
-				render: Util.getChangeGroupRenderer(me, "IND")
 			}
 		];
 
