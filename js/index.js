@@ -181,6 +181,11 @@ function DataManager() {
 	me.groupListTag = $('#groupList');
 	me.indicatorListTag = $('#indicatorList');
 
+	me.dataElementGroupChangeList = $('#dataElementGroupChangeList');
+	me.dataElementGroupChangeAction = $('#dataElementGroupChangeAction');
+	me.indicatorGroupChangeList = $('#indicatorGroupChangeList');
+	me.indicatorGroupChangeAction = $('#indicatorGroupChangeAction');
+
 	me.paramTab = '';
 	me.paramSearchValue = '';
 	me.paramSearchType = '';
@@ -1179,6 +1184,15 @@ function DataManager() {
 	me.getDataElementColumns = function(attributes) { 
 		var baseColumns = [
 			{
+				data: 'id',
+				targets: 0,
+				checkboxes: {
+					selectRow: true,
+					selectAll: false,
+					selectAllPages: false,
+				}
+			},
+			{
 				data : 'dataElementGroupNames',
 				"title" : "DE Group",
 				"render" : function(data, type, full) {
@@ -1271,11 +1285,6 @@ function DataManager() {
 				data : 'lastUpdated',
 				"title" : "Updated on",
 				"render" : Util.getDataTableRenderer("date")
-			},
-			{
-				data: 'id',
-				title: 'Change data element groups',
-				render: Util.getChangeGroupRenderer(me, "DE")
 			}
 		];
 		
@@ -1322,7 +1331,10 @@ function DataManager() {
 					.dataTable({
 						"data" : dataList,
 						"columns" : me.getDataElementColumns(attributes),
-						"order" : [ [ 0, "asc" ], [ 1, "asc" ] ],
+						'select': {
+							'style': 'multi'
+						},
+						"order" : [ [ 1, "asc" ], [ 2, "asc" ] ],
 						"buttons" : Util.getExportButtons(),
 						"colReorder": {
 							"realtime": false,
@@ -1424,6 +1436,15 @@ function DataManager() {
 	me.getIndicatorColumns = function(attributes) {
 		var baseColumns = [
 			{
+				data: 'id',
+				targets: 0,
+				checkboxes: {
+					selectRow: true,
+					selectAll: false,
+					selectAllPages: false,
+				}
+			},
+			{
 				data : 'indicatorGroupNames',
 				"title" : "IND Group",
 				"render" : function(data, type, full) {
@@ -1513,11 +1534,6 @@ function DataManager() {
 				data : 'lastUpdated',
 				"title" : "Updated on",
 				"render" : Util.getDataTableRenderer("date")
-			},
-			{
-				data: 'id',
-				title: 'Change indicator groups',
-				render: Util.getChangeGroupRenderer(me, "IND")
 			}
 		];
 
@@ -1542,7 +1558,10 @@ function DataManager() {
 					.dataTable({
 						"data" : dataList,
 						"columns" : me.getIndicatorColumns(attributes),
-						"order" : [ [ 0, "asc" ], [ 1, "asc" ] ],
+						'select': {
+							'style': 'multi'
+						},
+						"order" : [ [ 1, "asc" ], [ 2, "asc" ] ],
 						"buttons" : Util.getExportButtons(),
 						"colReorder": {
 							"realtime": false,
