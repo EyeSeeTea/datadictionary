@@ -407,13 +407,23 @@ Users: Number of users having access to at least one org. unit." src="images/hel
 		<!-- Dataelements Groups Tab -->
 		<div id="tabs-7" style="display:none;">
 			<div class="content">
-				<table style="border-spacing: 20px; text-align: center; white-space: nowrap">
+				<table class="areaStyle" style="border-spacing: 15px; white-space: nowrap; border: 1px solid #ccc;">
 					<tr style="font-weight: bold">
-						<td>Data Element Groups:</td>
-						<td><select id="groupList" class="action_select"></select></td>
+						<td style="vertical-align: top;">
+							Data Element Groups:
+						</td>
+						<td style="vertical-align: top;">
+							<select id="groupList" style="min-width: 350px;" class="action_select"></select>
+						</td>
+						<td style="vertical-align: top;">
+							Change data element groups for selected items:
+						</td>
+						<td style="vertical-align: top; text-align: right;">
+							<select id="dataElementGroupChangeList" style="min-width: 350px;" multiple></select>
+							<br>
+							<button id="dataElementGroupChangeAction">Apply</button>
+						</td>
 						<td style="width:99%"></td>
-						<td>Change data element groups in selected items:<br><br><button id="dataElementGroupChangeAction">Apply group changes</button></td>
-						<td><select id="dataElementGroupChangeList" multiple></select></td>
 					</tr>
 				</table>
 				
@@ -433,15 +443,24 @@ Users: Number of users having access to at least one org. unit." src="images/hel
 		<!-- Indicator Tab -->
 		<div id="tabs-8" style="display:none;">
 			<div class="content">
-				<table style="border-spacing: 20px; text-align: center; white-space: nowrap">
+				<table class="areaStyle" style="border-spacing: 15px; white-space: nowrap; border: 1px solid #ccc;">
 					<tr style="font-weight: bold">
-						<td>Indicator Groups:</td>
-						<td><select id="indicatorList" class="action_select"></select></td>
+						<td style="vertical-align: top;">
+							Indicator Groups:
+						</td>
+						<td style="vertical-align: top;">
+							<select id="indicatorList" style="min-width: 350px;" class="action_select"></select>
+						</td>
+						<td style="vertical-align: top;">
+							Change indicator groups for selected items:
+						</td>
+						<td style="vertical-align: top; text-align: right;">
+							<select id="indicatorGroupChangeList" style="min-width: 350px;" multiple></select>
+							<br>
+							<button id="indicatorGroupChangeAction">Apply</button>
+						</td>
 						<td style="width:99%"></td>
-						<td>Change indicator groups in selected items:<br><br><button id="indicatorGroupChangeAction">Apply group changes</button></td>
-						<td><select id="indicatorGroupChangeList" multiple></select></td>
 					</tr>
-					
 				</table>
 				
 				<div class="table-settings"></div>
