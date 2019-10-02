@@ -120,6 +120,9 @@ TableSettings = function(user, tableType, schemaSection, box, redrawTable, onSet
 		var table = this.getTable();
 		var links = _
 			.chain(table.getColumns())
+			.filter(function (column) {
+				return !!column.title;
+			})
 			.map(function(column) {
 				return [ 
 					$("<span>").text(" | "), 
