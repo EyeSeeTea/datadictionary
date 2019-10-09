@@ -281,6 +281,7 @@ Util.updateGroups = function (groupType, ids, selector) {
 				url: apiPath + "metadata",
 				data: JSON.stringify(metadata),
 				async: true,
+				dataType: "json",
 				success: function (report) {
 					if (report.status == "ERROR") {
 						alert("The group change request could not be applied, you might not have permissions.")
