@@ -1832,6 +1832,8 @@ getApiVersionPath = function(version) {
 		return null;
 	} else if (minorVersion <= 26) {
 		return minorVersion;
+	} else if (minorVersion > 30) {
+		return "29"
 	} else {
 		return "26";
 	}
