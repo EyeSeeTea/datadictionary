@@ -40,12 +40,12 @@ $(document).ready(function() {
 			dhisInfo = info;
 			var apiVersionPath = getApiVersionPath(info.version);
 
-			if (!apiVersionPath) {
+			if (apiVersionPath === null) {
 				$(document.body).empty();
 				alert("Unsupported DHIS2 version: " + info.version);
 			} else {
 				// Read dhis and api path from manifest.webapp 
-				apiPath = dhisPath + "api/" + apiVersionPath + "/";
+				apiPath = dhisPath + "api/";
 
 				// Configure dhis and api path components
 				configureDhisPathComponents();
@@ -1831,9 +1831,9 @@ getApiVersionPath = function(version) {
 	} else if (minorVersion < 25) {
 		return null;
 	} else if (minorVersion <= 26) {
-		return minorVersion;
+		return "";
 	} else {
-		return "26";
+		return "";
 	}
 };
 
