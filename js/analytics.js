@@ -79,7 +79,7 @@ function setup_Analytics(me, afterFunc) {
 														return false;
 													}
 												});
-												joinEditLinks = " <a style='color:#f45e00' href='#' onclick='submitData_URL(this, \"" + apiPath + "userGroups/" + item_userGroupAccesses.userGroupUid + "/users/" + userId + "\")'>join</a> | <a style='color:#f45e00' target='_blank' href='" + editLink +"'>edit</a>";
+												joinEditLinks = " <a style='color:#f45e00' href='#' onclick='submitData_URL(this, \"" + apiPath + "userGroups/" + item_userGroupAccesses.userGroupUid + "/users/" + userId + "\", function () {return false;})'>join</a> | <a style='color:#f45e00' target='_blank' href='" + editLink +"'>edit</a>";
 											}
 											
 											userGrouspNameDict[item_userGroupAccesses.userGroupUid] = json_UserGroups_details.name + ': ' + item_userGroupAccesses.access 
@@ -143,7 +143,7 @@ function submitData_URL( el, url, successFunc, failFunc )
 	  //data: JSON.stringify( jsonData ),
 	  contentType: "text/plain; charset=utf-8",
 	  success: function( msg ) {
-		  $(this).closest('tr').css("background-color", 'whitesmoke');
+		  $(el).closest('tr').css("background-color", 'whitesmoke');
 		  if (successFunc) successFunc();
 		},
 	  error: function( msg ) {
