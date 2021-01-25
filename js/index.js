@@ -1830,8 +1830,6 @@ getApiVersionPath = function(version) {
 		return null;
 	} else if (minorVersion < 25) {
 		return null;
-	} else if (minorVersion <= 26) {
-		return "";
 	} else {
 		return "";
 	}
