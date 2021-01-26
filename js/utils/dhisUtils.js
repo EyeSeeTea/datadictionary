@@ -40,7 +40,7 @@ DhisUtils = {};
 	DhisUtils.getUserInfo = function(dhisPath) {
 		return $.when(
 			DhisUtils.getRequestData(RESTUtil.get(dhisPath + "me")),
-			DhisUtils.getRequestData(RESTUtil.get(dhisPath + "me/authorities"))
+			DhisUtils.getRequestData(RESTUtil.get(dhisPath + "me/authorization.json"))
 		).then(function(me, meAuth) {
 			return $.extend(me, {authorities: meAuth});
 		});
